@@ -4,6 +4,10 @@ Claude Code, Codex, Cursor 같은 AI 에이전트와 팀이 함께 작업할 때
 
 AI 에이전트가 만든 결과를 그대로 믿는 것이 아니라, 사람이 다시 설명할 수 있는 단위로 묶고 검증하는 것이 목표입니다.
 
+## Keywords
+
+AI agent, agent memory, Claude Code, Codex, Cursor, vibe coding, AI coding workflow, local-first developer tools, work log, code review, team collaboration, markdown evidence, terminal session review.
+
 ## 현재 MVP
 
 - 로컬 Claude Code / Codex CLI 세션 탐지

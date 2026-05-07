@@ -2,6 +2,29 @@
   "name": "agent-work-memory",
   "private": true,
   "version": "0.1.0",
+  "description": "Team-based memory and review tool for AI agent work across Claude Code, Codex, Cursor, local sessions, commits, and markdown evidence.",
+  "keywords": [
+    "ai-agent",
+    "agent-memory",
+    "agent-workflow",
+    "claude-code",
+    "codex",
+    "cursor",
+    "vibe-coding",
+    "developer-tools",
+    "work-log",
+    "local-first",
+    "team-collaboration",
+    "ai-code-review"
+  ],
+  "homepage": "https://github.com/TeamSPWK/agent-work-memory#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TeamSPWK/agent-work-memory.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TeamSPWK/agent-work-memory/issues"
+  },
   "type": "module",
   "bin": {
     "awm": "./bin/awm.mjs"
