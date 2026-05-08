@@ -17,6 +17,10 @@ import { homedir } from "node:os";
 import { dirname, extname, join, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createPersistence, validationError } from "./persist.mjs";
+import { scoreCommitCandidate, categorizeScore, buildMatchReason } from "./match.mjs";
+
+// 점수 기반 정렬용 — downstream이 commitCandidates[0]을 최고 후보로 사용
+const CONFIDENCE_RANK = Object.freeze({ high: 2, medium: 1, low: 0 });
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, "..");
@@ -643,13 +647,15 @@ function buildSessionFromRecords({
     : parentSessionId;
   const initialTitle = makeTitle(firstText, file, tool, commands);
   const commandSummary = commands.slice(0, 3).join(", ");
-  const commitCandidates = gitEvidence?.commits.map((commit, commitIndex) => buildCommitCandidate(
+  const commitCandidates = (gitEvidence?.commits.map((commit, commitIndex) => buildCommitCandidate(
     commit,
     commitIndex,
     startedAt,
     endedAt,
     [firstText, lastText, ...commands],
-  )) ?? [];
+  )) ?? [])
+    .slice()
+    .sort((a, b) => CONFIDENCE_RANK[b.confidence] - CONFIDENCE_RANK[a.confidence]);
   const commitSummary = gitEvidence?.commits.length
     ? `로컬 커밋 후보: ${gitEvidence.commits.map((commit) => commit.shortHash).join(", ")}`
     : "";
@@ -1021,13 +1027,15 @@ function parseManualSessionFile(file, index) {
     : "필요 시 팀원이 커밋 후보와 변경 범위를 확인한다.";
   const risk = detectRisk([summary, changed, unknown, askTeam, repo, cwdGuess].join("\n"));
   const sessionId = payload.id ? String(payload.id) : `manual_${hashString(file.path)}`;
-  const commitCandidates = gitEvidence?.commits.map((commit, commitIndex) => buildCommitCandidate(
+  const commitCandidates = (gitEvidence?.commits.map((commit, commitIndex) => buildCommitCandidate(
     commit,
     commitIndex,
     createdAt,
     createdAt,
     [summary, changed, verified, unknown, askTeam],
-  )) ?? [];
+  )) ?? [])
+    .slice()
+    .sort((a, b) => CONFIDENCE_RANK[b.confidence] - CONFIDENCE_RANK[a.confidence]);
   const commitSummary = gitEvidence?.commits.length
     ? `로컬 커밋 후보: ${gitEvidence.commits.map((commit) => commit.shortHash).join(", ")}`
     : "";
@@ -1194,21 +1202,12 @@ function isAssistantBoilerplate(text) {
 
 function buildCommitCandidate(commit, index, startedAt, endedAt, signals = []) {
   const commitDate = new Date(commit.timestamp * 1000);
-  const distance = distanceFromWindowMinutes(commitDate, startedAt, endedAt);
-  const matchedFiles = findMentionedFiles(commit.files, signals);
-  const confidence = matchedFiles.length > 0 || distance <= 20
-    ? "high"
-    : distance <= 90
-      ? "medium"
-      : "low";
-  const matchReason = matchedFiles.length > 0
-    ? `세션 내용에 나온 파일 ${matchedFiles.length}개가 이 커밋에 포함됩니다.`
-    : distance === 0
-      ? "세션이 진행되던 시간 안에 만들어진 커밋입니다."
-      : index === 0
-        ? `같은 작업 영역에서 세션과 가장 가까운 커밋입니다. 약 ${distance}분 차이입니다.`
-        : `같은 작업 영역에서 세션 전후 ${distance}분 안에 만든 커밋입니다.`;
-
+  const distanceMinutes = distanceFromWindowMinutes(commitDate, startedAt, endedAt);
+  const score = scoreCommitCandidate({
+    commit: { subject: commit.subject ?? "", files: commit.files ?? [] },
+    distanceMinutes,
+    signals,
+  });
   return {
     hash: commit.hash,
     shortHash: commit.shortHash,
@@ -1217,8 +1216,8 @@ function buildCommitCandidate(commit, index, startedAt, endedAt, signals = []) {
     committedAt: localTime(commitDate),
     confirmed: false,
     rejected: false,
-    confidence,
-    matchReason,
+    confidence: categorizeScore(score.total),
+    matchReason: buildMatchReason(score, distanceMinutes),
   };
 }
 
@@ -1230,17 +1229,6 @@ function distanceFromWindowMinutes(date, startedAt, endedAt) {
   if (date >= safeStart && date <= safeEnd) return 0;
   const edge = date < safeStart ? safeStart : safeEnd;
   return Math.round(Math.abs(date.getTime() - edge.getTime()) / 60_000);
-}
-
-function findMentionedFiles(files = [], signals = []) {
-  const text = signals.join("\n");
-  return files.filter((file) => {
-    const basename = file.split("/").filter(Boolean).at(-1);
-    return Boolean(
-      file && text.includes(file)
-        || basename && basename.length > 4 && text.includes(basename),
-    );
-  }).slice(0, 3);
 }
 
 function buildWorkBrief({

@@ -205,6 +205,8 @@ MVP API:
 
 MVP에서는 연결을 자동 확정하지 않고 사용자가 확인한다.
 
+후보 신뢰도는 4축 가중 점수로 결정한다: `fileScore`(파일 경로 매칭, 가중치 0.45) / `areaScore`(디렉토리 prefix Jaccard, 0.20) / `subjectScore`(커밋 메시지↔세션 키워드 Jaccard, 0.20) / `distanceScore`(비선형 감쇠 1/(1+d/30), 0.15). 총점이 0.40 이상이면 `high`, 0.20 이상이면 `medium`, 미만이면 `low`. 상수는 `bin/match.mjs`의 `WEIGHTS`·`THRESHOLDS`에 고정.
+
 ## 4. Risk Path Defaults
 
 초기 위험 경로:
