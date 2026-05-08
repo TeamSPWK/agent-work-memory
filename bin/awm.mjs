@@ -3,15 +3,12 @@ import { spawnSync } from "node:child_process";
 import {
   closeSync,
   existsSync,
-  fsyncSync,
   mkdirSync,
   openSync,
   readFileSync,
   readSync,
   readdirSync,
-  renameSync,
   statSync,
-  unlinkSync,
   writeFileSync,
   appendFileSync,
 } from "node:fs";
@@ -19,6 +16,7 @@ import { createServer } from "node:http";
 import { homedir } from "node:os";
 import { dirname, extname, join, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createPersistence, validationError } from "./persist.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, "..");
@@ -26,9 +24,8 @@ const cwd = process.cwd();
 const stateDir = join(cwd, ".awm");
 const configPath = join(stateDir, "config.json");
 const eventsPath = join(stateDir, "events.jsonl");
-const persistEventsPath = join(stateDir, "persist-events.jsonl");
-const PERSIST_EVENTS_ROTATE_BYTES = 1024 * 1024;
-const PERSIST_EVENTS_RING_CAP = 256;
+const persistence = createPersistence({ stateDir });
+const { atomicWriteJsonSync, readJsonSafe, runQueued, emitEvent } = persistence;
 const discoveryPath = join(stateDir, "discovery.json");
 const ingestPath = join(stateDir, "ingest.json");
 const linksPath = join(stateDir, "links.json");
@@ -1813,14 +1810,14 @@ function serveLocalApp(values = []) {
           stateDir,
           version: readPackageVersion(),
           now: new Date().toISOString(),
-          lastWrite: _lastWrite,
-          quarantined: _quarantined.slice(-32),
+          lastWrite: persistence.getLastWrite(),
+          quarantined: persistence.getQuarantined(),
         });
         return;
       }
 
       if (url.pathname === "/api/persist-events") {
-        sendJson(response, _persistEventsRing.slice(-128));
+        sendJson(response, persistence.getEventsRing());
         return;
       }
 
@@ -1967,133 +1964,6 @@ function scheduleIngestRebuild(limit = 30) {
       // 사용자 요청은 이미 응답된 상태. 명시적 refresh로 복구 가능.
     }
   }, 0);
-}
-
-// === Persistence helpers (S1: atomic write + corrupt quarantine + per-path queue) ===
-// HTTP 핸들러가 async라 read-modify-write 사이에 다른 요청이 끼어들 수 있다.
-// per-path Promise queue로 같은 파일에 대한 동시 mutation을 직렬화한다.
-// crash 안전성: tmp 파일에 쓰고 fsync 후 rename. rename 전 종료 시 원본 파일 불변.
-let _lastWrite = null;
-const _quarantined = [];
-const _pathQueues = new Map();
-
-function runQueued(key, fn) {
-  const prev = _pathQueues.get(key) ?? Promise.resolve();
-  const next = prev.then(fn, fn); // 이전 실패해도 다음 작업은 실행
-  _pathQueues.set(key, next);
-  // 정리 체인은 next의 거부를 흡수해야 한다 (안 그러면 unhandled rejection으로 process exit).
-  // 호출자(`return next`)가 await로 잡으니 정리 쪽에서는 무음 처리한다.
-  const cleanup = () => {
-    if (_pathQueues.get(key) === next) _pathQueues.delete(key);
-  };
-  next.then(cleanup, cleanup);
-  return next;
-}
-
-const _persistEventsRing = [];
-
-function validationError(message) {
-  const error = new Error(message);
-  error.code = "VALIDATION";
-  return error;
-}
-
-function emitEvent(type, payload) {
-  const event = { t: new Date().toISOString(), type, payload: payload ?? {} };
-  _persistEventsRing.push(event);
-  if (_persistEventsRing.length > PERSIST_EVENTS_RING_CAP) _persistEventsRing.shift();
-  // 디스크 append는 best-effort. 실패해도 in-memory는 보존된다.
-  try {
-    if (!existsSync(stateDir)) mkdirSync(stateDir, { recursive: true });
-    if (existsSync(persistEventsPath)) {
-      try {
-        const size = statSync(persistEventsPath).size;
-        if (size >= PERSIST_EVENTS_ROTATE_BYTES) {
-          renameSync(persistEventsPath, `${persistEventsPath}.1`);
-        }
-      } catch {}
-    }
-    appendFileSync(persistEventsPath, `${JSON.stringify(event)}\n`, { mode: 0o644 });
-  } catch {
-    // 무음. emit이 실패 경로를 만들지 않게 한다.
-  }
-}
-
-function atomicWriteJsonSync(absPath, value) {
-  const dir = dirname(absPath);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const body = `${JSON.stringify(value, null, 2)}\n`;
-  const tmp = `${absPath}.tmp.${process.pid}.${Math.random().toString(36).slice(2, 8)}`;
-  try {
-    writeFileSync(tmp, body, { mode: 0o644 });
-    const fd = openSync(tmp, "r");
-    try {
-      fsyncSync(fd);
-    } finally {
-      closeSync(fd);
-    }
-    renameSync(tmp, absPath);
-    try {
-      const dfd = openSync(dir, "r");
-      try {
-        fsyncSync(dfd);
-      } finally {
-        closeSync(dfd);
-      }
-    } catch {
-      // dir fsync 실패해도 rename은 commit됨. 무음.
-    }
-    _lastWrite = { path: absPath, at: new Date().toISOString(), ok: true };
-    emitEvent("persist.write.ok", { path: absPath, bytes: body.length });
-  } catch (error) {
-    try {
-      unlinkSync(tmp);
-    } catch {}
-    const message = error instanceof Error ? error.message : String(error);
-    _lastWrite = {
-      path: absPath,
-      at: new Date().toISOString(),
-      ok: false,
-      code: "PERSIST_WRITE_FAIL",
-      message,
-    };
-    emitEvent("persist.write.fail", { path: absPath, code: "PERSIST_WRITE_FAIL", message });
-    const wrapped = new Error(`persist write failed: ${message}`);
-    wrapped.code = "PERSIST_WRITE_FAIL";
-    throw wrapped;
-  }
-}
-
-function readJsonSafe(absPath, fallback = {}) {
-  if (!existsSync(absPath)) return fallback;
-  let raw;
-  try {
-    raw = readFileSync(absPath, "utf8");
-  } catch {
-    return fallback;
-  }
-  try {
-    return JSON.parse(raw);
-  } catch (error) {
-    const isoNoColon = new Date().toISOString().replace(/:/g, "-");
-    const quarantine = `${absPath}.corrupt-${isoNoColon}`;
-    let renamed = false;
-    try {
-      renameSync(absPath, quarantine);
-      renamed = true;
-    } catch {}
-    const message = error instanceof Error ? error.message : String(error);
-    if (renamed) {
-      _quarantined.push({ path: absPath, at: new Date().toISOString(), original: quarantine });
-      while (_quarantined.length > 256) _quarantined.shift();
-      emitEvent("persist.read.corrupt", { path: absPath, quarantine, message });
-    } else {
-      // 격리(rename) 실패. 사용자에게 가짜 격리본 위치를 보여주지 않는다.
-      // 다음 read에서 같은 corrupt가 또 감지되더라도 같은 경로 ghost를 만들지 않는다.
-      emitEvent("persist.read.corrupt_unquarantinable", { path: absPath, message });
-    }
-    return fallback;
-  }
 }
 
 function readLinks() {

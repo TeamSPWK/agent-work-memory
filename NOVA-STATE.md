@@ -10,7 +10,7 @@
 |------|--------|---------|------|
 | S1 atomic write + 격리 읽기 + per-path queue | done | smoke 7/7 + 동일 sessionId race PASS | bin/awm.mjs · Evaluator HIGH#1 race 수정 완료 |
 | S2 관찰성: events·/api/health·표준에러·UI배너 | done | Evaluator CRITICAL+HIGH×3+MED 수정 후 재검증 PASS | bin/awm.mjs · App.tsx · styles.css |
-| S3 vitest smoke test backbone | todo | - | tests/ 신규 |
+| S3 vitest smoke test backbone | done | npm test 6/6 PASS (264ms) | tests/persist.test.mjs · 헬퍼 모듈 추출 |
 
 ## Recently Done (최근 3개만)
 | Task | Completed | Verdict | Ref |
@@ -34,10 +34,10 @@
 > --emergency 플래그 사용 또는 Evaluator 건너뛸 때 반드시 기록. 미기록 = Hard-Block.
 
 ## Last Activity
-- S2 evaluator → PASS — CRITICAL(runQueued unhandled rejection) + HIGH×3 + MED 수정, 재현 시 서버 생존·envelope·배너 모두 검증 | 2026-05-08
-- S2 implementation → PASS — events·/api/health 확장·표준 에러·UI 배너 (role/aria-live 조건부) | 2026-05-08
-- S1 evaluator → PASS — HIGH#1 race 수정 후 10건/동일sessionId 3건 race 재검증 | 2026-05-08
-- S1 implementation → PASS — smoke 6/6 (round-trip · 격리 · tmp 누수 없음 · 동시성) | 2026-05-08
+- S3 implementation → PASS — bin/persist.mjs로 헬퍼 추출, vitest 6/6 PASS (264ms), 서버 동작 회귀 OK | 2026-05-08
+- S2 evaluator → PASS — CRITICAL(runQueued) + HIGH×3 + MED 수정, 서버 생존·envelope·배너 검증 | 2026-05-08
+- S2 implementation → PASS — events·/api/health·표준 에러·UI 배너 | 2026-05-08
+- S1 evaluator → PASS — HIGH#1 race 수정 후 10건/동일sessionId 재검증 | 2026-05-08
 
 ## Refs
 - Plan: docs/plans/session-commit-link-stabilization.md
