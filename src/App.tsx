@@ -136,6 +136,42 @@ function App() {
   const [manualSessionSaveStatus, setManualSessionSaveStatus] = React.useState<"idle" | "saving" | "saved" | "error">("idle");
   const [sessionActionStatus, setSessionActionStatus] = React.useState<"idle" | "saving" | "saved" | "error">("idle");
   const [issueNoteResult, setIssueNoteResult] = React.useState<IssueNoteResult | null>(null);
+  const [persistHealth, setPersistHealth] = React.useState<{
+    lastWrite: { path: string; at: string; ok: boolean; code?: string; message?: string } | null;
+    quarantined: { path: string; at: string; original: string }[];
+  } | null>(null);
+  const [persistBannerDismissed, setPersistBannerDismissed] = React.useState<string>("");
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const r = await fetch("/api/health");
+        if (!r.ok) return;
+        const data = await r.json();
+        if (cancelled) return;
+        setPersistHealth({
+          lastWrite: data.lastWrite ?? null,
+          quarantined: Array.isArray(data.quarantined) ? data.quarantined : [],
+        });
+      } catch {
+        // 헬스 폴링 실패는 무음 — 다음 폴링에서 다시 시도
+      }
+    };
+    poll();
+    const id = setInterval(poll, 10_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  const persistBanner = React.useMemo(() => {
+    if (!persistHealth) return null;
+    const writeFailed = persistHealth.lastWrite && persistHealth.lastWrite.ok === false;
+    const hasQuarantine = persistHealth.quarantined.length > 0;
+    if (!writeFailed && !hasQuarantine) return null;
+    const key = `${persistHealth.lastWrite?.at ?? ""}|${persistHealth.quarantined.map(q => q.at).join(",")}`;
+    if (persistBannerDismissed === key) return null;
+    return { key, writeFailed, hasQuarantine };
+  }, [persistHealth, persistBannerDismissed]);
 
   const loadMvp = React.useCallback(async (refresh = false) => {
     setMvpStatus("loading");
@@ -467,6 +503,39 @@ function App() {
   }, [loadMvp]);
 
   return (
+    <>
+      {persistBanner && persistHealth && (
+        <div
+          className="persist-banner"
+          role={persistBanner.writeFailed ? "alert" : "status"}
+          aria-live={persistBanner.writeFailed ? "assertive" : "polite"}
+        >
+          <div className="persist-banner-body">
+            <strong>저장소 알림</strong>
+            {persistBanner.writeFailed && persistHealth.lastWrite && (
+              <span>
+                마지막 쓰기 실패: {persistHealth.lastWrite.path.split("/").slice(-2).join("/")} —{" "}
+                {persistHealth.lastWrite.code ?? "ERR"}
+                {persistHealth.lastWrite.message ? ` · ${persistHealth.lastWrite.message}` : ""}
+              </span>
+            )}
+            {persistBanner.hasQuarantine && (
+              <span>
+                손상된 파일 격리 {persistHealth.quarantined.length}건 — 마지막:{" "}
+                {persistHealth.quarantined[persistHealth.quarantined.length - 1].original.split("/").slice(-1)[0]}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            className="persist-banner-close"
+            onClick={() => setPersistBannerDismissed(persistBanner.key)}
+            aria-label="알림 닫기"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     <div className="app-shell">
       <aside className="sidebar" aria-label="주요 내비게이션">
         <div className="brand">
@@ -606,6 +675,7 @@ function App() {
         </main>
       </div>
     </div>
+    </>
   );
 }
 

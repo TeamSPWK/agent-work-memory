@@ -2486,3 +2486,37 @@ p {
     justify-self: start;
   }
 }
+
+/* persist-banner: 영속화 실패/격리 알림 (S2) */
+.persist-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #b45309;
+  color: #fffbeb;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+.persist-banner-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  flex: 1;
+}
+.persist-banner-body strong {
+  font-weight: 600;
+}
+.persist-banner-close {
+  background: transparent;
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  padding: 0.125rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.persist-banner-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+}

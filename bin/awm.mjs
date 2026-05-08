@@ -26,6 +26,9 @@ const cwd = process.cwd();
 const stateDir = join(cwd, ".awm");
 const configPath = join(stateDir, "config.json");
 const eventsPath = join(stateDir, "events.jsonl");
+const persistEventsPath = join(stateDir, "persist-events.jsonl");
+const PERSIST_EVENTS_ROTATE_BYTES = 1024 * 1024;
+const PERSIST_EVENTS_RING_CAP = 256;
 const discoveryPath = join(stateDir, "discovery.json");
 const ingestPath = join(stateDir, "ingest.json");
 const linksPath = join(stateDir, "links.json");
@@ -1810,7 +1813,14 @@ function serveLocalApp(values = []) {
           stateDir,
           version: readPackageVersion(),
           now: new Date().toISOString(),
+          lastWrite: _lastWrite,
+          quarantined: _quarantined.slice(-32),
         });
+        return;
+      }
+
+      if (url.pathname === "/api/persist-events") {
+        sendJson(response, _persistEventsRing.slice(-128));
         return;
       }
 
@@ -1917,7 +1927,15 @@ function serveLocalApp(values = []) {
         response.destroy(error instanceof Error ? error : undefined);
         return;
       }
-      sendJson(response, { error: error instanceof Error ? error.message : String(error) }, 500);
+      const message = error instanceof Error ? error.message : String(error);
+      const explicitCode = error && typeof error === "object" && typeof error.code === "string" ? error.code : null;
+      const code = explicitCode === "VALIDATION"
+        ? "VALIDATION"
+        : explicitCode === "PERSIST_WRITE_FAIL"
+          ? "PERSIST_WRITE_FAIL"
+          : "INTERNAL";
+      const status = code === "VALIDATION" ? 400 : code === "PERSIST_WRITE_FAIL" ? 503 : 500;
+      sendJson(response, { ok: false, code, message }, status);
     }
   });
 
@@ -1963,16 +1981,42 @@ function runQueued(key, fn) {
   const prev = _pathQueues.get(key) ?? Promise.resolve();
   const next = prev.then(fn, fn); // 이전 실패해도 다음 작업은 실행
   _pathQueues.set(key, next);
-  next.finally(() => {
+  // 정리 체인은 next의 거부를 흡수해야 한다 (안 그러면 unhandled rejection으로 process exit).
+  // 호출자(`return next`)가 await로 잡으니 정리 쪽에서는 무음 처리한다.
+  const cleanup = () => {
     if (_pathQueues.get(key) === next) _pathQueues.delete(key);
-  });
+  };
+  next.then(cleanup, cleanup);
   return next;
 }
 
+const _persistEventsRing = [];
+
+function validationError(message) {
+  const error = new Error(message);
+  error.code = "VALIDATION";
+  return error;
+}
+
 function emitEvent(type, payload) {
-  // S2에서 events.jsonl + in-memory ring buffer로 구현. S1에서는 no-op 스텁.
-  void type;
-  void payload;
+  const event = { t: new Date().toISOString(), type, payload: payload ?? {} };
+  _persistEventsRing.push(event);
+  if (_persistEventsRing.length > PERSIST_EVENTS_RING_CAP) _persistEventsRing.shift();
+  // 디스크 append는 best-effort. 실패해도 in-memory는 보존된다.
+  try {
+    if (!existsSync(stateDir)) mkdirSync(stateDir, { recursive: true });
+    if (existsSync(persistEventsPath)) {
+      try {
+        const size = statSync(persistEventsPath).size;
+        if (size >= PERSIST_EVENTS_ROTATE_BYTES) {
+          renameSync(persistEventsPath, `${persistEventsPath}.1`);
+        }
+      } catch {}
+    }
+    appendFileSync(persistEventsPath, `${JSON.stringify(event)}\n`, { mode: 0o644 });
+  } catch {
+    // 무음. emit이 실패 경로를 만들지 않게 한다.
+  }
 }
 
 function atomicWriteJsonSync(absPath, value) {
@@ -2033,12 +2077,21 @@ function readJsonSafe(absPath, fallback = {}) {
   } catch (error) {
     const isoNoColon = new Date().toISOString().replace(/:/g, "-");
     const quarantine = `${absPath}.corrupt-${isoNoColon}`;
+    let renamed = false;
     try {
       renameSync(absPath, quarantine);
+      renamed = true;
     } catch {}
     const message = error instanceof Error ? error.message : String(error);
-    _quarantined.push({ path: absPath, at: new Date().toISOString(), original: quarantine });
-    emitEvent("persist.read.corrupt", { path: absPath, quarantine, message });
+    if (renamed) {
+      _quarantined.push({ path: absPath, at: new Date().toISOString(), original: quarantine });
+      while (_quarantined.length > 256) _quarantined.shift();
+      emitEvent("persist.read.corrupt", { path: absPath, quarantine, message });
+    } else {
+      // 격리(rename) 실패. 사용자에게 가짜 격리본 위치를 보여주지 않는다.
+      // 다음 read에서 같은 corrupt가 또 감지되더라도 같은 경로 ghost를 만들지 않는다.
+      emitEvent("persist.read.corrupt_unquarantinable", { path: absPath, message });
+    }
     return fallback;
   }
 }
@@ -2050,7 +2103,7 @@ function readLinks() {
 function saveManualSession(body) {
   ensureState();
   const summary = maskSecrets(String(body.summary ?? "")).trim();
-  if (!summary) throw new Error("Session summary is required.");
+  if (!summary) throw validationError("Session summary is required.");
   const id = body.id ? String(body.id) : `manual_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
   const cwdValue = body.cwd ? String(body.cwd) : cwd;
   const session = {
@@ -2081,9 +2134,9 @@ async function saveLink(body) {
   const hash = String(body.hash ?? "");
   const shortHash = String(body.shortHash ?? hash.slice(0, 7));
   const action = String(body.action ?? "confirm");
-  if (!sessionId) throw new Error("sessionId is required.");
-  if (!hash && !shortHash) throw new Error("commit hash is required.");
-  if (!["confirm", "reject"].includes(action)) throw new Error("Unsupported link action.");
+  if (!sessionId) throw validationError("sessionId is required.");
+  if (!hash && !shortHash) throw validationError("commit hash is required.");
+  if (!["confirm", "reject"].includes(action)) throw validationError("Unsupported link action.");
 
   return runQueued(linksPath, () => {
     const links = readLinks();
@@ -2175,9 +2228,9 @@ async function saveReview(body) {
   ensureState();
   const sessionId = String(body.sessionId ?? "");
   const status = String(body.status ?? "");
-  if (!sessionId) throw new Error("sessionId is required.");
+  if (!sessionId) throw validationError("sessionId is required.");
   if (!["reviewed", "needs_explanation", "linked", "unlinked"].includes(status)) {
-    throw new Error("Unsupported review status.");
+    throw validationError("Unsupported review status.");
   }
   return runQueued(reviewsPath, () => {
     const reviews = readReviews();
@@ -2202,9 +2255,9 @@ async function saveBulkReviews(body) {
   ensureState();
   const sessionIds = Array.isArray(body.sessionIds) ? body.sessionIds.map(String).filter(Boolean) : [];
   const status = String(body.status ?? "");
-  if (sessionIds.length === 0) throw new Error("sessionIds are required.");
+  if (sessionIds.length === 0) throw validationError("sessionIds are required.");
   if (!["reviewed", "needs_explanation", "linked", "unlinked"].includes(status)) {
-    throw new Error("Unsupported review status.");
+    throw validationError("Unsupported review status.");
   }
   return runQueued(reviewsPath, () => {
     const reviews = readReviews();
