@@ -3,12 +3,15 @@ import { spawnSync } from "node:child_process";
 import {
   closeSync,
   existsSync,
+  fsyncSync,
   mkdirSync,
   openSync,
   readFileSync,
   readSync,
   readdirSync,
+  renameSync,
   statSync,
+  unlinkSync,
   writeFileSync,
   appendFileSync,
 } from "node:fs";
@@ -1837,7 +1840,7 @@ function serveLocalApp(values = []) {
 
       if (url.pathname === "/api/reviews/bulk" && request.method === "POST") {
         const body = await readRequestJson(request);
-        const reviews = saveBulkReviews(body);
+        const reviews = await saveBulkReviews(body);
         sendJson(response, { reviews });
         scheduleIngestRebuild(Number(url.searchParams.get("limit") ?? 30));
         return;
@@ -1850,7 +1853,7 @@ function serveLocalApp(values = []) {
         }
         if (request.method === "POST") {
           const body = await readRequestJson(request);
-          const review = saveReview(body);
+          const review = await saveReview(body);
           sendJson(response, review);
           scheduleIngestRebuild(Number(url.searchParams.get("limit") ?? 30));
           return;
@@ -1864,7 +1867,7 @@ function serveLocalApp(values = []) {
         }
         if (request.method === "POST") {
           const body = await readRequestJson(request);
-          const link = saveLink(body);
+          const link = await saveLink(body);
           buildAndStoreIngest(Number(url.searchParams.get("limit") ?? 30));
           sendJson(response, link);
           return;
@@ -1940,19 +1943,108 @@ function scheduleIngestRebuild(limit = 30) {
   setTimeout(() => {
     try {
       buildAndStoreIngest(limit);
-    } catch {
-      // A later explicit refresh can rebuild the local cache.
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      emitEvent("persist.ingest.rebuild_fail", { reason: "buildAndStoreIngest", message });
+      // 사용자 요청은 이미 응답된 상태. 명시적 refresh로 복구 가능.
     }
   }, 0);
 }
 
-function readLinks() {
-  if (!existsSync(linksPath)) return {};
+// === Persistence helpers (S1: atomic write + corrupt quarantine + per-path queue) ===
+// HTTP 핸들러가 async라 read-modify-write 사이에 다른 요청이 끼어들 수 있다.
+// per-path Promise queue로 같은 파일에 대한 동시 mutation을 직렬화한다.
+// crash 안전성: tmp 파일에 쓰고 fsync 후 rename. rename 전 종료 시 원본 파일 불변.
+let _lastWrite = null;
+const _quarantined = [];
+const _pathQueues = new Map();
+
+function runQueued(key, fn) {
+  const prev = _pathQueues.get(key) ?? Promise.resolve();
+  const next = prev.then(fn, fn); // 이전 실패해도 다음 작업은 실행
+  _pathQueues.set(key, next);
+  next.finally(() => {
+    if (_pathQueues.get(key) === next) _pathQueues.delete(key);
+  });
+  return next;
+}
+
+function emitEvent(type, payload) {
+  // S2에서 events.jsonl + in-memory ring buffer로 구현. S1에서는 no-op 스텁.
+  void type;
+  void payload;
+}
+
+function atomicWriteJsonSync(absPath, value) {
+  const dir = dirname(absPath);
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  const body = `${JSON.stringify(value, null, 2)}\n`;
+  const tmp = `${absPath}.tmp.${process.pid}.${Math.random().toString(36).slice(2, 8)}`;
   try {
-    return JSON.parse(readFileSync(linksPath, "utf8"));
-  } catch {
-    return {};
+    writeFileSync(tmp, body, { mode: 0o644 });
+    const fd = openSync(tmp, "r");
+    try {
+      fsyncSync(fd);
+    } finally {
+      closeSync(fd);
+    }
+    renameSync(tmp, absPath);
+    try {
+      const dfd = openSync(dir, "r");
+      try {
+        fsyncSync(dfd);
+      } finally {
+        closeSync(dfd);
+      }
+    } catch {
+      // dir fsync 실패해도 rename은 commit됨. 무음.
+    }
+    _lastWrite = { path: absPath, at: new Date().toISOString(), ok: true };
+    emitEvent("persist.write.ok", { path: absPath, bytes: body.length });
+  } catch (error) {
+    try {
+      unlinkSync(tmp);
+    } catch {}
+    const message = error instanceof Error ? error.message : String(error);
+    _lastWrite = {
+      path: absPath,
+      at: new Date().toISOString(),
+      ok: false,
+      code: "PERSIST_WRITE_FAIL",
+      message,
+    };
+    emitEvent("persist.write.fail", { path: absPath, code: "PERSIST_WRITE_FAIL", message });
+    const wrapped = new Error(`persist write failed: ${message}`);
+    wrapped.code = "PERSIST_WRITE_FAIL";
+    throw wrapped;
   }
+}
+
+function readJsonSafe(absPath, fallback = {}) {
+  if (!existsSync(absPath)) return fallback;
+  let raw;
+  try {
+    raw = readFileSync(absPath, "utf8");
+  } catch {
+    return fallback;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    const isoNoColon = new Date().toISOString().replace(/:/g, "-");
+    const quarantine = `${absPath}.corrupt-${isoNoColon}`;
+    try {
+      renameSync(absPath, quarantine);
+    } catch {}
+    const message = error instanceof Error ? error.message : String(error);
+    _quarantined.push({ path: absPath, at: new Date().toISOString(), original: quarantine });
+    emitEvent("persist.read.corrupt", { path: absPath, quarantine, message });
+    return fallback;
+  }
+}
+
+function readLinks() {
+  return readJsonSafe(linksPath, {});
 }
 
 function saveManualSession(body) {
@@ -1976,14 +2068,14 @@ function saveManualSession(body) {
     createdAt: new Date().toISOString(),
   };
   const filePath = join(sessionsDir, `${id}.json`);
-  writeFileSync(filePath, `${JSON.stringify(session, null, 2)}\n`);
+  atomicWriteJsonSync(filePath, session);
   return {
     ...session,
     path: filePath,
   };
 }
 
-function saveLink(body) {
+async function saveLink(body) {
   ensureState();
   const sessionId = String(body.sessionId ?? "");
   const hash = String(body.hash ?? "");
@@ -1993,37 +2085,39 @@ function saveLink(body) {
   if (!hash && !shortHash) throw new Error("commit hash is required.");
   if (!["confirm", "reject"].includes(action)) throw new Error("Unsupported link action.");
 
-  const links = readLinks();
-  const current = links[sessionId] ?? {
-    sessionId,
-    commits: [],
-    rejectedCommits: [],
-    updatedAt: new Date().toISOString(),
-  };
-  const linkRecord = {
-    hash,
-    shortHash,
-    subject: body.subject ? maskSecrets(String(body.subject)).slice(0, 180) : "",
-    [action === "reject" ? "rejectedAt" : "confirmedAt"]: new Date().toISOString(),
-  };
-  const sameCommit = (commit) => {
-    if (hash && commit.hash === hash) return false;
-    return !(shortHash && commit.shortHash === shortHash);
-  };
-  const next = action === "reject" ? {
-    ...current,
-    commits: (current.commits ?? []).filter(sameCommit),
-    rejectedCommits: [...(current.rejectedCommits ?? []).filter(sameCommit), linkRecord],
-    updatedAt: new Date().toISOString(),
-  } : {
-    ...current,
-    commits: [...(current.commits ?? []).filter(sameCommit), linkRecord],
-    rejectedCommits: (current.rejectedCommits ?? []).filter(sameCommit),
-    updatedAt: new Date().toISOString(),
-  };
-  links[sessionId] = next;
-  writeFileSync(linksPath, `${JSON.stringify(links, null, 2)}\n`);
-  return next;
+  return runQueued(linksPath, () => {
+    const links = readLinks();
+    const current = links[sessionId] ?? {
+      sessionId,
+      commits: [],
+      rejectedCommits: [],
+      updatedAt: new Date().toISOString(),
+    };
+    const linkRecord = {
+      hash,
+      shortHash,
+      subject: body.subject ? maskSecrets(String(body.subject)).slice(0, 180) : "",
+      [action === "reject" ? "rejectedAt" : "confirmedAt"]: new Date().toISOString(),
+    };
+    const sameCommit = (commit) => {
+      if (hash && commit.hash === hash) return false;
+      return !(shortHash && commit.shortHash === shortHash);
+    };
+    const next = action === "reject" ? {
+      ...current,
+      commits: (current.commits ?? []).filter(sameCommit),
+      rejectedCommits: [...(current.rejectedCommits ?? []).filter(sameCommit), linkRecord],
+      updatedAt: new Date().toISOString(),
+    } : {
+      ...current,
+      commits: [...(current.commits ?? []).filter(sameCommit), linkRecord],
+      rejectedCommits: (current.rejectedCommits ?? []).filter(sameCommit),
+      updatedAt: new Date().toISOString(),
+    };
+    links[sessionId] = next;
+    atomicWriteJsonSync(linksPath, links);
+    return next;
+  });
 }
 
 function applyLinksToSession(session, linkState) {
@@ -2074,15 +2168,10 @@ function applyLinksToSession(session, linkState) {
 }
 
 function readReviews() {
-  if (!existsSync(reviewsPath)) return {};
-  try {
-    return JSON.parse(readFileSync(reviewsPath, "utf8"));
-  } catch {
-    return {};
-  }
+  return readJsonSafe(reviewsPath, {});
 }
 
-function saveReview(body) {
+async function saveReview(body) {
   ensureState();
   const sessionId = String(body.sessionId ?? "");
   const status = String(body.status ?? "");
@@ -2090,24 +2179,26 @@ function saveReview(body) {
   if (!["reviewed", "needs_explanation", "linked", "unlinked"].includes(status)) {
     throw new Error("Unsupported review status.");
   }
-  const reviews = readReviews();
-  const previous = reviews[sessionId] ?? {};
-  const issueNote = body.issueNote
-    ? normalizeIssueNote(body.issueNote)
-    : previous.issueNote;
-  const review = {
-    sessionId,
-    status,
-    note: body.note ? maskSecrets(String(body.note)).slice(0, 400) : "",
-    ...(issueNote ? { issueNote } : {}),
-    updatedAt: new Date().toISOString(),
-  };
-  reviews[sessionId] = review;
-  writeFileSync(reviewsPath, `${JSON.stringify(reviews, null, 2)}\n`);
-  return review;
+  return runQueued(reviewsPath, () => {
+    const reviews = readReviews();
+    const previous = reviews[sessionId] ?? {};
+    const issueNote = body.issueNote
+      ? normalizeIssueNote(body.issueNote)
+      : previous.issueNote;
+    const review = {
+      sessionId,
+      status,
+      note: body.note ? maskSecrets(String(body.note)).slice(0, 400) : "",
+      ...(issueNote ? { issueNote } : {}),
+      updatedAt: new Date().toISOString(),
+    };
+    reviews[sessionId] = review;
+    atomicWriteJsonSync(reviewsPath, reviews);
+    return review;
+  });
 }
 
-function saveBulkReviews(body) {
+async function saveBulkReviews(body) {
   ensureState();
   const sessionIds = Array.isArray(body.sessionIds) ? body.sessionIds.map(String).filter(Boolean) : [];
   const status = String(body.status ?? "");
@@ -2115,24 +2206,25 @@ function saveBulkReviews(body) {
   if (!["reviewed", "needs_explanation", "linked", "unlinked"].includes(status)) {
     throw new Error("Unsupported review status.");
   }
-
-  const reviews = readReviews();
-  const updatedAt = new Date().toISOString();
-  const note = body.note ? maskSecrets(String(body.note)).slice(0, 400) : "";
-  const saved = sessionIds.map((sessionId) => {
-    const previous = reviews[sessionId] ?? {};
-    const review = {
-      sessionId,
-      status,
-      note,
-      ...(previous.issueNote ? { issueNote: previous.issueNote } : {}),
-      updatedAt,
-    };
-    reviews[sessionId] = review;
-    return review;
+  return runQueued(reviewsPath, () => {
+    const reviews = readReviews();
+    const updatedAt = new Date().toISOString();
+    const note = body.note ? maskSecrets(String(body.note)).slice(0, 400) : "";
+    const saved = sessionIds.map((sessionId) => {
+      const previous = reviews[sessionId] ?? {};
+      const review = {
+        sessionId,
+        status,
+        note,
+        ...(previous.issueNote ? { issueNote: previous.issueNote } : {}),
+        updatedAt,
+      };
+      reviews[sessionId] = review;
+      return review;
+    });
+    atomicWriteJsonSync(reviewsPath, reviews);
+    return saved;
   });
-  writeFileSync(reviewsPath, `${JSON.stringify(reviews, null, 2)}\n`);
-  return saved;
 }
 
 function applyReviewToSession(session, review) {
