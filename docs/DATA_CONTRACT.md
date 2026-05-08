@@ -55,6 +55,8 @@ interface WorkSession {
   tool: "Claude Code" | "Codex" | "Cursor" | "Other";
   actor: string;
   repo: string;
+  repoFullName?: string;
+  repoRoot?: string;
   startedAt: string;
   endedAt: string;
   intentSummary: string;
@@ -69,6 +71,14 @@ interface WorkSession {
     files: string[];
     committedAt?: string;
     confirmed?: boolean;
+    rejected?: boolean;
+    confidence?: "high" | "medium" | "low";
+    matchReason?: string;
+    source?: "local_git" | "github";
+    sources?: Array<"local_git" | "github" | "local">;
+    authorLogin?: string;
+    htmlUrl?: string;
+    prNumbers?: number[];
   }>;
   evidence: EvidenceLink[];
   unresolved: string[];
@@ -161,7 +171,7 @@ interface LocalIngestResult {
   ingestedAt: string;
   limit: number;
   sources: Array<{
-    id: "claude" | "codex" | "gemini";
+    id: "claude" | "codex" | "gemini" | "manual" | "github";
     label: string;
     fileCount: number;
     ingestedFiles: number;
@@ -178,6 +188,102 @@ interface LocalIngestResult {
 }
 ```
 
+### 2.7 GitHubActivity
+
+```ts
+interface GitHubActivity {
+  schemaVersion: 1;
+  source: "github";
+  repoFullName: string;
+  syncedAt: string;
+  since?: string;
+  until?: string;
+  commits: Array<{
+    source: "github";
+    repoFullName: string;
+    hash: string;
+    shortHash: string;
+    subject: string;
+    files: string[];
+    committedAt?: string;
+    authorLogin?: string;
+    authorName?: string;
+    htmlUrl?: string;
+  }>;
+  pullRequests: Array<{
+    source: "github";
+    repoFullName: string;
+    number: number;
+    title: string;
+    state?: string;
+    authorLogin?: string;
+    branch?: string;
+    baseBranch?: string;
+    updatedAt?: string;
+    htmlUrl?: string;
+    files: string[];
+    commits: string[];
+  }>;
+}
+```
+
+GitHub App credential은 이 객체에 저장하지 않는다. `.awm/github-activity.json`에는 token, private key, webhook secret, raw patch를 저장하지 않고, commit/PR 식별자와 파일 경로 중심의 결과 증거만 저장한다.
+
+### 2.8 GitHubWebhookStore
+
+```ts
+interface GitHubWebhookStore {
+  schemaVersion: 1;
+  source: "github_webhook";
+  updatedAt?: string;
+  deliveries: Array<{
+    deliveryId: string;
+    event: string;
+    action?: string;
+    repoFullName?: string;
+    receivedAt: string;
+    senderLogin?: string;
+    commitCount: number;
+    pullRequestCount: number;
+    payloadSha256: string;
+  }>;
+}
+```
+
+`.awm/github-webhooks.json`은 raw webhook payload, signature, webhook secret을 저장하지 않는다. `deliveryId`와 `payloadSha256`만 보관해 GitHub retry는 idempotent duplicate로 처리하고, 같은 delivery id의 다른 payload는 replay mismatch로 거부한다.
+
+### 2.9 GitHubVisibility
+
+```ts
+interface GitHubVisibility {
+  kind: "github";
+  status: "ready" | "needs_setup";
+  repoFullName?: string;
+  appId?: string;
+  installationId?: string;
+  privateKeySource?: "env" | "path";
+  apiBaseUrl: string;
+  missing: string[];
+  permissions: string[];
+  lastSyncAt?: string;
+  activity?: {
+    repoFullName: string;
+    syncedAt: string;
+    commits: number;
+    pullRequests: number;
+    changedFiles: number;
+  };
+  webhook: {
+    status: "ready" | "needs_setup";
+    path: "/api/github/webhook";
+    deliveries: number;
+    lastDeliveryAt?: string;
+  };
+}
+```
+
+`GET /api/health`와 `GET /api/mvp`는 이 객체를 `github` 필드로 반환한다. UI는 이 필드로 GitHub App 어댑터 상태와 repository remote evidence를 표시한다. Webhook receiver는 `AWM_GITHUB_WEBHOOK_SECRET`이 있을 때만 ready로 보고한다.
+
 MVP API:
 
 - `GET /api/mvp`: 마지막 ingest 결과를 반환한다.
@@ -188,6 +294,7 @@ MVP API:
 - `GET /api/links`: 세션-커밋 확정 연결을 반환한다.
 - `POST /api/links`: 커밋 후보를 확정 연결로 저장한다.
 - `POST /api/sessions`: 자동 탐지되지 않은 작업을 수동 세션 요약으로 저장하고 ingest에 포함한다.
+- `POST /api/github/webhook`: GitHub webhook raw body를 `X-Hub-Signature-256`로 검증하고 delivery dedupe 후 sanitized remote evidence로 저장한다.
 - `POST /api/wiki`: 현재 daily summary를 Markdown 파일로 저장한다.
 
 ## 3. MVP Linking Rules

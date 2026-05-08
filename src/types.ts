@@ -44,6 +44,11 @@ export interface CommitCandidate {
   rejected?: boolean;
   confidence?: "high" | "medium" | "low";
   matchReason?: string;
+  source?: "local_git" | "github";
+  sources?: Array<"local_git" | "github" | "local">;
+  authorLogin?: string;
+  htmlUrl?: string;
+  prNumbers?: number[];
 }
 
 export interface WorkBrief {
@@ -75,6 +80,8 @@ export interface RepositoryActivity {
   id: string;
   name: string;
   owner: string;
+  repoFullName?: string;
+  repoRoot?: string;
   commits: number;
   prs: number;
   changedFiles: number;
@@ -82,6 +89,10 @@ export interface RepositoryActivity {
   riskCount: number;
   focusAreas: string[];
   lastActivity: string;
+  githubLastSyncAt?: string;
+  githubCommits?: number;
+  githubPullRequests?: number;
+  githubChangedFiles?: number;
 }
 
 export interface WorkSession {
@@ -90,6 +101,8 @@ export interface WorkSession {
   tool: ToolName;
   actor: string;
   repo: string;
+  repoFullName?: string;
+  repoRoot?: string;
   startedAt: string;
   endedAt: string;
   fullIntent?: string;

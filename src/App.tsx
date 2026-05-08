@@ -86,9 +86,36 @@ interface MvpResponse {
   };
   repositories: RepositoryActivity[];
   workPackets?: WorkPacket[];
+  github?: GitHubVisibility;
   sessions: WorkSession[];
   riskEvents: RiskEvent[];
   timeline: TimelineEvent[];
+}
+
+interface GitHubVisibility {
+  kind: "github";
+  status: "ready" | "needs_setup";
+  repoFullName?: string;
+  appId?: string;
+  installationId?: string;
+  privateKeySource?: "env" | "path";
+  apiBaseUrl: string;
+  missing: string[];
+  permissions: string[];
+  lastSyncAt?: string;
+  activity?: {
+    repoFullName: string;
+    syncedAt: string;
+    commits: number;
+    pullRequests: number;
+    changedFiles: number;
+  };
+  webhook?: {
+    status: "ready" | "needs_setup";
+    path: "/api/github/webhook";
+    deliveries: number;
+    lastDeliveryAt?: string;
+  };
 }
 
 interface ManualSessionInput {
@@ -139,6 +166,7 @@ function App() {
   const [persistHealth, setPersistHealth] = React.useState<{
     lastWrite: { path: string; at: string; ok: boolean; code?: string; message?: string } | null;
     quarantined: { path: string; at: string; original: string }[];
+    github?: GitHubVisibility;
   } | null>(null);
   const [persistBannerDismissed, setPersistBannerDismissed] = React.useState<string>("");
 
@@ -153,6 +181,7 @@ function App() {
         setPersistHealth({
           lastWrite: data.lastWrite ?? null,
           quarantined: Array.isArray(data.quarantined) ? data.quarantined : [],
+          github: data.github,
         });
       } catch {
         // 헬스 폴링 실패는 무음 — 다음 폴링에서 다시 시도
@@ -203,6 +232,7 @@ function App() {
   const liveSessions = mvp?.sessions ?? [];
   const liveRiskEvents = mvp?.riskEvents ?? [];
   const liveTimeline = mvp?.timeline ?? [];
+  const githubVisibility = mvp?.github ?? persistHealth?.github;
 
   const selectedSession =
     liveSessions.find((session) => session.id === selectedSessionId) ?? liveSessions[0];
@@ -668,7 +698,7 @@ function App() {
                 />
               ) : null}
               {activeNav === "wiki" ? <WikiScreen /> : null}
-              {activeNav === "capture" ? <CaptureSetupScreen sources={mvp?.sources ?? []} sessions={liveSessions} /> : null}
+              {activeNav === "capture" ? <CaptureSetupScreen github={githubVisibility} sources={mvp?.sources ?? []} sessions={liveSessions} /> : null}
               {activeNav === "settings" ? <SettingsScreen /> : null}
             </>
           ) : null}
@@ -738,6 +768,13 @@ function compactPath(path: string) {
   const fileName = tail[tail.length - 1];
   tail[tail.length - 1] = limitText(fileName, 38);
   return tail.join("/");
+}
+
+function formatDateTime(value?: string) {
+  if (!value) return "대기 중";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("ko-KR");
 }
 
 function labelForCommitMatch(index: number, candidate: CommitCandidate) {
@@ -1523,9 +1560,11 @@ function RepositoriesScreen({ repositories }: { repositories: RepositoryActivity
 }
 
 function CaptureSetupScreen({
+  github,
   sessions,
   sources,
 }: {
+  github?: GitHubVisibility;
   sessions: WorkSession[];
   sources: NonNullable<MvpResponse["sources"]>;
 }) {
@@ -1548,6 +1587,10 @@ function CaptureSetupScreen({
   React.useEffect(() => {
     loadDiscovery();
   }, [loadDiscovery]);
+  const adapters = React.useMemo(
+    () => captureAdapters.map((adapter) => adapter.kind === "github" ? withGitHubVisibility(adapter, github) : adapter),
+    [github],
+  );
 
   return (
     <div className="capture-layout">
@@ -1570,7 +1613,7 @@ function CaptureSetupScreen({
         </div>
 
         <div className="adapter-grid">
-          {captureAdapters.map((adapter) => (
+          {adapters.map((adapter) => (
             <CaptureAdapterCard adapter={adapter} key={adapter.id} />
           ))}
         </div>
@@ -1592,7 +1635,7 @@ function CaptureSetupScreen({
 
       <section className="content-section">
         <SectionHeader eyebrow="진단" title="오늘 수집 상태" />
-        <CaptureDiagnostics discovery={discovery} sessions={sessions} sources={sources} />
+        <CaptureDiagnostics discovery={discovery} github={github} sessions={sessions} sources={sources} />
       </section>
 
       <section className="content-section">
@@ -2069,17 +2112,51 @@ function LocalDiscoveryPanel({
   );
 }
 
+function withGitHubVisibility(adapter: CaptureAdapter, github?: GitHubVisibility): CaptureAdapter {
+  if (!github) return adapter;
+  const activity = github.activity;
+  const connected = github.status === "ready" && Boolean(activity);
+  return {
+    ...adapter,
+    status: connected ? "connected" : github.status === "ready" ? "ready" : "needs_setup",
+    setupCommand: github.status === "ready"
+      ? "npm run cli -- github sync --since 2026-05-01T00:00:00Z"
+      : "npm run cli -- github status --json",
+    notes: activity
+      ? `최근 sync에서 커밋 ${activity.commits}개, PR ${activity.pullRequests}개, 변경 파일 ${activity.changedFiles}개를 반영했다.`
+      : github.status === "ready"
+        ? "GitHub App 설정은 준비됐다. sync를 실행하면 원격 결과 증거가 반영된다."
+        : `설정 누락: ${github.missing.join(", ")}`,
+  };
+}
+
 function CaptureDiagnostics({
   discovery,
+  github,
   sessions,
   sources,
 }: {
   discovery: DiscoveryResponse | null;
+  github?: GitHubVisibility;
   sessions: WorkSession[];
   sources: NonNullable<MvpResponse["sources"]>;
 }) {
   const sourceMap = new Map(sources.map((source) => [source.id, source]));
+  const githubSource = sourceMap.get("github");
+  const githubStatus = github?.status === "ready"
+    ? github.activity ? "연결됨" : "준비됨"
+    : "설정 필요";
+  const githubDetail = github?.activity
+    ? `커밋 ${github.activity.commits}개 · PR ${github.activity.pullRequests}개 · ${formatDateTime(github.activity.syncedAt)} sync`
+    : github?.missing?.length
+      ? github.missing.join(", ")
+      : `${githubSource?.ingestedFiles ?? 0}개 원격 증거 반영`;
   const rows = [
+    {
+      label: "GitHub App",
+      status: githubStatus,
+      detail: githubDetail,
+    },
     {
       label: "Claude Code",
       status: sourceMap.get("claude")?.ingestedFiles ? "정상" : discovery?.sources.find((source) => source.id === "claude")?.fileCount ? "파일 있음" : "미탐지",
@@ -2195,13 +2272,14 @@ function Metric({
 }
 
 function RepoCard({ repo }: { repo: RepositoryActivity }) {
+  const hasGithubEvidence = Boolean(repo.githubLastSyncAt || repo.githubCommits || repo.githubPullRequests);
   return (
     <article className="repo-card">
       <div className="repo-title">
         <Github size={17} />
         <div>
           <h3>{compactRepo(`${repo.owner}/${repo.name}`)}</h3>
-          <span>마지막 활동 {repo.lastActivity}</span>
+          <span>{repo.repoFullName ?? `마지막 활동 ${repo.lastActivity}`}</span>
         </div>
       </div>
       <div className="repo-stats">
@@ -2209,6 +2287,13 @@ function RepoCard({ repo }: { repo: RepositoryActivity }) {
         <span>PR {repo.prs}개</span>
         <span>변경 파일 {repo.changedFiles}개</span>
       </div>
+      {hasGithubEvidence ? (
+        <div className="repo-stats">
+          <span>GitHub sync {formatDateTime(repo.githubLastSyncAt)}</span>
+          <span>원격 커밋 {repo.githubCommits ?? 0}개</span>
+          <span>원격 변경 {repo.githubChangedFiles ?? 0}개</span>
+        </div>
+      ) : null}
       <div className="tag-row">
         {repo.focusAreas.map((area) => (
           <Badge key={area} label={area} />

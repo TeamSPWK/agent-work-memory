@@ -1,18 +1,22 @@
 # Nova State
 
 ## Current
-- **Goal**: 세션-커밋 매칭 정확도 향상 (가중 점수·키워드·작업 영역)
+- **Goal**: GitHub App 연동 (REST sync-first)
 - **Phase**: done
 - **Blocker**: none
 
 ## Tasks
 | Task | Status | Verdict | Note |
 |------|--------|---------|------|
-| 구현 + Evaluator 검증 | done | npm test 16/16 + build exit 0, 11/11 Critical PASS | bin/match.mjs(250L)·awm.mjs·tests·DATA_CONTRACT.md |
+| GitHub App DeepPlan 작성 | done | PASS — docs/plans/github-app-integration.md | REST sync-first, repo identity 선행 |
+| S0-S2 구현 | done | npm test 20/20 + build exit 0 + CLI checks PASS | repo identity · github adapter · ingest merge |
+| S3 UI/API Visibility | done | build + API health/mvp checks PASS | GitHub status/card/repo evidence |
+| S4 Webhook Receiver | done | npm test 23/23 + build exit 0 + API webhook checks PASS | HMAC 검증 · delivery dedupe · retry-safe sanitized persistence |
 
 ## Recently Done (최근 3개만)
 | Task | Completed | Verdict | Ref |
 |------|-----------|---------|-----|
+| GitHub App S4 Webhook Receiver | 2026-05-08 | PASS — accepted/duplicate/auth API checks + retry-safety audit | bin/awm.mjs · bin/github.mjs · tests/github.test.mjs |
 | P1 매칭 정확도 (4축 가중점수+stoplist) | 2026-05-08 | PASS — 11/11 Critical | bin/match.mjs · tests/match.test.mjs |
 
 ## Known Risks
@@ -25,7 +29,6 @@
 | stoplist 어휘 확장 | `build`/`loader`/`router` 등 흔한 basename 추가 후보 | 낮음, 실데이터 기반 후속 |
 | 한국어 path areaScore | extractSignalDirPrefixes 정규식이 `[A-Za-z0-9_./-]+`만 추출 | 낮음, 필요 시 |
 | CWD/TZ 모호성 (P4) | repoRoot 스키마 변경 동반 마이그레이션 | 중간, 별도 Plan |
-| GitHub App 연동 | 다음 큰 단계 — 본 매칭 점수 모델 위에 자동 confirm 임계 도입 | 다음 스프린트 후보 |
 
 ## 규칙 우회 이력 (감사 추적)
 | 날짜 | 커맨드 | 우회 이유 | 사후 조치 |
@@ -35,11 +38,11 @@
 > --emergency 플래그 사용 또는 Evaluator 건너뛸 때 반드시 기록. 미기록 = Hard-Block.
 
 ## Last Activity
-- /nova:run → PASS — match.mjs+awm.mjs 교체, 11/11 Critical, npm test 16/16, build exit 0 | 2026-05-08
-- /nova:design → 완료 — docs/designs/session-commit-match-scoring.md | 2026-05-08
-- /nova:plan → 완료 — docs/plans/session-commit-match-scoring.md | 2026-05-08
+- final verification → PASS — GitHub App S0-S4 ready-to-review, retry-safety fix, test/build/CLI/API PASS | 2026-05-08
+- implementation → PASS — GitHub App S4 webhook receiver, npm test 23/23, build exit 0, API accepted/duplicate/auth verified | 2026-05-08
+- implementation → PASS — GitHub App S3 visibility, build/test PASS, health/mvp API verified | 2026-05-08
 
 ## Refs
-- Plan: docs/plans/session-commit-match-scoring.md
-- Design: docs/designs/session-commit-match-scoring.md
-- Last Verification: npm test 16/16 + build exit 0 (Evaluator PASS, 미커밋)
+- Plan: docs/plans/github-app-integration.md
+- Design: TBD
+- Last Verification: npm test 23/23 + build exit 0 + github status PASS + webhook API accepted 202/duplicate 200/auth 401 + secret scan PASS + ingest/today PASS

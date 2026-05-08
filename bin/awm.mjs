@@ -18,6 +18,18 @@ import { dirname, extname, join, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createPersistence, validationError } from "./persist.mjs";
 import { scoreCommitCandidate, categorizeScore, buildMatchReason } from "./match.mjs";
+import {
+  addGitHubWebhookDeliveryToStore,
+  getGitHubStatus,
+  hashGitHubWebhookPayload,
+  mergeGitHubWebhookDelivery,
+  mergeGitHubActivityIntoSession,
+  normalizeGitHubWebhookDelivery,
+  normalizeRepoFullName,
+  resolveRepoIdentity,
+  syncGitHubActivity,
+  verifyGitHubWebhookSignature,
+} from "./github.mjs";
 
 // 점수 기반 정렬용 — downstream이 commitCandidates[0]을 최고 후보로 사용
 const CONFIDENCE_RANK = Object.freeze({ high: 2, medium: 1, low: 0 });
@@ -34,8 +46,11 @@ const discoveryPath = join(stateDir, "discovery.json");
 const ingestPath = join(stateDir, "ingest.json");
 const linksPath = join(stateDir, "links.json");
 const reviewsPath = join(stateDir, "reviews.json");
+const githubActivityPath = join(stateDir, "github-activity.json");
+const githubWebhookPath = join(stateDir, "github-webhooks.json");
 const sessionsDir = join(stateDir, "sessions");
 const wikiDir = join(stateDir, "wiki");
+const GITHUB_WEBHOOK_MAX_BYTES = 25 * 1024 * 1024;
 
 const args = process.argv.slice(2);
 
@@ -68,8 +83,27 @@ async function main() {
 
   if (scope === "repo" && action === "link") {
     if (!target) throw new Error("Usage: awm repo link <owner/repo>");
-    writeConfig({ repo: target, repoPath: cwd, linkedAt: new Date().toISOString() });
-    console.log(`Linked repo ${target} at ${cwd}`);
+    const repoFullName = normalizeRepoFullName(target);
+    if (!repoFullName) throw validationError("Repo must be owner/repo or a GitHub repo URL.");
+    writeConfig({
+      repo: repoFullName,
+      repoFullName,
+      repoRoot: cwd,
+      repoPath: cwd,
+      repoIdentitySource: "manual",
+      linkedAt: new Date().toISOString(),
+    });
+    console.log(`Linked repo ${repoFullName} at ${cwd}`);
+    return;
+  }
+
+  if (scope === "github" && action === "status") {
+    printGitHubStatus(args.slice(2));
+    return;
+  }
+
+  if (scope === "github" && action === "sync") {
+    await syncGitHub(args.slice(2));
     return;
   }
 
@@ -153,6 +187,8 @@ Usage:
   awm capture sample
   awm capture wrap codex -- <codex args>
   awm discover
+  awm github status --json
+  awm github sync --since <ISO>
   awm ingest --limit 30
   awm serve --port 5173
   awm session summarize --tool codex --summary "..."
@@ -443,6 +479,53 @@ function printDiscovery(result) {
   }
 }
 
+function printGitHubStatus(values = []) {
+  const status = buildGitHubVisibility();
+  if (values.includes("--json")) {
+    console.log(JSON.stringify(status, null, 2));
+    return;
+  }
+  console.log(`GitHub App: ${status.status}`);
+  console.log(`Repo: ${status.repoFullName ?? "not linked"}`);
+  console.log(`Permissions: ${status.permissions.join(", ")}`);
+  if (status.missing.length) {
+    console.log(`Missing: ${status.missing.join(", ")}`);
+    console.log("Run: awm repo link <owner/repo> and set AWM_GITHUB_APP_ID, AWM_GITHUB_INSTALLATION_ID, AWM_GITHUB_PRIVATE_KEY_PATH.");
+  }
+}
+
+async function syncGitHub(values = []) {
+  ensureState();
+  const config = readConfig();
+  const since = readFlag(values, "--since");
+  const until = readFlag(values, "--until") ?? new Date().toISOString();
+  const status = getGitHubStatus({ config, env: process.env });
+  if (status.status !== "ready") {
+    throw validationError(`GitHub App setup incomplete: ${status.missing.join(", ")}`);
+  }
+  const activity = await syncGitHubActivity({
+    config,
+    env: process.env,
+    since,
+    until,
+  });
+  atomicWriteJsonSync(githubActivityPath, activity);
+  writeConfig({
+    repoFullName: activity.repoFullName,
+    githubLastSyncAt: activity.syncedAt,
+    githubApiBaseUrl: status.apiBaseUrl,
+    githubInstallationId: status.installationId,
+  });
+  if (values.includes("--json")) {
+    console.log(JSON.stringify(activity, null, 2));
+    return;
+  }
+  console.log(`GitHub synced: ${activity.repoFullName}`);
+  console.log(`Commits: ${activity.commits.length}`);
+  console.log(`Pull requests: ${activity.pullRequests.length}`);
+  console.log(`Activity written: ${githubActivityPath}`);
+}
+
 function collectFiles(root, extension, maxDepth) {
   if (!existsSync(root)) return [];
   const files = [];
@@ -505,6 +588,8 @@ function buildIngestResult(limit = 30) {
   const discovery = buildDiscoveryResult({ includeAllFiles: true });
   const confirmedLinks = readLinks();
   const reviews = readReviews();
+  const githubActivity = readGitHubActivity();
+  const github = buildGitHubVisibility(githubActivity);
   writeFileSync(
     discoveryPath,
     `${JSON.stringify({ ...discovery, sources: discovery.sources.map(({ allFiles, ...source }) => source) }, null, 2)}\n`,
@@ -518,6 +603,7 @@ function buildIngestResult(limit = 30) {
   const discoveredSessions = files
     .flatMap((file, index) => parseSessionFile(file, index))
     .filter(Boolean)
+    .map((session) => mergeGitHubActivityIntoSession(session, githubActivity))
     .map((session) => applyLinksToSession(session, confirmedLinks[session.id]))
     .map((session) => applyReviewToSession(session, reviews[session.id]));
   const manualSessions = collectFiles(sessionsDir, ".json", 1)
@@ -525,6 +611,7 @@ function buildIngestResult(limit = 30) {
     .slice(0, limit)
     .map((file, index) => parseManualSessionFile(file, index))
     .filter(Boolean)
+    .map((session) => mergeGitHubActivityIntoSession(session, githubActivity))
     .map((session) => applyLinksToSession(session, confirmedLinks[session.id]))
     .map((session) => applyReviewToSession(session, reviews[session.id]));
   const sessions = [...manualSessions, ...discoveredSessions]
@@ -534,7 +621,7 @@ function buildIngestResult(limit = 30) {
   const timeline = sessions.flatMap((session) => session.timelineEvents)
     .sort((a, b) => `${a.sortAt}`.localeCompare(`${b.sortAt}`))
     .map(({ sortAt, ...event }) => event);
-  const repositories = aggregateRepositories(sessions);
+  const repositories = aggregateRepositories(sessions, githubActivity);
   const workPackets = buildWorkPackets(sessions);
 
   return {
@@ -553,6 +640,12 @@ function buildIngestResult(limit = 30) {
         fileCount: collectFiles(sessionsDir, ".json", 1).length,
         ingestedFiles: sessions.filter((session) => session.fileMeta.source === "manual").length,
       },
+      {
+        id: "github",
+        label: "GitHub App",
+        fileCount: (githubActivity?.commits?.length ?? 0) + (githubActivity?.pullRequests?.length ?? 0),
+        ingestedFiles: (githubActivity?.commits?.length ?? 0) + (githubActivity?.pullRequests?.length ?? 0),
+      },
     ],
     privacy: {
       rawTranscriptStored: false,
@@ -561,6 +654,7 @@ function buildIngestResult(limit = 30) {
     },
     repositories,
     workPackets,
+    github,
     sessions: sessions.map(({ risks, timelineEvents, fileMeta, sortAt, ...session }) => session),
     riskEvents,
     timeline,
@@ -639,7 +733,8 @@ function buildSessionFromRecords({
   const startedAt = segment?.startedAt ?? timestamps[0] ?? file.modifiedAt;
   const endedAt = segment?.endedAt ?? timestamps[timestamps.length - 1] ?? file.modifiedAt;
   const gitEvidence = collectGitEvidence(cwdGuess, startedAt, endedAt);
-  const repo = gitEvidence?.repoLabel ?? inferRepoLabel(cwdGuess, file);
+  const repoIdentity = resolveSessionRepoIdentity(cwdGuess, gitEvidence?.gitRoot);
+  const repo = repoIdentity.repoFullName ?? gitEvidence?.repoLabel ?? inferRepoLabel(cwdGuess, file);
   const searchable = [firstText, lastText, ...commands, file.relativePath, cwdGuess].join("\n");
   const risk = detectRisk(searchable);
   const sessionId = segment
@@ -698,6 +793,8 @@ function buildSessionFromRecords({
     tool,
     actor: "로컬 사용자",
     repo,
+    repoFullName: repoIdentity.repoFullName,
+    repoRoot: repoIdentity.repoRoot ?? gitEvidence?.gitRoot,
     startedAt: localTime(new Date(startedAt)),
     endedAt: localTime(new Date(endedAt)),
     fullIntent: firstText ? truncate(firstText, 520) : undefined,
@@ -746,6 +843,8 @@ function buildSessionFromRecords({
       truncated: sampled.truncated,
       cwd: cwdGuess,
       gitRoot: gitEvidence?.gitRoot,
+      repoFullName: repoIdentity.repoFullName,
+      repoRoot: repoIdentity.repoRoot ?? gitEvidence?.gitRoot,
       gitCommitCount: gitEvidence?.commits.length ?? 0,
       gitChangedFiles: gitEvidence?.changedFiles.length ?? 0,
       gitDirtyFiles: gitEvidence?.dirtyFiles.length ?? 0,
@@ -1009,9 +1108,10 @@ function parseManualSessionFile(file, index) {
   const createdAt = payload.createdAt ?? file.modifiedAt;
   const cwdGuess = payload.cwd || cwd;
   const gitEvidence = collectGitEvidence(cwdGuess, createdAt, createdAt);
+  const repoIdentity = resolveSessionRepoIdentity(cwdGuess, gitEvidence?.gitRoot);
   const repo = payload.repo
     ? maskSecrets(String(payload.repo)).slice(0, 120)
-    : gitEvidence?.repoLabel ?? inferRepoLabel(cwdGuess, { source: { id: "manual" } });
+    : repoIdentity.repoFullName ?? gitEvidence?.repoLabel ?? inferRepoLabel(cwdGuess, { source: { id: "manual" } });
   const summary = toReadableSessionText(payload.summary ?? "") || "수동 세션 요약";
   const changed = payload.changed
     ? maskSecrets(String(payload.changed)).slice(0, 500)
@@ -1060,6 +1160,8 @@ function parseManualSessionFile(file, index) {
     tool,
     actor: payload.actor ? maskSecrets(String(payload.actor)).slice(0, 80) : "로컬 사용자",
     repo,
+    repoFullName: repoIdentity.repoFullName,
+    repoRoot: repoIdentity.repoRoot ?? gitEvidence?.gitRoot,
     startedAt: localTime(new Date(createdAt)),
     endedAt: localTime(new Date(createdAt)),
     fullIntent: truncate(summary, 520),
@@ -1101,6 +1203,8 @@ function parseManualSessionFile(file, index) {
       truncated: false,
       cwd: cwdGuess,
       gitRoot: gitEvidence?.gitRoot,
+      repoFullName: repoIdentity.repoFullName,
+      repoRoot: repoIdentity.repoRoot ?? gitEvidence?.gitRoot,
       gitCommitCount: gitEvidence?.commits.length ?? 0,
       gitChangedFiles: gitEvidence?.changedFiles.length ?? 0,
       gitDirtyFiles: gitEvidence?.dirtyFiles.length ?? 0,
@@ -1434,13 +1538,17 @@ function toRiskEvent(risk, sessionId, title, repo, file, time) {
   };
 }
 
-function aggregateRepositories(sessions) {
+function aggregateRepositories(sessions, githubActivity) {
   const map = new Map();
   for (const session of sessions) {
-    const current = map.get(session.repo) ?? {
-      id: `repo_${hashString(session.repo)}`,
-      owner: "local",
-      name: session.repo,
+    const repoKey = session.repoFullName ?? session.repo;
+    const repoParts = normalizeRepoFullName(repoKey)?.split("/") ?? [];
+    const current = map.get(repoKey) ?? {
+      id: `repo_${hashString(repoKey)}`,
+      owner: repoParts[0] ?? "local",
+      name: repoParts[1] ?? session.repo,
+      repoFullName: session.repoFullName,
+      repoRoot: session.repoRoot ?? session.fileMeta?.repoRoot,
       commits: 0,
       prs: 0,
       changedFiles: 0,
@@ -1459,8 +1567,35 @@ function aggregateRepositories(sessions) {
       session.tool,
       session.fileMeta.source,
       ...(session.fileMeta?.gitCommitCount ? ["git"] : []),
+      ...(session.fileMeta?.githubCandidateCount ? ["github"] : []),
     ])).slice(0, 4);
-    map.set(session.repo, current);
+    map.set(repoKey, current);
+  }
+  for (const repo of githubActivity?.repositories ?? []) {
+    const repoKey = repo.repoFullName ?? `${repo.owner}/${repo.name}`;
+    const current = map.get(repoKey) ?? {
+      id: `repo_${hashString(repoKey)}`,
+      owner: repo.owner ?? "github",
+      name: repo.name ?? repoKey,
+      repoFullName: repo.repoFullName,
+      commits: 0,
+      prs: 0,
+      changedFiles: 0,
+      sessions: 0,
+      riskCount: 0,
+      focusAreas: [],
+      lastActivity: repo.lastActivity,
+    };
+    current.commits += repo.commits ?? 0;
+    current.prs += repo.prs ?? 0;
+    current.changedFiles += repo.changedFiles ?? 0;
+    current.lastActivity = repo.lastActivity ?? current.lastActivity;
+    current.githubLastSyncAt = githubActivity?.syncedAt;
+    current.githubChangedFiles = repo.changedFiles ?? 0;
+    current.githubCommits = repo.commits ?? 0;
+    current.githubPullRequests = repo.prs ?? 0;
+    current.focusAreas = Array.from(new Set([...current.focusAreas, "github"])).slice(0, 4);
+    map.set(repoKey, current);
   }
   return Array.from(map.values()).sort((a, b) => b.sessions - a.sessions).slice(0, 12);
 }
@@ -1750,6 +1885,19 @@ function inferCwdFromPath(file) {
   return dirname(file.path);
 }
 
+function resolveSessionRepoIdentity(cwdValue, gitRoot) {
+  const identity = resolveRepoIdentity(readConfig());
+  if (!identity.repoFullName) return { repoRoot: gitRoot };
+  const configuredRoot = identity.repoRoot;
+  if (!configuredRoot) return identity;
+  const candidate = resolve(cwdValue || gitRoot || "");
+  const root = resolve(configuredRoot);
+  if (candidate === root || candidate.startsWith(`${root}${sep}`) || gitRoot === root) {
+    return identity;
+  }
+  return { repoRoot: gitRoot };
+}
+
 function inferRepoLabel(cwdValue, file) {
   const parts = cwdValue.split("/").filter(Boolean);
   const name = parts.at(-1) ?? file.source.id;
@@ -1791,6 +1939,17 @@ function serveLocalApp(values = []) {
     const url = new URL(request.url ?? "/", `http://${host}:${port}`);
 
     try {
+      if (url.pathname === "/api/github/webhook") {
+        if (request.method !== "POST") {
+          sendJson(response, { ok: false, code: "METHOD_NOT_ALLOWED", message: "POST required." }, 405);
+          return;
+        }
+        const result = await receiveGitHubWebhook(request);
+        sendJson(response, result, result.duplicate ? 200 : 202);
+        if (!result.duplicate) scheduleIngestRebuild(Number(url.searchParams.get("limit") ?? 30));
+        return;
+      }
+
       if (url.pathname === "/api/health") {
         sendJson(response, {
           ok: true,
@@ -1798,6 +1957,7 @@ function serveLocalApp(values = []) {
           stateDir,
           version: readPackageVersion(),
           now: new Date().toISOString(),
+          github: buildGitHubVisibility(),
           lastWrite: persistence.getLastWrite(),
           quarantined: persistence.getQuarantined(),
         });
@@ -1916,10 +2076,12 @@ function serveLocalApp(values = []) {
       const explicitCode = error && typeof error === "object" && typeof error.code === "string" ? error.code : null;
       const code = explicitCode === "VALIDATION"
         ? "VALIDATION"
+        : explicitCode === "AUTH"
+          ? "AUTH"
         : explicitCode === "PERSIST_WRITE_FAIL"
           ? "PERSIST_WRITE_FAIL"
           : "INTERNAL";
-      const status = code === "VALIDATION" ? 400 : code === "PERSIST_WRITE_FAIL" ? 503 : 500;
+      const status = code === "VALIDATION" ? 400 : code === "AUTH" ? 401 : code === "PERSIST_WRITE_FAIL" ? 503 : 500;
       sendJson(response, { ok: false, code, message }, status);
     }
   });
@@ -1958,17 +2120,130 @@ function readLinks() {
   return readJsonSafe(linksPath, {});
 }
 
+function readGitHubActivity() {
+  return readJsonSafe(githubActivityPath, undefined);
+}
+
+function readGitHubWebhookStore() {
+  return readJsonSafe(githubWebhookPath, { schemaVersion: 1, source: "github_webhook", deliveries: [] });
+}
+
+function buildGitHubVisibility(activity = readGitHubActivity()) {
+  const config = readConfig();
+  const status = getGitHubStatus({ config, env: process.env });
+  const webhookStore = readGitHubWebhookStore();
+  const changedFiles = new Set([
+    ...(activity?.commits ?? []).flatMap((commit) => commit.files ?? []),
+    ...(activity?.pullRequests ?? []).flatMap((pull) => pull.files ?? []),
+  ]);
+  return {
+    ...status,
+    lastSyncAt: config.githubLastSyncAt ?? activity?.syncedAt,
+    activity: activity ? {
+      repoFullName: activity.repoFullName,
+      syncedAt: activity.syncedAt,
+      commits: activity.commits?.length ?? 0,
+      pullRequests: activity.pullRequests?.length ?? 0,
+      changedFiles: changedFiles.size,
+    } : undefined,
+    webhook: {
+      status: process.env.AWM_GITHUB_WEBHOOK_SECRET ? "ready" : "needs_setup",
+      path: "/api/github/webhook",
+      deliveries: webhookStore.deliveries?.length ?? 0,
+      lastDeliveryAt: webhookStore.updatedAt,
+    },
+  };
+}
+
+async function receiveGitHubWebhook(request) {
+  ensureState();
+  const secret = process.env.AWM_GITHUB_WEBHOOK_SECRET;
+  if (!secret) throw validationError("AWM_GITHUB_WEBHOOK_SECRET is required.");
+  const rawBody = await readRequestBody(request, { maxBytes: GITHUB_WEBHOOK_MAX_BYTES });
+  const signature = headerValue(request, "x-hub-signature-256");
+  if (!verifyGitHubWebhookSignature({ secret, payload: rawBody, signature })) {
+    throw authError("GitHub webhook signature verification failed.");
+  }
+  const deliveryId = headerValue(request, "x-github-delivery");
+  const event = headerValue(request, "x-github-event");
+  if (!deliveryId) throw validationError("X-GitHub-Delivery is required.");
+  if (!event) throw validationError("X-GitHub-Event is required.");
+
+  let payload;
+  try {
+    payload = JSON.parse(rawBody.toString("utf8"));
+  } catch {
+    throw validationError("GitHub webhook payload must be JSON.");
+  }
+
+  const delivery = normalizeGitHubWebhookDelivery({
+    event,
+    deliveryId,
+    payload,
+    receivedAt: new Date().toISOString(),
+  });
+  const config = readConfig();
+  const configuredRepo = normalizeRepoFullName(config.repoFullName ?? config.repo);
+  if (configuredRepo && delivery.repoFullName && configuredRepo !== delivery.repoFullName) {
+    throw validationError("GitHub webhook repository does not match the linked repo.");
+  }
+
+  const payloadSha256 = hashGitHubWebhookPayload(rawBody);
+  const saved = await saveGitHubWebhookDelivery(delivery, payloadSha256);
+  return {
+    ok: true,
+    status: saved.duplicate ? "duplicate" : "accepted",
+    duplicate: saved.duplicate,
+    deliveryId: delivery.deliveryId,
+    event: delivery.event,
+    action: delivery.action,
+    repoFullName: delivery.repoFullName,
+    commits: delivery.commits.length,
+    pullRequests: delivery.pullRequests.length,
+  };
+}
+
+async function saveGitHubWebhookDelivery(delivery, payloadSha256) {
+  return runQueued(githubWebhookPath, () => {
+    const result = addGitHubWebhookDeliveryToStore(readGitHubWebhookStore(), delivery, payloadSha256);
+    if (result.replayMismatch) throw validationError("GitHub webhook delivery replay mismatch.");
+    if (result.duplicate) {
+      emitEvent("github.webhook.duplicate", {
+        deliveryId: delivery.deliveryId,
+        event: delivery.event,
+        repoFullName: delivery.repoFullName,
+      });
+      return result;
+    }
+
+    const activity = mergeGitHubWebhookDelivery(readGitHubActivity(), delivery);
+    if (activity) atomicWriteJsonSync(githubActivityPath, activity);
+    atomicWriteJsonSync(githubWebhookPath, result.store);
+    emitEvent("github.webhook.accepted", {
+      deliveryId: delivery.deliveryId,
+      event: delivery.event,
+      repoFullName: delivery.repoFullName,
+      commits: delivery.commits.length,
+      pullRequests: delivery.pullRequests.length,
+    });
+    return result;
+  });
+}
+
 function saveManualSession(body) {
   ensureState();
   const summary = maskSecrets(String(body.summary ?? "")).trim();
   if (!summary) throw validationError("Session summary is required.");
   const id = body.id ? String(body.id) : `manual_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
   const cwdValue = body.cwd ? String(body.cwd) : cwd;
+  const repoFullName = normalizeRepoFullName(body.repoFullName ?? body.repo);
   const session = {
     id,
     tool: normalizeToolName(body.tool),
     actor: body.actor ? maskSecrets(String(body.actor)).slice(0, 80) : "로컬 사용자",
-    repo: body.repo ? maskSecrets(String(body.repo)).slice(0, 120) : undefined,
+    repo: body.repo ? maskSecrets(String(body.repo)).slice(0, 120) : repoFullName,
+    repoFullName,
+    repoRoot: body.repoRoot ? String(body.repoRoot) : cwdValue,
     cwd: cwdValue,
     summary: summary.slice(0, 1_500),
     changed: body.changed ? maskSecrets(String(body.changed)).slice(0, 1_000) : "",
@@ -2175,6 +2450,30 @@ async function readRequestJson(request) {
   const text = Buffer.concat(chunks).toString("utf8");
   if (!text.trim()) return {};
   return JSON.parse(text);
+}
+
+async function readRequestBody(request, { maxBytes } = {}) {
+  const chunks = [];
+  let total = 0;
+  for await (const chunk of request) {
+    const buffer = Buffer.from(chunk);
+    total += buffer.length;
+    if (maxBytes && total > maxBytes) throw validationError("Request body is too large.");
+    chunks.push(buffer);
+  }
+  return Buffer.concat(chunks);
+}
+
+function headerValue(request, name) {
+  const value = request.headers[name.toLowerCase()];
+  if (Array.isArray(value)) return value[0];
+  return value ? String(value) : undefined;
+}
+
+function authError(message) {
+  const error = new Error(message);
+  error.code = "AUTH";
+  return error;
 }
 
 function saveWikiEntry(body) {
