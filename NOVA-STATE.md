@@ -54,7 +54,8 @@
 > --emergency 또는 Evaluator 우회 시 기록. 미기록 = Hard-Block.
 
 ## Last Activity
-- /nova:check (운영 체계 v0) → PASS — PARA(areas/operations·regulatory·customer) + git-crypt 룰 + Weekly Review 템플릿 + cost-stages 신규 6개 파일, CLAUDE.md 갱신, M1 기술 결정 5개(Clerk·Supabase Tokyo·Fly NRT·RLS·Workspace API Key) 확정 | 2026-05-10
+- /nova:check (ops sync v0 files) → PASS — 직전 76cc810 commit이 staging 누락한 6개 신규 파일(.claude/rules/operations-sync.md + docs/areas/{operations,regulatory,customer}) + CLAUDE.md edit 보완 commit | 2026-05-10
+- /nova:check (운영 체계 v0) → PASS — PARA + git-crypt 룰 + Weekly Review + M1 기술 결정 5개(Clerk·Supabase Tokyo·Fly NRT·RLS·Workspace API Key) 확정 | 2026-05-10
 - /nova:evaluator (PRD v2) → CONDITIONAL PASS — TOC 23행 임의기간 1건 수정·Warnings 4건 v2.1로, 자산 명세·시장 신호·1인 운영 회로 정합 | 2026-05-10
 - PRD v2 11섹션 작성 완료 → docs/PRD.md (914줄). v1은 docs/archive/PRD-v1-tech-validation.md로 이동 | 2026-05-10
 - /nova:review (Standard) → PASS — Critical 0 / Warning 1 / Info 1 | 2026-05-10

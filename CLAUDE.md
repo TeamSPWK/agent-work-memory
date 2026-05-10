@@ -52,9 +52,17 @@ npm run dev         # vite dev server (UI 작업 시)
 PRD/페르소나/GTM/Roadmap 작성·수정 시 반드시 `.claude/rules/prd-and-strategy-collaboration.md` 5개 원칙을 적용한다.
 요약: (1) 시장 신호 직접 조사, (2) 가상 회사·인물명 금지, (3) 사용자 직군 편견 금지, (4) 임의 기간 milestone 금지, (5) 1인 프로젝트 제약 반영.
 
+## 운영 동기화 (1인 창업자 sustainability)
+운영 결정·고객 데이터·비용·규제 변경 시 반드시 `.claude/rules/operations-sync.md`를 따른다.
+- 문서: PARA 구조 (`docs/projects/`·`docs/areas/`·`docs/resources/`·`docs/archive/`). 새 .md는 PARA 위치 결정 후 작성.
+- 운영 데이터: `data/` + git-crypt (민감 파일만 암호화).
+- 매주 30분 Weekly Review (`docs/areas/operations/weekly-review.md`).
+- 정합성 스크립트 `npm run check:docs` (구현 예정).
+- 회피: Notion·Airtable 외부 SaaS 운영 데이터 X / 매일 회고 X / docs 루트에 무계획 .md 추가 X.
+
 ## 프로젝트 정체성
-- agent-work-memory는 jay@spacewalk.tech **1인 프로젝트**.
-- 모든 결정(PRD·architecture·GTM)에 1인 운영 가능성이 제약 조건으로 들어간다.
+- agent-work-memory는 jay@spacewalk.tech **1인 프로젝트** (Spacewalk 사업자 명의).
+- 모든 결정(PRD·architecture·GTM·운영)에 1인 운영 가능성이 제약 조건으로 들어간다.
 - 협업 원칙은 *git에 들어가는 프로젝트 내부 파일*에만 둔다. 개인 글로벌 메모리는 작업 환경/사용자/AI 도구가 달라지면 무의미하므로 사용 안 함.
 
 ## Claude Code 특화
