@@ -1,16 +1,20 @@
 # Nova State
 
 ## Current
-- **Goal**: D0 Discovery — 1차 타겟(SaaS·이커머스 SMB 10~50명) 인터뷰 5건 + PRD v2 가설 검증
-- **Phase**: planning (PRD v2 done, D0 진입 대기 — 인터뷰 protocol·고객 후보 리스트 준비 중)
-- **Blocker**: none — Spacewalk 내부 + 디스콰이엇 + GeekNews 3중 채널 시작점 결정 필요
+- **Goal**: M1 Foundation — 회원가입·팀 워크스페이스·서버 webhook·기존 CLI 연결 (PRD §10.1)
+- **Phase**: planning (M1 Plan 작성 중. 기술 결정 5개 — Auth·DB·Hosting·워크스페이스 모델·CLI 인증 캐치볼 단계)
+- **Blocker**: 기술 결정 5개 미정. 사용자 결정: D0 인터뷰는 보류·dogfooding으로 대체. 구현 우선.
 
 ## Tasks
 | Task | Status | Verdict | Note |
 |------|--------|---------|------|
-| PRD v2 (Product / B2B) 11섹션 작성 | done | CONDITIONAL PASS — Evaluator: Critical 1(TOC 임의기간) 수정 후 / Warnings 4건 v2.1 보완 | docs/PRD.md (914줄), v1은 docs/archive/PRD-v1-tech-validation.md |
-| D0 인터뷰 protocol·고객 후보 리스트 | pending | — | §8.2 1차 3중 채널, §8.3 5개 질문 |
-| M1 Foundation 구현 (회원가입·팀·서버 webhook) | pending | — | §10.1, 자산 재사용 § 9.5 |
+| PRD v2 (Product / B2B) 11섹션 작성 | done | CONDITIONAL PASS — Evaluator: Critical 1 수정 / Warnings 4건 v2.1 보완 | docs/PRD.md (914줄), v1은 docs/archive/PRD-v1-tech-validation.md |
+| 운영 체계 v0 도입 (PARA + git-crypt + Weekly Review) | done | PASS — 5개 라우터 + 운영 룰 신규, CLAUDE.md 갱신 | .claude/rules/operations-sync.md, docs/areas/* |
+| M1 기술 결정 5개 (Auth·DB·Hosting·Tenant·CLI Auth) | done | PASS — Clerk + Supabase Tokyo + Fly.io NRT + Row-level RLS + Workspace API Key | 5개 병렬 Agent 조사 결과 |
+| M1 Foundation Plan 작성 | pending | — | docs/projects/plans/m1-foundation.md (다음 commit) |
+| M1 Foundation 구현 | pending | — | §10.1, 자산 재사용 §9.5. Plan 승인 후 |
+| 정합성 검증 스크립트 (`npm run check:docs`) | pending | — | 운영 룰 §5 |
+| D0 Discovery 인터뷰 | deferred | — | 사용자 결정 — dogfooding으로 대체 검토 |
 
 ## Recently Done (최근 3개만)
 | Task | Completed | Verdict | Ref |
@@ -50,16 +54,21 @@
 > --emergency 또는 Evaluator 우회 시 기록. 미기록 = Hard-Block.
 
 ## Last Activity
+- /nova:check (운영 체계 v0) → PASS — PARA(areas/operations·regulatory·customer) + git-crypt 룰 + Weekly Review 템플릿 + cost-stages 신규 6개 파일, CLAUDE.md 갱신, M1 기술 결정 5개(Clerk·Supabase Tokyo·Fly NRT·RLS·Workspace API Key) 확정 | 2026-05-10
 - /nova:evaluator (PRD v2) → CONDITIONAL PASS — TOC 23행 임의기간 1건 수정·Warnings 4건 v2.1로, 자산 명세·시장 신호·1인 운영 회로 정합 | 2026-05-10
-- PRD v2 11섹션 작성 완료 → docs/PRD.md (914줄). v1은 docs/archive/PRD-v1-tech-validation.md로 이동. 협업 룰 5개 .claude/rules/prd-and-strategy-collaboration.md로 이전 (글로벌 메모리 X) | 2026-05-10
+- PRD v2 11섹션 작성 완료 → docs/PRD.md (914줄). v1은 docs/archive/PRD-v1-tech-validation.md로 이동 | 2026-05-10
 - /nova:review (Standard) → PASS — Critical 0 / Warning 1 / Info 1 | 2026-05-10
 - S4 + S2.5 → dead CSS 100+줄 일소, 컴포넌트 추출 (SessionCard·ExplainBackPanel·WorkPacketCard) | 2026-05-10
 - S3 Risk Radar / Incident Replay → tabs 실제 필터·키워드 필터·empty state | 2026-05-10
 - S2.1~2.3 → 헬퍼 13·primitives 11·cards 3 추출, App↔Today 순환 import 해소 | 2026-05-09
 
 ## Refs
-- PRD v2: docs/PRD.md (활성, 2026-05-10)
+- PRD v2: docs/PRD.md (활성, 2026-05-10) — 점진 이동 예정 (docs/resources/PRD.md)
 - PRD v1: docs/archive/PRD-v1-tech-validation.md (보존)
-- 협업 원칙: .claude/rules/prd-and-strategy-collaboration.md (PRD/페르소나/GTM 작업 시 5개 원칙 적용)
-- Plans: docs/plans/ui-redesign-calm-operations.md (S1 완료), docs/plans/github-app-integration.md (완료)
-- Design: docs/DESIGN_SYSTEM.md / Competitive: docs/COMPETITIVE_LANDSCAPE.md
+- **협업 룰**: .claude/rules/prd-and-strategy-collaboration.md (PRD/GTM 5원칙)
+- **운영 룰**: .claude/rules/operations-sync.md (PARA + git-crypt + Weekly Review + 정합성 검증)
+- Operations Area: docs/areas/operations/{README, cost-stages, weekly-review-template}.md
+- Regulatory Area: docs/areas/regulatory/README.md
+- Customer Area: docs/areas/customer/README.md
+- Plans: docs/plans/ui-redesign-calm-operations.md (S1 완료), docs/plans/github-app-integration.md (완료) — 점진 이동 예정 (docs/projects/plans/)
+- Design / Competitive: docs/DESIGN_SYSTEM.md / docs/COMPETITIVE_LANDSCAPE.md — 점진 이동 예정 (docs/resources/)
