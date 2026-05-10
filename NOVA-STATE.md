@@ -1,30 +1,30 @@
 # Nova State
 
 ## Current
-- **Goal**: P0 프로토타입 3개 화면 — 외부 의존성(Supabase·Clerk·Fly.io) 결정 전 본인 dogfooding 검증
-- **Phase**: implementing (P0.1 Audit Export done · P0.2 Reviewer Brief / P0.3 Incident Replay 대기)
-- **Blocker**: 사용자 dogfooding 평가 → 다음 화면 진입 결정. M1 외부 작업은 P0 종료 후 재검토.
+- **Goal**: Design-First Restart — Claude Artifact로 PRD 11화면 시각 시안 후 새 stack 결정·새 코드
+- **Phase**: design (v1 코드 archive 완료, Master Prompt v2 박힘. 사용자 Claude.ai 시안 작업 대기)
+- **Blocker**: 사용자 Claude.ai Artifact 시안 1차 생성 → 평가 → step prompt deep dive 결정
 
 ## Tasks
 | Task | Status | Verdict | Note |
 |------|--------|---------|------|
-| P0.1 Audit Export 화면 | done | PASS — vite build 1579 modules, 진짜 .awm/ 데이터 + CSV export | src/screens/Audit.tsx |
-| P0.2 Reviewer Brief 화면 | pending | — | P0.1 dogfooding 평가 후 |
-| P0.3 Incident Replay 화면 | pending | — | P0.2 평가 후, S3 시안 30% 자산 |
-| M1.1~M1.5 (외부 작업 보류) | deferred | — | P0 3개 종료 후 진입 재검토 |
-| 정합성 검증 (npm run check:docs) | pending | — | 운영 룰 §5 |
+| v1 archive — 코드·plan·v1 stack 의존 docs 모두 main 제거 | done | PASS — legacy-v1 브랜치 + tag 보존, 22 tracked files만 남김 | 44 files / 17,142 deletions |
+| Master Prompt v2 (PRD 11화면 전체) | done | PASS — PRD ↔ prompt 매핑 검증 §1~§11 모두 포섭 (§8·§10 의도적 미반영 명시) | docs/projects/plans/p0-claude-design-prompts.md |
+| Claude Artifact 시안 생성 (사용자) | pending | — | 사용자가 Master v2 복붙 후 평가 |
+| 시안 수렴 → 새 stack 결정 | pending | — | 백엔드도 새로 결정 |
+| 시안 → 코드 이식 | pending | — | 새 src/ 디렉토리 |
 
 ## Recently Done
 | Task | Completed | Verdict | Ref |
 |------|-----------|---------|-----|
-| P0 spec + P0.1 Audit Export | 2026-05-10 | PASS | docs/projects/plans/p0-prototype-3-screens.md, src/screens/Audit.tsx |
-| M1.1 Supabase schema·RLS migration | 2026-05-10 | PASS (형식) — 실행 검증 보류 | supabase/migrations/000{1,2}*.sql |
-| M1 Foundation Plan + 운영 체계 v0 + PRD v2 | 2026-05-10 | PASS / PASS / CONDITIONAL PASS | docs/projects/plans/m1-foundation.md, docs/areas/*, docs/PRD.md |
+| v1 archive (Design-First Restart) | 2026-05-10 | PASS | legacy-v1 브랜치, legacy-v1-2026-05-10 tag |
+| P0.1 Audit Export prototype (v1, archive 됨) | 2026-05-10 | INSUFFICIENT — PRD 가치 못 전달 | legacy-v1:src/screens/Audit.tsx |
+| PRD v2 (제품화 PRD) | 2026-05-10 | CONDITIONAL PASS — Critical 1 수정 / Warnings 4건 v2.1 보완 | docs/PRD.md |
 
 ## Known Risks (PRD §11 압축)
 | 위험 | 심각도 | 상태 |
 |------|--------|------|
-| 시장 가설 (한국 SMB Audit 결제 의지) | 높음 | dogfooding 검증 |
+| 시장 가설 (한국 SMB Audit 결제 의지) | 높음 | 디자인 수렴 후 dogfooding 검증 |
 | 1인 운영 키맨 위험 | 높음 | 자동화 + 계약 투명 공개 |
 | Audit Layer 외부 신뢰성 | 중간 | v2.x WORM으로 미룸 |
 | 인공지능기본법 SMB 강제력 | 중간 | 법무 자문 + FSC 추적 |
@@ -35,15 +35,15 @@
 | — | — | — |
 
 ## Last Activity
-- /nova:check (P0.1 Audit Export) → PASS — vite build 1579 modules, src/screens/Audit.tsx + App.tsx nav 추가 + styles.css audit 섹션, 진짜 .awm/events.jsonl 동작·CSV export·해시 체인 placeholder | 2026-05-10
-- /nova:check (M1.1 Supabase schema·RLS) → PASS (형식) — migration 0001/0002 + .env.example + setup 가이드, 실행 검증은 사용자 외부 작업 후 | 2026-05-10
-- /nova:check (ops sync v0 + M1 Plan) → PASS — PARA + git-crypt + Weekly Review + 5개 라우터 + cost-stages, M1 의존성 그래프 | 2026-05-10
-- /nova:evaluator (PRD v2) → CONDITIONAL PASS — TOC 23행 임의기간 수정·Warnings 4건 v2.1 | 2026-05-10
+- /nova:check (Master Prompt v2) → PASS — PRD 11화면 전체 시각화 prompt 작성, PRD §1~§11 매핑 검증(§8·§10 의도 제외 명시), Step Prompts 4개 + 이식 가이드 + v1 fallback 보존 | 2026-05-10
+- /nova:check (Design-First Restart) → PASS — v1 전체 archive (legacy-v1 브랜치 + legacy-v1-2026-05-10 tag), main 23 files (docs·rules만), README/CLAUDE.md 갱신 | 2026-05-10
+- /nova:check (P0.1 Audit Export) → INSUFFICIENT — vite build PASS이지만 사용자 dogfooding 결과 "PRD를 느껴볼 수준 아님" — 코드 인프라가 시각 탐색 느리게 함 | 2026-05-10
+- /nova:evaluator (PRD v2) → CONDITIONAL PASS — Critical 1 수정·Warnings 4건 v2.1 | 2026-05-10
 
 ## Refs
 - PRD v2: docs/PRD.md / v1: docs/archive/PRD-v1-tech-validation.md
 - 협업·운영 룰: .claude/rules/{prd-and-strategy-collaboration, operations-sync}.md
-- M1 Plan: docs/projects/plans/m1-foundation.md
-- Areas: docs/areas/{operations, regulatory, customer}/README.md
-- Supabase: docs/areas/operations/supabase-setup.md + supabase/migrations/000{1,2}*.sql + .env.example
+- 디자인 prompt: docs/projects/plans/p0-claude-design-prompts.md (v2 갱신 대기)
+- Areas: docs/areas/{operations, regulatory, customer}/README.md (cost-stages·supabase-setup은 v1 stack 의존이라 archive)
+- v1 자산 회수: `git checkout legacy-v1` 또는 `git show legacy-v1-2026-05-10:<path>`
 - v2.1 Warnings: §1 Vercel·Byline 출처 / §6·§9 자산 재사용 기준 / §7.5 50% 할인 / §7.6 Active OP 분쟁
