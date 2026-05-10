@@ -17,23 +17,64 @@ import {
   History,
   Link2,
   MessageSquareText,
+  Moon,
   Plus,
   Radar,
   RefreshCcw,
   Search,
   Settings,
   ShieldAlert,
+  Sun,
   Terminal,
   Upload,
 } from "lucide-react";
 import {
   captureAdapters,
 } from "./data/sampleData";
+import { WorkPacketCard } from "./components/packets/WorkPacketCard";
+import { ExplainBackPanel } from "./components/sessions/ExplainBackPanel";
+import { SessionCard } from "./components/sessions/SessionCard";
+import {
+  RepoCard,
+  RiskCard,
+  TimelineList,
+} from "./components/shared/Cards";
+import {
+  AdapterStatusBadge,
+  Badge,
+  CircleInfoIcon,
+  EvidenceLink,
+  Fact,
+  InfoBlock,
+  Metric,
+  SectionHeader,
+  SeverityBadge,
+  StatusBadge,
+  StatusText,
+} from "./components/shared/Primitives";
+import {
+  compactPath,
+  compactRepo,
+  displayRiskTitle,
+  displaySessionTitle,
+  displayText,
+  formatDateTime,
+  formatSessionTime,
+  labelForCommitMatch,
+  labelForEnvironment,
+  labelForLoadStatus,
+  labelForPriority,
+  labelForTimelineType,
+  limitText,
+  normalizeLogText,
+} from "./lib/format";
+import { TodayScreen } from "./screens/Today";
 import type {
   CaptureAdapter,
   EvidenceLink as EvidenceLinkType,
   RepositoryActivity,
   CommitCandidate,
+  RiskCategory,
   RiskEvent,
   RiskSeverity,
   TerminalEvent,
@@ -169,6 +210,24 @@ function App() {
     github?: GitHubVisibility;
   } | null>(null);
   const [persistBannerDismissed, setPersistBannerDismissed] = React.useState<string>("");
+  const [theme, setTheme] = React.useState<"light" | "dark">(() => {
+    if (typeof document === "undefined") return "light";
+    const current = document.documentElement.getAttribute("data-theme");
+    return current === "dark" ? "dark" : "light";
+  });
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    try {
+      window.localStorage.setItem("awm-theme", theme);
+    } catch {
+      // localStorage 불가 환경 — 무음
+    }
+  }, [theme]);
+
+  const toggleTheme = React.useCallback(() => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  }, []);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -619,6 +678,15 @@ function App() {
               <CalendarDays size={16} />
               <input aria-label="날짜" defaultValue="2026-05-07" type="date" />
             </label>
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              type="button"
+              aria-label={theme === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
+              title={theme === "dark" ? "라이트 모드" : "다크 모드"}
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <button className="button secondary" disabled={isMvpLoading} onClick={() => loadMvp(true)} type="button">
               <RefreshCcw className={isMvpLoading ? "spin" : ""} size={16} />
               {isMvpLoading ? "불러오는 중" : "새로고침"}
@@ -714,82 +782,6 @@ function titleForNav(activeNav: NavKey) {
   return found?.label ?? "오늘";
 }
 
-function displaySessionTitle(session: WorkSession) {
-  return displayText(session.title, `${session.tool} 세션 확인`, 72).replace(/\s*위험 신호$/, "");
-}
-
-function displayRiskTitle(risk: RiskEvent) {
-  const title = risk.title.replace(/\s*위험 신호$/, "");
-  return `${displayText(title, "운영에 영향이 있을 수 있는 작업", 72)} 위험 신호`;
-}
-
-function displayText(value: string | undefined, fallback: string, maxLength = 120) {
-  const normalized = normalizeLogText(value ?? "", fallback);
-  return limitText(normalized || fallback, maxLength);
-}
-
-function normalizeLogText(value: string, fallback: string) {
-  const text = value
-    .replace(/\\n/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!text) return fallback;
-
-  const sessionTitle = text.match(/["']sessionTitle["']\s*:\s*["']([^"']{4,160})["']/i)?.[1];
-  if (sessionTitle) return sessionTitle;
-
-  if (/<permissions instructions>|Filesystem sandboxing|sandbox_mode|danger-full-access/i.test(text)) {
-    return "로컬 권한/샌드박스 설정 확인";
-  }
-
-  if (/hookSpecificOutput|hookEventName|CLAUDE_PLUGIN_ROOT|session-start/i.test(text)) {
-    return "에이전트 세션 시작 훅 확인";
-  }
-
-  if (/Knowledge cutoff|You are Codex|AGENTS\.md instructions|# Personal Global|AI Coding Discipline|# Collaboration Mode|## Apps \(Connectors\)|## Plugins|## Skills|Codex desktop context|request_user_input availability|<environment_context>|<app-context>|<skills_instructions>/i.test(text)) {
-    return fallback;
-  }
-
-  if (/^[{[]/.test(text) && text.length > 80) return fallback;
-  return text.replace(/<[^>]{1,80}>/g, "").trim() || fallback;
-}
-
-function compactRepo(repo: string) {
-  const normalized = repo.replace(/^local\//, "").replace(/^\/Users\/keunsik\/develop\//, "");
-  const parts = normalized.split("/").filter(Boolean);
-  if (parts.length > 2) return parts.slice(-2).join("/");
-  return normalized || "로컬 작업 영역";
-}
-
-function compactPath(path: string) {
-  const parts = path.split("/").filter(Boolean);
-  const tail = parts.slice(-3);
-  if (tail.length === 0) return "로컬 세션";
-  const fileName = tail[tail.length - 1];
-  tail[tail.length - 1] = limitText(fileName, 38);
-  return tail.join("/");
-}
-
-function formatDateTime(value?: string) {
-  if (!value) return "대기 중";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("ko-KR");
-}
-
-function labelForCommitMatch(index: number, candidate: CommitCandidate) {
-  if (candidate.confirmed) return "연결됨";
-  if (candidate.rejected) return "제외됨";
-  if (index === 0) return "시간상 가장 가까움";
-  if (index === 1) return "비슷한 시간";
-  return "그 밖의 커밋";
-}
-
-function limitText(value: string, maxLength: number) {
-  const text = value.replace(/\s+/g, " ").trim();
-  return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
-}
-
 function LoadingProgress({ initial = false }: { initial?: boolean }) {
   const steps = [
     "로컬 세션 파일 확인",
@@ -838,179 +830,6 @@ function LoadError({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-function TodayScreen({
-  confirmedCommitCount,
-  highRiskCount,
-  ingestedSessionCount,
-  ingestStatus,
-  ingestedAt,
-  isLoading,
-  needsExplanationCount,
-  onOpenSession,
-  onSaveWiki,
-  privacy,
-  repositories,
-  reviewQueueCount,
-  riskEvents,
-  sessions,
-  sourceSummary,
-  timeline,
-  totalChangedFiles,
-  totalCommits,
-  wikiSaveStatus,
-}: {
-  confirmedCommitCount: number;
-  highRiskCount: number;
-  ingestedSessionCount: number;
-  ingestStatus: "loading" | "ready" | "error";
-  ingestedAt?: string;
-  isLoading: boolean;
-  needsExplanationCount: number;
-  onOpenSession: (id: string) => void;
-  onSaveWiki: () => void;
-  privacy?: MvpResponse["privacy"];
-  repositories: RepositoryActivity[];
-  reviewQueueCount: number;
-  riskEvents: RiskEvent[];
-  sessions: WorkSession[];
-  sourceSummary?: string;
-  timeline: TimelineEvent[];
-  totalChangedFiles: number;
-  totalCommits: number;
-  wikiSaveStatus: "idle" | "saving" | "saved" | "error";
-}) {
-  const reviewQueue = sessions.filter((session) => session.status !== "reviewed").slice(0, 5);
-  const topRepos = repositories.slice(0, 5);
-  const topRisks = riskEvents.slice(0, 3);
-  const recentTimeline = timeline.slice(-5).reverse();
-  const isReady = ingestStatus === "ready";
-
-  return (
-    <>
-      <section className="mvp-hero" aria-label="MVP 상태">
-        <div>
-          <Badge label={isReady ? "실제 로컬 데이터" : labelForLoadStatus(ingestStatus)} tone={ingestStatus === "error" ? "risk" : "info"} />
-          <h2>오늘 설명이 필요한 에이전트 작업을 먼저 줄입니다.</h2>
-          <p>
-            로컬 Claude/Codex 세션과 커밋 후보를 읽고, 팀에 설명하기 어려운 작업부터 보여줍니다.
-            목표는 기록 수집이 아니라 오늘 한 일을 사람이 설명 가능한 상태로 만드는 것입니다.
-          </p>
-        </div>
-        <div className="mvp-status-panel">
-          <Fact label="읽은 기록" value={sourceSummary || "로컬 세션 없음"} />
-          <Fact label="최근 갱신" value={ingestedAt ? new Date(ingestedAt).toLocaleString("ko-KR") : "대기 중"} />
-          <Fact label="저장 방식" value={privacy?.rawTranscriptStored === false ? "원문 미저장" : "확인 필요"} />
-          {isLoading ? <Fact label="현재 상태" value="세션과 커밋을 다시 확인하는 중" /> : null}
-        </div>
-      </section>
-
-      <section className="metrics-grid compact" aria-label="오늘 요약">
-        <Metric label="읽은 세션" value={ingestedSessionCount.toString()} />
-        <Metric label="작업 영역" value={repositories.length.toString()} />
-        <Metric label="설명 필요" value={reviewQueueCount.toString()} tone="unknown" />
-        <Metric label="연결한 커밋" value={confirmedCommitCount.toString()} />
-      </section>
-
-      <DailyFlowGuide
-        firstSessionId={reviewQueue[0]?.id}
-        onOpenSession={onOpenSession}
-      />
-
-      <div className="today-layout focused">
-        <div className="today-column">
-          <section className="content-section">
-            <SectionHeader eyebrow="1단계" title="오늘 작업한 영역" />
-            <div className="repo-grid compact">
-              {topRepos.map((repo) => (
-                <RepoCard key={repo.id} repo={repo} />
-              ))}
-            </div>
-            {repositories.length > topRepos.length ? (
-              <p className="section-note">나머지 {repositories.length - topRepos.length}개 레포는 숨겼습니다. 먼저 볼 작업 영역만 남겼습니다.</p>
-            ) : null}
-          </section>
-
-          <section className="content-section">
-            <SectionHeader eyebrow="2단계" title="오늘 설명해야 할 작업" />
-            <div className="stack-list compact">
-              {reviewQueue.map((session) => (
-                <button
-                  className="work-card interactive compact"
-                  key={session.id}
-                  onClick={() => onOpenSession(session.id)}
-                  type="button"
-                >
-                  <div className="work-card-head">
-                    <Badge label={session.tool} />
-                    <StatusBadge status={session.status} />
-                  </div>
-                  <h3>{displaySessionTitle(session)}</h3>
-                  <p>{displayText(session.workBrief?.handoff ?? session.intentSummary, "팀에 설명할 내용을 더 확인해야 합니다.", 132)}</p>
-                  <div className="meta-row muted">
-                    <span>{compactRepo(session.repo)}</span>
-                    <span>{session.workBrief?.missing?.length ?? session.unresolved.length}개 확인 필요</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-            {reviewQueueCount > reviewQueue.length ? (
-              <p className="section-note">총 {reviewQueueCount}개 중 우선순위 5개만 보여줍니다.</p>
-            ) : null}
-          </section>
-
-          <section className="content-section wiki-draft">
-            <SectionHeader eyebrow="3단계" title="오늘 기록으로 저장" />
-            <div className="draft-block">
-              <p>
-                {repositories.length}개 작업 영역, 최근 {sessions.length}개 세션, 위험 신호 {riskEvents.length}개를
-                오늘의 작업 기록으로 저장합니다.
-              </p>
-              <button
-                className="button primary compact"
-                disabled={wikiSaveStatus === "saving"}
-                onClick={onSaveWiki}
-                type="button"
-              >
-                <BookOpen size={16} />
-                {wikiSaveStatus === "saving"
-                  ? "저장 중"
-                  : wikiSaveStatus === "saved"
-                    ? "저장됨"
-                    : wikiSaveStatus === "error"
-                      ? "다시 저장"
-                      : "기록 저장"}
-              </button>
-            </div>
-          </section>
-        </div>
-
-        <div className="today-column">
-          <section className="content-section">
-            <SectionHeader eyebrow="위험" title="먼저 확인할 위험 신호" />
-            {topRisks.length > 0 ? (
-              <div className="stack-list compact">
-                {topRisks.map((risk) => (
-                  <RiskCard key={risk.id} risk={risk} />
-                ))}
-              </div>
-            ) : (
-              <div className="empty-state compact">
-                <ShieldAlert size={18} />
-                <p>지금은 먼저 볼 위험 신호가 없습니다.</p>
-              </div>
-            )}
-          </section>
-
-          <section className="content-section">
-            <SectionHeader eyebrow="최근" title="최근 타임라인" />
-            <TimelineList events={recentTimeline} />
-          </section>
-        </div>
-      </div>
-    </>
-  );
-}
-
 function WorkPacketsScreen({
   packets,
   selectedPacket,
@@ -1049,32 +868,15 @@ function WorkPacketsScreen({
   return (
     <div className="split-layout packet-layout">
       <section className="content-section">
-        <SectionHeader eyebrow="작업 패킷" title="세션을 업무 단위로 묶어 보기" />
-        <p className="section-note">
-          최근 세션을 작업 영역과 요청 주제 기준으로 묶었습니다. 세션 하나보다 패킷 하나가 팀 공유 단위에 가깝습니다.
-        </p>
+        <SectionHeader eyebrow="작업 패킷" title="세션을 업무 단위로" />
         <div className="stack-list compact">
           {packets.map((packet) => (
-            <button
-              className={`packet-card ${selectedPacketId === packet.id ? "selected" : ""}`}
+            <WorkPacketCard
               key={packet.id}
-              onClick={() => setSelectedPacketId(packet.id)}
-              type="button"
-            >
-              <div className="work-card-head">
-                <Badge label={packet.evidenceGrade} tone={packet.evidenceGrade === "낮음" ? "risk" : "info"} />
-                <StatusBadge status={packet.status} />
-              </div>
-              <h3>{packet.title}</h3>
-              <p>{packet.summary}</p>
-              <div className="packet-score">
-                <span style={{ "--score": `${packet.evidenceScore}%` } as React.CSSProperties} />
-              </div>
-              <div className="meta-row muted">
-                <span>{compactRepo(packet.repo)}</span>
-                <span>세션 {packet.sessionCount}개 · 문서 {packet.issueNoteCount}개 · 커밋 후보 {packet.commitCandidateCount}개</span>
-              </div>
-            </button>
+              packet={packet}
+              selected={selectedPacketId === packet.id}
+              onSelect={setSelectedPacketId}
+            />
           ))}
         </div>
       </section>
@@ -1084,14 +886,14 @@ function WorkPacketsScreen({
         {selectedPacket ? (
           <>
             <section className="packet-hero">
-              <div>
-                <Badge label={`근거 ${selectedPacket.evidenceGrade}`} tone={selectedPacket.evidenceGrade === "낮음" ? "risk" : "info"} />
-                <h3>{selectedPacket.title}</h3>
-                <p>{selectedPacket.summary}</p>
+              <div className="packet-hero-meta">
+                <span>{compactRepo(selectedPacket.repo)}</span>
+                <span>·</span>
+                <span>마지막 활동 {selectedPacket.lastActivity}</span>
               </div>
               <div className="packet-score-large">
                 <strong>{selectedPacket.evidenceScore}</strong>
-                <span>근거 점수</span>
+                <span>근거 {selectedPacket.evidenceGrade}</span>
               </div>
             </section>
 
@@ -1106,7 +908,6 @@ function WorkPacketsScreen({
                 <div>
                   <p className="eyebrow">다음 판단</p>
                   <h3>{selectedPacket.nextAction}</h3>
-                  <p>이 패킷이 팀에 설명 가능한 상태인지 판단하기 위한 가장 가까운 액션입니다.</p>
                 </div>
                 <Badge label={selectedPacket.status === "reviewed" ? "마감됨" : "확인 필요"} tone={selectedPacket.status === "reviewed" ? "info" : "risk"} />
               </div>
@@ -1286,8 +1087,6 @@ function SessionsScreen({
             </button>
           }
         />
-        <p className="section-note">최근 {sessions.length}개 중 사람이 확인해야 할 작업을 먼저 보여줍니다.</p>
-        <SessionListGuide />
         <div className="session-view-switch" aria-label="작업 목록 보기 방식">
           <button
             className={sessionViewMode === "workspace" ? "active" : ""}
@@ -1378,8 +1177,6 @@ function SessionsScreen({
         <SectionHeader eyebrow="작업 상세" title={selectedSession ? displaySessionTitle(selectedSession) : "작업을 선택하세요"} />
         {selectedSession ? (
           <>
-            <DetailFlowGuide />
-
             <div className="detail-grid">
               <div className="fact-list">
                 <Fact label="도구" value={selectedSession.tool} />
@@ -1453,7 +1250,7 @@ function SessionsScreen({
               {reviewSaveStatus === "error" ? <p className="section-note">저장에 실패했습니다. 다시 시도해주세요.</p> : null}
             </section>
 
-            <ExplainBack key={selectedSession.id} session={selectedSession} />
+            <ExplainBackPanel key={selectedSession.id} session={selectedSession} />
             {selectedSession.reviewNote ? (
               <section className="subsection">
                 <h3>리뷰 메모</h3>
@@ -1465,53 +1262,6 @@ function SessionsScreen({
       </section>
     </div>
   );
-}
-
-function SessionCard({
-  onSelect,
-  selected,
-  session,
-}: {
-  onSelect: (id: string) => void;
-  selected: boolean;
-  session: WorkSession;
-}) {
-  return (
-    <button
-      className={`work-card interactive compact ${selected ? "selected" : ""}`}
-      onClick={() => onSelect(session.id)}
-      type="button"
-    >
-      <div className="work-card-head">
-        <div className="work-card-tools">
-          <Badge label={session.tool} />
-          {session.sourceKind === "manual" ? <Badge label="직접 추가" /> : null}
-        </div>
-        <div className="work-card-status">
-          <span className="session-time">{formatSessionTime(session)}</span>
-          <StatusBadge status={session.status} />
-        </div>
-      </div>
-      <h3>{displaySessionTitle(session)}</h3>
-      <p>{displayText(session.agentSummary, "에이전트 작업 요약을 더 확인해야 합니다.", 118)}</p>
-      <div className="meta-row muted">
-        <span>{compactRepo(session.repo)}</span>
-        <span>
-          후보 커밋 {session.commitCandidates?.length ?? session.linkedCommits.length}개
-          {session.flowSteps?.length ? ` · 흐름 ${session.flowSteps.length}단계` : ""}
-          {session.segmentCount && session.segmentIndex ? ` · ${session.segmentIndex}/${session.segmentCount}` : ""}
-          {session.confirmedCommits?.length ? ` · 연결됨 ${session.confirmedCommits.length}개` : ""}
-          {session.rejectedCommits?.length ? ` · 제외 ${session.rejectedCommits.length}개` : ""}
-        </span>
-      </div>
-    </button>
-  );
-}
-
-function formatSessionTime(session: WorkSession) {
-  return session.startedAt === session.endedAt
-    ? session.endedAt
-    : `${session.startedAt} - ${session.endedAt}`;
 }
 
 function groupSessionsByWorkspace(sessions: WorkSession[]) {
@@ -1651,26 +1401,70 @@ function CaptureSetupScreen({
 }
 
 function RiskRadarScreen({ riskEvents }: { riskEvents: RiskEvent[] }) {
+  const [activeCategory, setActiveCategory] = React.useState<RiskCategory | "All">("All");
+  const tabs: Array<RiskCategory | "All"> = [
+    "All",
+    "Database",
+    "Migration",
+    "Auth",
+    "Secret",
+    "Infra",
+    "Destructive",
+    "Large Diff",
+    "Failed Verification",
+  ];
+  const categoryCounts = React.useMemo(() => {
+    const counts: Partial<Record<RiskCategory, number>> = {};
+    for (const risk of riskEvents) counts[risk.category] = (counts[risk.category] ?? 0) + 1;
+    return counts;
+  }, [riskEvents]);
+  const filteredRisks =
+    activeCategory === "All"
+      ? riskEvents
+      : riskEvents.filter((risk) => risk.category === activeCategory);
+
   return (
     <div className="risk-layout">
       <section className="content-section">
         <SectionHeader eyebrow="Risk Radar" title="위험 신호" />
-        <div className="risk-tabs">
-          {["All", "Database", "Secret", "Large Diff", "Failed Verification"].map((tab) => (
-            <button className={tab === "All" ? "active" : ""} key={tab} type="button">
-              {tab}
-            </button>
-          ))}
+        <div className="risk-tabs" role="tablist" aria-label="위험 카테고리">
+          {tabs.map((tab) => {
+            const count = tab === "All" ? riskEvents.length : (categoryCounts[tab] ?? 0);
+            return (
+              <button
+                className={tab === activeCategory ? "active" : ""}
+                key={tab}
+                onClick={() => setActiveCategory(tab)}
+                role="tab"
+                aria-selected={tab === activeCategory}
+                type="button"
+              >
+                {tab === "All" ? "전체" : tab}
+                {count > 0 ? <span className="tab-count">{count}</span> : null}
+              </button>
+            );
+          })}
         </div>
-        <div className="stack-list">
-          {riskEvents.map((risk) => (
-            <RiskCard key={risk.id} risk={risk} />
-          ))}
-        </div>
+        {filteredRisks.length > 0 ? (
+          <div className="stack-list">
+            {filteredRisks.map((risk) => (
+              <RiskCard key={risk.id} risk={risk} />
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <ShieldAlert size={18} />
+            <p>
+              {activeCategory === "All"
+                ? "현재 위험 신호가 없습니다."
+                : `${activeCategory} 카테고리에 해당하는 위험 신호가 없습니다.`}
+            </p>
+          </div>
+        )}
       </section>
 
       <section className="content-section">
-        <SectionHeader eyebrow="Rules" title="기본 위험 경로" />
+        <SectionHeader eyebrow="규칙" title="기본 위험 경로" />
         <div className="path-list">
           {["db/", "migrations/", ".env", "secrets", "auth", ".github/workflows", "infra"].map(
             (path) => (
@@ -1686,7 +1480,17 @@ function RiskRadarScreen({ riskEvents }: { riskEvents: RiskEvent[] }) {
 }
 
 function IncidentReplayScreen({ timeline }: { timeline: TimelineEvent[] }) {
-  const incidentEvents = timeline.filter((event) => event.severity);
+  const [keyword, setKeyword] = React.useState("");
+  const incidentEvents = React.useMemo(() => {
+    const base = timeline.filter((event) => event.severity);
+    if (!keyword.trim()) return base;
+    const needle = keyword.trim().toLowerCase();
+    return base.filter((event) =>
+      [event.summary, event.actor, event.repo, event.type]
+        .filter(Boolean)
+        .some((field) => field.toLowerCase().includes(needle)),
+    );
+  }, [timeline, keyword]);
 
   return (
     <div className="incident-layout">
@@ -1695,40 +1499,41 @@ function IncidentReplayScreen({ timeline }: { timeline: TimelineEvent[] }) {
         <div className="filter-row">
           <label className="date-control">
             <CalendarDays size={16} />
-            <input aria-label="시작일" defaultValue="2026-05-07" type="date" />
+            <input aria-label="시작일" type="date" />
           </label>
           <div className="search-field wide">
             <Search size={15} />
-            <input aria-label="사고 키워드" defaultValue="tenant_id 고객 목록" />
+            <input
+              aria-label="사고 키워드"
+              placeholder="키워드 (예: migration, tenant_id, .env)"
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+            />
           </div>
-          <button className="button primary" type="button">
-            <Radar size={16} />
-            Replay
-          </button>
         </div>
-        <TimelineList events={incidentEvents} />
+        {incidentEvents.length > 0 ? (
+          <TimelineList events={incidentEvents} />
+        ) : (
+          <div className="empty-state">
+            <Radar size={18} />
+            <p>
+              {keyword.trim()
+                ? `"${keyword.trim()}" 와(과) 일치하는 위험 이벤트가 없습니다.`
+                : "현재 표시할 위험 이벤트가 없습니다."}
+            </p>
+          </div>
+        )}
       </section>
 
       <section className="content-section">
-        <SectionHeader eyebrow="Evidence" title="원인 후보" />
-        <div className="evidence-columns">
-          <InfoBlock
-            title="확실한 증거"
-            text="10:12에 migration 파일이 변경됐고, 10:31에 같은 세션에서 커밋이 생성됐다."
-          />
-          <InfoBlock
-            title="가능성 높은 후보"
-            text="tenant_id 기본값 누락과 seed backfill 범위가 고객 목록 빈 화면과 연결될 수 있다."
-          />
-          <InfoBlock
-            title="불명확한 부분"
-            text="운영 DB에 동일한 migration이 적용됐는지, backfill 대상이 전체 tenant인지 확인되지 않았다."
-          />
+        <SectionHeader eyebrow="원인 후보" title="분석 결과" />
+        <div className="empty-state">
+          <FileText size={18} />
+          <p>
+            자동 원인 분석은 후속 스프린트에서 제공됩니다. 현재는 위험 이벤트의 시간대만 키워드로 좁혀
+            볼 수 있습니다.
+          </p>
         </div>
-        <button className="button secondary" type="button">
-          <FileText size={16} />
-          Save Incident Note
-        </button>
       </section>
     </div>
   );
@@ -2250,188 +2055,6 @@ function TerminalEventCard({ event }: { event: TerminalEvent }) {
   );
 }
 
-function CircleInfoIcon() {
-  return <ShieldAlert size={16} />;
-}
-
-function Metric({
-  label,
-  tone,
-  value,
-}: {
-  label: string;
-  tone?: "risk" | "unknown";
-  value: string;
-}) {
-  return (
-    <article className={`metric-card ${tone ?? ""}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </article>
-  );
-}
-
-function RepoCard({ repo }: { repo: RepositoryActivity }) {
-  const hasGithubEvidence = Boolean(repo.githubLastSyncAt || repo.githubCommits || repo.githubPullRequests);
-  return (
-    <article className="repo-card">
-      <div className="repo-title">
-        <Github size={17} />
-        <div>
-          <h3>{compactRepo(`${repo.owner}/${repo.name}`)}</h3>
-          <span>{repo.repoFullName ?? `마지막 활동 ${repo.lastActivity}`}</span>
-        </div>
-      </div>
-      <div className="repo-stats">
-        <span>관련 커밋 {repo.commits}개</span>
-        <span>PR {repo.prs}개</span>
-        <span>변경 파일 {repo.changedFiles}개</span>
-      </div>
-      {hasGithubEvidence ? (
-        <div className="repo-stats">
-          <span>GitHub sync {formatDateTime(repo.githubLastSyncAt)}</span>
-          <span>원격 커밋 {repo.githubCommits ?? 0}개</span>
-          <span>원격 변경 {repo.githubChangedFiles ?? 0}개</span>
-        </div>
-      ) : null}
-      <div className="tag-row">
-        {repo.focusAreas.map((area) => (
-          <Badge key={area} label={area} />
-        ))}
-        {repo.riskCount > 0 ? <Badge label={`위험 ${repo.riskCount}개`} tone="risk" /> : null}
-      </div>
-    </article>
-  );
-}
-
-function TimelineList({ events }: { events: TimelineEvent[] }) {
-  return (
-    <div className="timeline">
-      {events.map((event) => (
-        <article className={`timeline-item ${event.severity ?? ""}`} key={event.id}>
-          <div className="timeline-time">
-            <Clock3 size={15} />
-            <span>{event.time}</span>
-          </div>
-          <div className="timeline-body">
-            <div className="timeline-head">
-              <strong>{displayText(event.summary, "세션 이벤트", 96)}</strong>
-              {event.severity ? <SeverityBadge severity={event.severity} /> : null}
-            </div>
-            <p>{event.actor} · {compactRepo(event.repo)} · {labelForTimelineType(event.type)}</p>
-            <div className="evidence-strip">
-              {event.evidence.map((evidence) => (
-                <EvidenceLink evidence={evidence} key={evidence.id} />
-              ))}
-            </div>
-          </div>
-        </article>
-      ))}
-    </div>
-  );
-}
-
-function RiskCard({ risk }: { risk: RiskEvent }) {
-  return (
-    <article className={`risk-card ${risk.severity}`}>
-      <div className="risk-icon">
-        {risk.category === "Database" ? <Database size={18} /> : <ShieldAlert size={18} />}
-      </div>
-      <div className="risk-content">
-        <div className="risk-head">
-          <strong>{displayRiskTitle(risk)}</strong>
-          <SeverityBadge severity={risk.severity} />
-        </div>
-        <p>{displayText(risk.reason, "확인이 필요한 신호입니다.", 92)}</p>
-        <div className="meta-row muted">
-          <span>{compactRepo(risk.repo)}</span>
-          <span>{compactPath(risk.file)}</span>
-          <span>{risk.time}</span>
-        </div>
-        <div className="evidence-strip">
-          {risk.evidence.map((evidence) => (
-            <EvidenceLink evidence={evidence} key={evidence.id} />
-          ))}
-        </div>
-      </div>
-      <StatusBadge status={risk.status} />
-    </article>
-  );
-}
-
-function DailyFlowGuide({
-  firstSessionId,
-  onOpenSession,
-}: {
-  firstSessionId?: string;
-  onOpenSession: (id: string) => void;
-}) {
-  return (
-    <section className="flow-guide" aria-label="처음 사용 흐름">
-      <div className="flow-guide-copy">
-        <p className="eyebrow">처음 사용 흐름</p>
-        <h2>오늘 한 일을 설명 가능한 상태로 정리하는 순서입니다.</h2>
-        <p>
-          하루 끝에 새로고침하고, 설명이 필요한 작업부터 열어본 뒤, 결과 커밋과 확인 상태만 남기면 됩니다.
-        </p>
-      </div>
-      <div className="guide-steps">
-        <GuideStep index={1} title="오늘 화면 확인" text="어느 작업 영역에서 AI 작업이 많았는지 먼저 봅니다." />
-        <GuideStep index={2} title="작업 하나 열기" text="설명 필요 작업을 눌러 브리프와 위험 신호를 확인합니다." />
-        <GuideStep index={3} title="결과 커밋 판단" text="근거가 맞으면 맞음, 관련 없으면 제외로 정리합니다." />
-        <GuideStep index={4} title="기록으로 마감" text="이해했으면 확인 완료, 남은 작업은 계속 확인에 둡니다." />
-      </div>
-      {firstSessionId ? (
-        <button className="button primary compact" onClick={() => onOpenSession(firstSessionId)} type="button">
-          <MessageSquareText size={15} />
-          첫 작업 확인
-        </button>
-      ) : null}
-    </section>
-  );
-}
-
-function SessionListGuide() {
-  return (
-    <div className="mini-guide">
-      <strong>왼쪽 목록은 오늘 설명이 필요한 작업 순서입니다.</strong>
-      <span>제목이 짧거나 애매하면, 오른쪽 브리프와 결과 커밋을 보고 판단하면 됩니다.</span>
-    </div>
-  );
-}
-
-function DetailFlowGuide() {
-  return (
-    <section className="detail-guide" aria-label="작업 상세 사용 순서">
-      <p className="eyebrow">이 화면에서 할 일</p>
-      <div className="detail-guide-steps">
-        <GuideStep index={1} title="브리프 읽기" text="무엇을 하려 했고 실제로 무엇이 바뀌었는지 봅니다." />
-        <GuideStep index={2} title="증거 판단" text="후보 커밋이 이 작업 결과로 보이면 맞음, 아니면 제외를 누릅니다." />
-        <GuideStep index={3} title="마감 선택" text="설명 가능하면 확인 완료, 애매하면 계속 확인으로 남깁니다." />
-      </div>
-    </section>
-  );
-}
-
-function GuideStep({
-  index,
-  text,
-  title,
-}: {
-  index: number;
-  text: string;
-  title: string;
-}) {
-  return (
-    <article className="guide-step">
-      <span>{index}</span>
-      <div>
-        <strong>{title}</strong>
-        <p>{text}</p>
-      </div>
-    </article>
-  );
-}
 
 function EvidenceQualityPanel({ session }: { session: WorkSession }) {
   const confirmed = session.confirmedCommits?.length ?? 0;
@@ -2502,9 +2125,8 @@ function WorkBriefPanel({ session }: { session: WorkSession }) {
         <div>
           <p className="eyebrow">작업 브리프</p>
           <h3>{brief.headline}</h3>
-          <p>{brief.handoff}</p>
         </div>
-        <Badge label={confidenceLabel(brief.confidence)} tone={brief.confidence === "high" ? "info" : undefined} />
+        <Badge label={`근거 ${confidenceLabel(brief.confidence)}`} tone={brief.confidence === "high" ? "info" : undefined} />
       </div>
 
       <div className="brief-grid">
@@ -2562,10 +2184,6 @@ function ConversationFlowPanel({ session }: { session: WorkSession }) {
         <div>
           <p className="eyebrow">대화 흐름</p>
           <h3>요청에서 판단까지</h3>
-          <p>
-            긴 세션 안에서 이 작업 흐름만 따로 잘라낸 기록입니다.
-            사용자가 무엇을 물었고, 에이전트가 무엇을 했고, 어떤 근거가 남았는지 순서대로 확인합니다.
-          </p>
         </div>
         {session.segmentCount && session.segmentIndex ? (
           <Badge label={`흐름 ${session.segmentIndex}/${session.segmentCount}`} tone="info" />
@@ -3043,183 +2661,6 @@ function confidenceLabel(confidence: "high" | "medium" | "low") {
   if (confidence === "high") return "근거 높음";
   if (confidence === "medium") return "근거 보통";
   return "근거 낮음";
-}
-
-function ExplainBack({ session }: { session: WorkSession }) {
-  const items = [
-    ["내가 요청한 것", displayText(session.explainBack.requested, "요청 내용을 더 확인해야 합니다.", 190)],
-    ["에이전트가 바꾼 것", displayText(session.explainBack.changed, "변경 내용을 더 확인해야 합니다.", 190)],
-    ["내가 확인한 것", displayText(session.explainBack.verified, "아직 자동 검증 결과가 연결되지 않았습니다.", 190)],
-    ["아직 모르는 것", displayText(session.explainBack.unknown, "불확실한 항목을 더 확인해야 합니다.", 190)],
-    ["팀원에게 물어볼 것", displayText(session.explainBack.askTeam, "팀 확인이 필요한 항목을 남겨주세요.", 190)],
-  ];
-
-  return (
-    <section className="subsection">
-      <h3>설명 확인</h3>
-      <div className="explain-grid">
-        {items.map(([label, value]) => (
-          <label key={label}>
-            {label}
-            <textarea defaultValue={value} />
-          </label>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function SectionHeader({
-  action,
-  eyebrow,
-  title,
-}: {
-  action?: React.ReactNode;
-  eyebrow: string;
-  title: string;
-}) {
-  return (
-    <div className="section-header">
-      <div>
-        <p className="eyebrow">{eyebrow}</p>
-        <h2>{title}</h2>
-      </div>
-      {action}
-    </div>
-  );
-}
-
-function InfoBlock({ text, title }: { text: string; title: string }) {
-  return (
-    <article className="info-block">
-      <h3>{title}</h3>
-      <p>{text}</p>
-    </article>
-  );
-}
-
-function Fact({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="fact">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function EvidenceLink({ evidence }: { evidence: EvidenceLinkType }) {
-  return (
-    <a className="evidence-link" href={evidence.href}>
-      {iconForEvidence(evidence.type)}
-      <span>{evidence.label}</span>
-      <ExternalLink size={12} />
-    </a>
-  );
-}
-
-function labelForEnvironment(environment: CaptureAdapter["environment"]) {
-  const labels: Record<CaptureAdapter["environment"], string> = {
-    web: "웹",
-    terminal: "터미널",
-    git: "Git",
-    manual: "수동",
-  };
-  return labels[environment];
-}
-
-function labelForPriority(priority: CaptureAdapter["priority"]) {
-  const labels: Record<CaptureAdapter["priority"], string> = {
-    mvp: "MVP",
-    next: "다음",
-    later: "나중",
-  };
-  return labels[priority];
-}
-
-function labelForTimelineType(type: string) {
-  const labels: Record<string, string> = {
-    risk_detected: "위험 감지",
-    session_ingested: "세션 읽음",
-    prompt: "요청",
-    file_change: "파일 변경",
-    commit: "커밋",
-    pr: "PR",
-  };
-  return labels[type] ?? type;
-}
-
-function labelForLoadStatus(status: "loading" | "ready" | "error") {
-  const labels = {
-    loading: "불러오는 중",
-    ready: "준비됨",
-    error: "오류",
-  };
-  return labels[status];
-}
-
-function iconForEvidence(type: EvidenceLinkType["type"]) {
-  if (type === "commit" || type === "pr") return <GitBranch size={13} />;
-  if (type === "file") return <FileCode2 size={13} />;
-  if (type === "command") return <Code2 size={13} />;
-  if (type === "wiki") return <BookOpen size={13} />;
-  return <Link2 size={13} />;
-}
-
-function Badge({
-  label,
-  tone,
-}: {
-  label: string;
-  tone?: "risk" | "info" | "unknown";
-}) {
-  return <span className={`badge ${tone ?? ""}`}>{label}</span>;
-}
-
-function SeverityBadge({ severity }: { severity: RiskSeverity }) {
-  const label = {
-    high: "높음",
-    medium: "중간",
-    low: "낮음",
-  }[severity];
-
-  return <span className={`severity ${severity}`}>{label}</span>;
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const labelMap: Record<string, string> = {
-    reviewed: "확인 완료",
-    needs_explanation: "확인 필요",
-    linked: "연결됨",
-    unlinked: "미연결",
-    unreviewed: "미확인",
-    acknowledged: "확인됨",
-    resolved: "해결됨",
-    connected: "연결됨",
-    ready: "준비됨",
-    planned: "예정",
-    needs_setup: "설정 필요",
-  };
-
-  return <span className={`status ${status}`}>{labelMap[status] ?? status}</span>;
-}
-
-function StatusText({ status }: { status: string }) {
-  const className =
-    status === "연결됨" || status === "사용 가능" || status === "준비됨" || status === "정상" || status === "사용 중"
-      ? "connected"
-      : "planned";
-  return <span className={`status-text ${className}`}>{status}</span>;
-}
-
-function AdapterStatusBadge({ status }: { status: CaptureAdapter["status"] }) {
-  const labelMap: Record<CaptureAdapter["status"], string> = {
-    connected: "연결됨",
-    ready: "준비됨",
-    planned: "예정",
-    needs_setup: "설정 필요",
-  };
-
-  return <span className={`status ${status}`}>{labelMap[status]}</span>;
 }
 
 export default App;
