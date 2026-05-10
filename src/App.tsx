@@ -24,6 +24,7 @@ import {
   Search,
   Settings,
   ShieldAlert,
+  ShieldCheck,
   Sun,
   Terminal,
   Upload,
@@ -34,6 +35,7 @@ import {
 import { WorkPacketCard } from "./components/packets/WorkPacketCard";
 import { ExplainBackPanel } from "./components/sessions/ExplainBackPanel";
 import { SessionCard } from "./components/sessions/SessionCard";
+import { AuditScreen } from "./screens/Audit";
 import {
   RepoCard,
   RiskCard,
@@ -88,6 +90,7 @@ type NavKey =
   | "today"
   | "packets"
   | "sessions"
+  | "audit"
   | "wiki"
   | "capture"
   | "settings";
@@ -187,6 +190,7 @@ const navItems: Array<{ key: NavKey; label: string; icon: React.ElementType }> =
   { key: "today", label: "오늘", icon: CalendarDays },
   { key: "packets", label: "작업 패킷", icon: BookOpen },
   { key: "sessions", label: "작업 확인", icon: MessageSquareText },
+  { key: "audit", label: "감사 추적", icon: ShieldCheck },
   { key: "wiki", label: "문서함", icon: FileText },
   { key: "capture", label: "수집 설정", icon: Terminal },
   { key: "settings", label: "팀 설정", icon: Settings },
@@ -765,6 +769,7 @@ function App() {
                   sessionActionStatus={sessionActionStatus}
                 />
               ) : null}
+              {activeNav === "audit" ? <AuditScreen /> : null}
               {activeNav === "wiki" ? <WikiScreen /> : null}
               {activeNav === "capture" ? <CaptureSetupScreen github={githubVisibility} sources={mvp?.sources ?? []} sessions={liveSessions} /> : null}
               {activeNav === "settings" ? <SettingsScreen /> : null}
