@@ -48,6 +48,15 @@ npm run dev         # vite dev server (UI 작업 시)
 - 현재 phase / TODO / blocker → `NOVA-STATE.md`
 - 개인 경로·로컬 토큰 → `CLAUDE.local.md` 또는 `.claude/settings.local.json`
 
+## PRD·전략 문서 작업
+PRD/페르소나/GTM/Roadmap 작성·수정 시 반드시 `.claude/rules/prd-and-strategy-collaboration.md` 5개 원칙을 적용한다.
+요약: (1) 시장 신호 직접 조사, (2) 가상 회사·인물명 금지, (3) 사용자 직군 편견 금지, (4) 임의 기간 milestone 금지, (5) 1인 프로젝트 제약 반영.
+
+## 프로젝트 정체성
+- agent-work-memory는 jay@spacewalk.tech **1인 프로젝트**.
+- 모든 결정(PRD·architecture·GTM)에 1인 운영 가능성이 제약 조건으로 들어간다.
+- 협업 원칙은 *git에 들어가는 프로젝트 내부 파일*에만 둔다. 개인 글로벌 메모리는 작업 환경/사용자/AI 도구가 달라지면 무의미하므로 사용 안 함.
+
 ## Claude Code 특화
 - Nova 자동 적용 규칙은 SessionStart 훅으로 주입됨. 상세는 `docs/nova-rules.md`(플러그인) on-demand 로드.
 - 자주 쓰는 진입점: `/nova:next`, `/nova:plan`, `/nova:check`, `/nova:review`, `/nova:claude-md`.
