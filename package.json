@@ -36,7 +36,13 @@
     "local": "npm run mvp",
     "mvp": "npm run build && node ./bin/awm.mjs ingest --limit 30 && node ./bin/awm.mjs serve --port 5173",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:status": "supabase status",
+    "db:reset": "supabase db reset",
+    "db:push": "supabase db push",
+    "db:diff": "supabase db diff"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -47,6 +53,7 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^6.0.1",
+    "supabase": "^2.98.2",
     "typescript": "^5.7.2",
     "vite": "^8.0.11",
     "vitest": "^4.1.5"
