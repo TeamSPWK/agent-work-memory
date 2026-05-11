@@ -47,6 +47,7 @@
 - /nova:review --fast (m2 S2.2 Today, qa-engineer) → PASS(3 후속 결정 권고) — Today 5섹션, build 304kB gz 97kB, test 3/3 | 2026-05-11
 
 ## Refs
+- **프로젝트 현황판: `docs/projects/STATUS.md`** (페이즈·sprint·화면 매트릭스·보류 결정·프로토타입 흔적)
 - 디자인 lock: p0-design-v0/(inside-app 23화면) + p0-design-v0.2/(외부 14화면)
 - Prompts: p0-...md(1차) / p0.1-...round2.md(2차) / p0.2-...round3.md(3차)
 - Plans: m2-frontend-from-design.md(inside-app) / m2.5-public-pages-from-design.md(외부)
