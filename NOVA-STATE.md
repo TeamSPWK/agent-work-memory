@@ -1,9 +1,9 @@
 # Nova State
 
 ## Current
-- **Goal**: v0.2 lock 완료. m2(inside-app) + m2.5(외부) 코드 이식 진입 준비
-- **Phase**: frontend ingest (두 시안 모두 lock — m2 S1 부트스트랩 시작 대기)
-- **Blocker**: 없음 — 사용자가 m2 S1 / m2.5 S1 진입 명시 시 작업 시작
+- **Goal**: m2 S1 부트스트랩 완료 → 사용자 시각 검증 + S2(시안 → 정적 화면 23개 mock 이식) 진입 대기
+- **Phase**: frontend ingest — m2 S1 done, S2 대기
+- **Blocker**: 없음 — 사용자 시각 검증(localhost:5173 토큰 적용) + 커밋 결정 대기
 
 ## Tasks
 | Task | Status | Verdict | Note |
@@ -13,7 +13,9 @@
 | PRD v2.1 §12 + p0.2 프롬프트 + 법무 트래커 | done | PASS — 외부 페이지 14화면 영역 | PRD §12 / p0.2-...md / legal-pages.md |
 | v0.2 채택 + 저장 + line 359 fix | done | PASS — 14화면 외부 페이지, 2.7MB, raw ID 노출 제거 | docs/projects/plans/p0-design-v0.2/ |
 | m2.5 Plan 작성 (외부 페이지 이식) | done | PASS — CPS + 8 exit criteria + S1~S9 작업 순서 | m2.5-public-pages-from-design.md |
-| 시안 → 코드 이식 (m2 S1 부트스트랩) | pending | — | 사용자 진입 명시 시 시작 |
+| 시안 → 코드 이식 (m2 S1 부트스트랩) | done | PASS(local) — typecheck/build/test/dev HTTP 200 | web/ + tokens/global.css + fonts + CI |
+| m2 S1.1 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | pending | — | 사용자 외부 계정 단계, S1 사용자 검증 후 |
+| m2 S2 시안 → 정적 23화면 (mock) | pending | — | S1 사용자 시각 검증 통과 후 |
 | 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S1~S3 완료 후 진입 |
 | 법무 4종 실제 문구 자문 | pending | — | legal-pages.md 단계 1~5 |
 
@@ -39,9 +41,9 @@
 | — | — | — |
 
 ## Last Activity
+- /nova:review --fast (m2 S1 부트스트랩, nova:qa-engineer 독립 평가) → PASS — web/ Vite+React19+TS6+RR7+TanStack5+Zustand5+Vitest4, tokens/global.css 이식(폰트 url /fonts/), CI(typecheck+build+test), build 191kB gz 60kB, smoke test 1/1, dev HTTP 200 | 2026-05-11
 - /nova:check (v0.2 lock + m2.5 Plan) → PASS — 외부 14화면 docs/projects/plans/p0-design-v0.2/(2.7MB), line 359 raw ID 노출 fix, m2.5 8 exit criteria + S1~S9 | 2026-05-11
 - /nova:check (PRD §12 + p0.2 + 법무 트래커) → PASS — 외부 페이지 14화면 영역 신설 + 라운드 3 프롬프트 + 법무 4종 별도 트래킹 | 2026-05-11
-- /nova:check (m2 Plan + stack 자문 + v0.1 lock) → PASS — 3AI 75% 합의 (B) Vite+Supabase, 23화면 inside-app 보존 | 2026-05-11
 
 ## Refs
 - 디자인 lock: p0-design-v0/(inside-app 23화면) + p0-design-v0.2/(외부 14화면)

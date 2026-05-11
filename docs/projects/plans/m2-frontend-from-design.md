@@ -251,3 +251,4 @@ S11. /nova:check 전체 — 8 criteria PASS 확인 후 m2 완료
 - 2026-05-11 — TSA / 외부 anchoring v2.x로 이연. PRD §11 위험표와 정합.
 - 2026-05-11 — 보존 정책 문서화 m2 외 별도 작업으로 분리.
 - 2026-05-11 — Cloudflare 옵션은 운영 비용 초과 시 재검토. m2에서 결정 안 함.
+- 2026-05-11 — S1 스캐폴드 시 Vite 8 latest templates 채택. 본 Plan §Solution에 적힌 메이저 버전 대비 실제 채택: React 18→19, TS 5→6, React Router 6→7, Vitest는 신규 채택(4). 모두 호환·strict mode 활성·typecheck/build/test PASS 확인 후 진행. 사용자 승인(2026-05-11).
