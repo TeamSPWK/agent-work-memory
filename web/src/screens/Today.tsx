@@ -32,7 +32,7 @@ export function Today() {
             오늘 · 5월 10일
           </button>
           {firstUnexplainedId ? (
-            <Link className="btn primary" to={`/sessions/${firstUnexplainedId}?tab=explain`}>
+            <Link className="btn primary" to={`/sessions/${firstUnexplainedId}/explain`}>
               <Icon name="pencil" size={14} />
               Explain Back 채우기 ({unexplained.length})
             </Link>
@@ -169,7 +169,7 @@ export function Today() {
                 </div>
               </div>
               {firstUnexplainedId ? (
-                <Link className="btn weak" to={`/sessions/${firstUnexplainedId}?tab=share`}>
+                <Link className="btn weak" to={`/sessions/${firstUnexplainedId}/share`}>
                   <Icon name="copy" size={14} />
                   복사 화면으로
                 </Link>

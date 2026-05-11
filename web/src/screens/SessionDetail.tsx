@@ -47,7 +47,7 @@ export function SessionDetail() {
           <Link className="btn" to="/sessions">
             ← 리스트
           </Link>
-          <Link className="btn primary" to={`/sessions/${session.id}?tab=explain`}>
+          <Link className="btn primary" to={`/sessions/${session.id}/explain`}>
             <Icon name="pencil" size={14} />
             Explain Back 채우기
           </Link>

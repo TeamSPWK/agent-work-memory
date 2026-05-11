@@ -6,6 +6,7 @@ import { PlaceholderScreen } from './screens/PlaceholderScreen'
 import { Today } from './screens/Today'
 import { Sessions } from './screens/Sessions'
 import { SessionDetail } from './screens/SessionDetail'
+import { ExplainBack } from './screens/ExplainBack'
 import { NAV_ITEMS } from './lib/seed/navigation'
 
 describe('AppShell + product IA', () => {
@@ -48,7 +49,7 @@ describe('AppShell + product IA', () => {
     expect(screen.getByRole('heading', { name: '오늘의 Work Session 타임라인' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Explain Back 채우기/ })).toHaveAttribute(
       'href',
-      expect.stringMatching(/^\/sessions\/s-\d+\?tab=explain$/),
+      expect.stringMatching(/^\/sessions\/s-\d+\/explain$/),
     )
   })
 
@@ -103,6 +104,44 @@ describe('AppShell + product IA', () => {
         <Routes>
           <Route path="/" element={<AppShell />}>
             <Route path="sessions/:id" element={<SessionDetail />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { name: '세션을 찾을 수 없습니다', level: 1 }),
+    ).toBeInTheDocument()
+  })
+
+  it('ExplainBack renders 5 fields composer for s-024', () => {
+    render(
+      <MemoryRouter initialEntries={['/sessions/s-024/explain']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions/:id/explain" element={<ExplainBack />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Explain Back 노트', level: 1 })).toBeInTheDocument()
+    for (const label of ['의도', '결과', '검증', '미해결', '핸드오프']) {
+      expect(screen.getByLabelText(new RegExp(label))).toBeInTheDocument()
+    }
+    expect(screen.getByRole('link', { name: /← 세션/ })).toHaveAttribute('href', '/sessions/s-024')
+    expect(screen.getByRole('link', { name: /저장 후 공유/ })).toHaveAttribute(
+      'href',
+      '/sessions/s-024/share',
+    )
+  })
+
+  it('ExplainBack falls back when id is unknown', () => {
+    render(
+      <MemoryRouter initialEntries={['/sessions/s-999/explain']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions/:id/explain" element={<ExplainBack />} />
           </Route>
         </Routes>
       </MemoryRouter>,
