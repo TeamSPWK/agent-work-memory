@@ -5,6 +5,7 @@ import { OnboardingLayout } from './layout/OnboardingLayout'
 import { PlaceholderScreen } from './screens/PlaceholderScreen'
 import { Today } from './screens/Today'
 import { Sessions } from './screens/Sessions'
+import { SessionDetail } from './screens/SessionDetail'
 import { NAV_ITEMS } from './lib/seed/navigation'
 
 describe('AppShell + product IA', () => {
@@ -69,6 +70,47 @@ describe('AppShell + product IA', () => {
     }
     expect(screen.getByPlaceholderText('의도·작업자·repo 검색')).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: '열기 →' })).toHaveLength(7)
+  })
+
+  it('SessionDetail renders prompts, commands, files, matches for s-024', () => {
+    render(
+      <MemoryRouter initialEntries={['/sessions/s-024']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions/:id" element={<SessionDetail />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', {
+        name: 'applicants 테이블 인덱스 추가 (created_at DESC)',
+        level: 1,
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '대화 맥락 (turn별 요약)' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '실행된 명령' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '변경 파일' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '매칭 commit 후보' })).toBeInTheDocument()
+    expect(screen.getByText('f08c4b2')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '← 리스트' })).toHaveAttribute('href', '/sessions')
+  })
+
+  it('SessionDetail falls back when id is unknown', () => {
+    render(
+      <MemoryRouter initialEntries={['/sessions/s-999']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions/:id" element={<SessionDetail />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { name: '세션을 찾을 수 없습니다', level: 1 }),
+    ).toBeInTheDocument()
   })
 
   it('onboarding renders wizard without sidebar', () => {

@@ -10,3 +10,6 @@ dist
 .nova-orchestration.json
 .claude/scheduled_tasks.lock
 .playwright-mcp/
+# Playwright 시각 검증 스크린샷 (로컬 회귀 비교용, 커밋 X)
+*-1440-light.png
+*-1440-dark.png

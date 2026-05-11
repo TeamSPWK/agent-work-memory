@@ -1,9 +1,8 @@
 # Nova State
 
-## Current
-- **Goal**: m2 S2.3 Sessions 목록 완료 → S2.4 Session Detail 진입 대기
-- **Phase**: frontend ingest — m2 S1+S2.1+S2.2+S2.3 done. H1 회상 사이클 2/6.
-- **Blocker**: 없음 — Sessions 시각 검증 + S2.4 진입 대기. 후속 결정 보류: eyebrow 정책 / 날짜 동적화 / 필터·오늘 dead-button.
+- **Goal**: m2 S2.4 Session Detail 완료 → S2.5(ExplainBack/Share/SelfRecall) 진입 대기
+- **Phase**: frontend ingest — m2 S1+S2.1~S2.4 done. H1 회상 사이클 3/6 (Today/Sessions/Detail). Playwright 시각 검증 라이트+다크 PASS.
+- **Blocker**: 없음. 후속 결정 보류: SESSION_DETAIL mock 확장(s-024 외) / eyebrow 정책 / 날짜 동적화.
 
 ## Tasks
 | Task | Status | Verdict | Note |
@@ -12,8 +11,9 @@
 | m2 S2.1 제품 IA + 골격 | done | PASS(qa) — 평면 네비 6 + /onboarding wizard | navigation seed + Layout 5 |
 | m2 S2.2 Today 화면 | done | PASS(qa) — KPI 4 + 타임라인 + 설명 부족 + TODO + 팀 공유 | screens/Today.tsx |
 | m2 S2.3 Sessions 목록 | done | PASS(qa) — tool 필터 5 + 검색(intent/actor/repo) + 7행 | screens/Sessions.tsx |
-| m2 S2.4 Session Detail | pending | — | /sessions/:id 채움. /incidents/:id breadcrumb 결정 필요 |
-| m2 S2.5+ Audit/Risk/Workspace/Settings/Onboarding | pending | — | S2.4 완료 후 |
+| m2 S2.4 Session Detail | done | PASS(qa) — 대화 7+명령 3+파일 2+매칭 commit 3, s-024 외 mock 한계 배지 | screens/SessionDetail.tsx, seed/sessionDetail.ts |
+| m2 S2.5 ExplainBack/Share/SelfRecall (?tab=…) | pending | — | sessions/:id 서브 라우트 |
+| m2 S2.6+ Audit/Risk/Workspace/Settings/Onboarding | pending | — | S2.5 완료 후 |
 | m2 S1.1 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | pending | — | 사용자 외부 계정 단계 |
 | 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S2 완료 후 |
 | 법무 4종 실제 문구 자문 | pending | — | legal-pages.md 단계 1~5 |
@@ -39,10 +39,10 @@
 | — | — | — |
 
 ## Last Activity
-- /nova:auto (m2 S2.3 Sessions 목록, orch-mp0v6cb7-exvz, qa-engineer 독립 평가) → PASS — tool 필터 5 + intent/actor/repo 검색(placeholder/필터 정합 surgical fix) + 테이블 7행, gotoSession → Link /sessions/:id, build 307kB gz 97kB, test 4/4, dev 3 라우트 HTTP 200 | 2026-05-11
-- /nova:review --fast (m2 S2.2 Today 화면, qa-engineer 독립 평가) → PASS(3 후속 결정 권고: eyebrow·팀 공유 수치·날짜 하드코딩) — Today 5섹션 v0.1 정합, build 304kB gz 97kB, test 3/3 | 2026-05-11
-- /nova:review --fast (m2 S2.1 제품 IA 재작성, qa-engineer 독립 평가) → PASS(1 minor: incidents breadcrumb은 S2.2 결정) — 시연 IA 폐기, 평면 네비 6 + /onboarding wizard, build 297kB gz 94kB, test 2/2 | 2026-05-11
-- /nova:review --fast (m2 S1 부트스트랩, qa-engineer 독립 평가) → PASS — Vite+React19+TS6+RR7+TanStack5+Zustand5+Vitest4, tokens/global.css 이식, CI(typecheck+build+test), build 191kB gz 60kB, test 1/1 | 2026-05-11
+- m2 S2.4 SessionDetail (qa-engineer 독립 + Playwright 1440×900 light/dark) → PASS — 대화 7 turn·명령 3·파일 2·매칭 commit 3+4축 bar, fallback graceful, s-024 외 mock 한계 배지 surgical fix, build 314kB gz 99kB, test 6/6 | 2026-05-11
+- /nova:auto (m2 S2.3 Sessions, orch-mp0v6cb7-exvz, qa-engineer) → PASS — tool 필터 5 + intent/actor/repo 검색 + 7행, build 307kB gz 97kB, test 4/4 | 2026-05-11
+- /nova:review --fast (m2 S2.2 Today, qa-engineer) → PASS(3 후속 결정 권고) — Today 5섹션, build 304kB gz 97kB, test 3/3 | 2026-05-11
+- /nova:review --fast (m2 S2.1 제품 IA 재작성, qa-engineer) → PASS — 시연 IA 폐기, 평면 네비 6 + /onboarding, build 297kB gz 94kB, test 2/2 | 2026-05-11
 
 ## Refs
 - 디자인 lock: p0-design-v0/(inside-app 23화면) + p0-design-v0.2/(외부 14화면)
