@@ -1,13 +1,17 @@
+import { Link } from 'react-router-dom'
 import {
   DEV_TRACK_SPRINTS,
+  NEXT_ACTION,
   PENDING_DECISIONS,
   PHASES,
   PROJECT_META,
   PROTOTYPE_MARKS,
   SCREENS,
   SPRINTS,
+  groupProgress,
 } from '../../lib/dev/projectStatus'
 import type { PhaseStatus, ScreenStatus, SprintStatus } from '../../lib/dev/projectStatus'
+import { Icon } from '../../components/Icon'
 
 const PHASE_TONE: Record<PhaseStatus, { bg: string; fg: string; label: string }> = {
   done: { bg: 'var(--c-green-50)', fg: '#fff', label: '완료' },
@@ -65,6 +69,55 @@ export function StatusBoard() {
           </div>
         </div>
       </div>
+
+      <section
+        className="card"
+        style={{
+          marginBottom: 16,
+          background: 'var(--primary-light)',
+          borderColor: 'transparent',
+          padding: 20,
+        }}
+      >
+        <div className="row between" style={{ alignItems: 'flex-start', gap: 16 }}>
+          <div style={{ flex: 1 }}>
+            <div
+              className="eyebrow"
+              style={{ color: 'var(--primary-strong)', marginBottom: 4 }}
+            >
+              지금 해야 할 한 가지 · {NEXT_ACTION.sprint}
+            </div>
+            <div
+              style={{
+                font: 'var(--t-heading2)',
+                color: 'var(--primary-strong)',
+                marginBottom: 6,
+              }}
+            >
+              {NEXT_ACTION.title}
+            </div>
+            <div
+              style={{
+                font: 'var(--t-body2)',
+                color: 'var(--primary-strong)',
+                opacity: 0.85,
+              }}
+            >
+              {NEXT_ACTION.detail}
+            </div>
+          </div>
+          {NEXT_ACTION.primaryRoute && (
+            <Link
+              className="btn primary"
+              to={NEXT_ACTION.primaryRoute}
+              style={{ flexShrink: 0 }}
+            >
+              <Icon name="arrow" size={14} />
+              현재 stub 보기
+            </Link>
+          )}
+        </div>
+      </section>
 
       <section className="card" style={{ marginBottom: 16 }}>
         <div className="card-h">
@@ -191,17 +244,42 @@ export function StatusBoard() {
           <h3>S2 화면 매트릭스</h3>
           <span className="sub">v0.1 inside-app 28화면 + onboarding 5 + Billing</span>
         </div>
-        {groups.map((g) => (
+        {groups.map((g) => {
+          const stats = groupProgress(g)
+          return (
           <div key={g} style={{ marginTop: 12 }}>
             <div
-              className="strong"
-              style={{
-                font: 'var(--t-label1-strong)',
-                color: 'var(--text-strong)',
-                marginBottom: 6,
-              }}
+              className="row"
+              style={{ alignItems: 'center', gap: 12, marginBottom: 6 }}
             >
-              {g}
+              <div
+                className="strong"
+                style={{
+                  font: 'var(--t-label1-strong)',
+                  color: 'var(--text-strong)',
+                  minWidth: 80,
+                }}
+              >
+                {g}
+              </div>
+              <div
+                className="tnum"
+                style={{
+                  font: 'var(--t-caption1-strong)',
+                  color:
+                    stats.pct === 100
+                      ? 'var(--status-positive)'
+                      : stats.pct > 0
+                      ? 'var(--primary-strong)'
+                      : 'var(--text-assistive)',
+                  minWidth: 60,
+                }}
+              >
+                {stats.done}/{stats.total} · {stats.pct}%
+              </div>
+              <div className="bar thin" style={{ flex: 1, maxWidth: 320 }}>
+                <i style={{ width: stats.pct + '%' }} />
+              </div>
             </div>
             <table className="tbl">
               <thead>
@@ -232,7 +310,8 @@ export function StatusBoard() {
               </tbody>
             </table>
           </div>
-        ))}
+          )
+        })}
       </section>
 
       <section className="card" style={{ marginBottom: 16 }}>

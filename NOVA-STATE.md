@@ -42,7 +42,8 @@
 | — | — | — |
 
 ## Last Activity
-- DT.1 Dashboard (qa + Playwright 1440 light/dark) → PASS — `/dev/status` StatusBoard(Phase 4 + Sprint 11+1 + 화면 28 매트릭스 + 보류 6 + 흔적 11), SSOT projectStatus.ts, test 13/13, JS 343kB gz 106kB | 2026-05-11
+- DT.1.1 Dashboard 보강 (UX 트렌드 비판 후 surgical) → PASS — "지금 해야 할 한 가지" NextAction 카드(primary-light, S2.6 진입 안내) + 그룹별 진행률 바(H1 6/6 100%, 외 0%), Playwright 1440 light/dark | 2026-05-11
+- DT.1 Dashboard (qa + Playwright) → PASS — `/dev/status` StatusBoard(Phase·Sprint·매트릭스·보류·흔적), SSOT projectStatus.ts, test 13/13 | 2026-05-11
 - m2 S2.5.c SelfRecall (qa + Playwright) → PASS(조건부) — split + match-line + 핸드오프, /sessions/yesterday, **H1 6/6 완성**, test 12/12 | 2026-05-11
 - m2 S2.5.b Share (qa + Playwright) → PASS — pre 요약 + 3채널 + H1 검증 카드 + clipboard toggle 테스트, test 11/11 | 2026-05-11
 - m2 S2.5.a ExplainBack (qa + Playwright) → PASS — 5필드 composer + 3카드 + nested 형제 라우트 전환, test 8/8 | 2026-05-11

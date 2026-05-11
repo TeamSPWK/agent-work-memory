@@ -198,6 +198,29 @@ export const PROJECT_META = {
   name: 'Agent Work Memory',
   tagline: 'AI Audit Trail SaaS for Korean SMB',
   ownerEmail: 'jay@spacewalk.tech',
-  currentCommit: '2e6d594',
+  currentCommit: '953987a',
   lastUpdated: '2026-05-11',
+}
+
+export type NextAction = {
+  sprint: string
+  title: string
+  detail: string
+  primaryRoute?: string
+}
+
+/** "지금 해야 할 한 가지." Linear inbox 패러다임. */
+export const NEXT_ACTION: NextAction = {
+  sprint: 'S2.6',
+  title: 'Audit — H2 결제 트리거 1/5',
+  detail:
+    'v0.1 H2 화면 4종(AuditTrail · 7대 원칙 · 체인 무결성 · PDF export)을 /audit 탭으로 채움. Billing은 S2.10 settings로 분리.',
+  primaryRoute: '/audit',
+}
+
+/** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */
+export function groupProgress(group: string) {
+  const all = SCREENS.filter((s) => s.group === group)
+  const done = all.filter((s) => s.status === 'done').length
+  return { done, total: all.length, pct: all.length === 0 ? 0 : Math.round((done / all.length) * 100) }
 }
