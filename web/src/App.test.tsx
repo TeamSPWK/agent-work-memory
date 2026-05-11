@@ -1,9 +1,22 @@
 import { render, screen } from '@testing-library/react'
-import App from './App'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { AppShell } from './layout/AppShell'
+import { PlaceholderScreen } from './screens/PlaceholderScreen'
 
-describe('App', () => {
-  it('renders bootstrap heading', () => {
-    render(<App />)
-    expect(screen.getByRole('heading', { name: 'Agent Work Memory', level: 1 })).toBeInTheDocument()
+describe('AppShell + PlaceholderScreen', () => {
+  it('renders sidebar + placeholder for /h1/today', () => {
+    render(
+      <MemoryRouter initialEntries={['/h1/today']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path=":hyp/:screen" element={<PlaceholderScreen />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Agent Work Memory')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('navigation')).toBeInTheDocument()
   })
 })
