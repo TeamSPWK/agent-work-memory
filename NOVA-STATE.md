@@ -1,8 +1,8 @@
 # Nova State
 
-- **Goal**: m2 S2.5.c SelfRecall 완료 → **H1 회상 사이클 6/6 완성** → S2.6 Audit 진입 대기
-- **Phase**: frontend ingest — m2 S1+S2.1~S2.5 done. H1 6/6, m2 S2 화면 6/28+1(SelfRecall 어제 라우트).
-- **Blocker**: 없음. 후속 결정 보류는 docs/projects/STATUS.md 참조.
+- **Goal**: DT.1 Dashboard 완료(`/dev/status`) → S2.6 Audit 진입 대기 (H2 결제 트리거 1/5)
+- **Phase**: frontend ingest — m2 S1+S2.1~S2.5 + DT.1 done. H1 6/6. 화면 6/28+1.
+- **Blocker**: 없음. 후속 결정·프로토타입 흔적은 `docs/projects/STATUS.md` + `/dev/status` 대시보드 참조.
 
 ## Tasks
 | Task | Status | Verdict | Note |
@@ -42,7 +42,8 @@
 | — | — | — |
 
 ## Last Activity
-- m2 S2.5.c SelfRecall (qa + Playwright 1440 light/dark) → PASS(조건부) — split layout, match-line ok/extra, 핸드오프, /sessions/yesterday 라우트, **H1 회상 사이클 6/6 완성**, test 12/12 | 2026-05-11
+- DT.1 Dashboard (qa + Playwright 1440 light/dark) → PASS — `/dev/status` StatusBoard(Phase 4 + Sprint 11+1 + 화면 28 매트릭스 + 보류 6 + 흔적 11), SSOT projectStatus.ts, test 13/13, JS 343kB gz 106kB | 2026-05-11
+- m2 S2.5.c SelfRecall (qa + Playwright) → PASS(조건부) — split + match-line + 핸드오프, /sessions/yesterday, **H1 6/6 완성**, test 12/12 | 2026-05-11
 - m2 S2.5.b Share (qa + Playwright) → PASS — pre 요약 + 3채널 + H1 검증 카드 + clipboard toggle 테스트, test 11/11 | 2026-05-11
 - m2 S2.5.a ExplainBack (qa + Playwright) → PASS — 5필드 composer + 3카드 + nested 형제 라우트 전환, test 8/8 | 2026-05-11
 - m2 S2.4 SessionDetail (qa + Playwright) → PASS — 대화 7·명령 3·파일 2·매칭 commit 3+4축 bar, mock 한계 배지, test 6/6 | 2026-05-11

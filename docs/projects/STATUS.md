@@ -130,10 +130,15 @@ PRD §12에 명시. 14화면 영역. 디자인은 v0.2(lock). 코드 이식은 m
 
 | Sprint | 목표 | 상태 | 비고 |
 |--------|------|------|------|
-| DT.1 | `/dev/status` 라우트 + StatusBoard 컴포넌트 | ⏸ 대기 | H1 회상 사이클(S2.5) 완료 후 진입 |
+| DT.1 | `/dev/status` 라우트 + StatusBoard 컴포넌트 | ✅ DONE | H1 S2.5 완료 직후 진입·완성. `/dev/status` 북마크 전용(사이드바 NavLink 없음) |
 
 **결정 사항**
-- SSOT: TS 데이터 파일 (`src/lib/dev/projectStatus.ts`). 본 STATUS.md는 사람 친화적 표현(수동 동기화). 매 sprint 마무리 시 둘 다 갱신.
+- SSOT: TS 데이터 파일 (`src/lib/dev/projectStatus.ts`). 본 STATUS.md는 사람 친화적 표현(수동 동기화).
+- **Sprint 마무리 체크리스트** (운영 룰 §1 sync 보강):
+  1. NOVA-STATE.md 갱신
+  2. `projectStatus.ts` 갱신 (sprint·screen·decision 상태)
+  3. `STATUS.md` 갱신 (위 1·2와 일치)
+  4. 커밋 메시지에 위 3개 모두 포함되었는지 확인
 - 라우트: `/dev/status` — production 사이드바 외부 (dev-only).
 - 디자인: Pretendard·tokens 재사용. Phase 진행 바 + Sprint 카드 그리드 + 화면 매트릭스 + 보류 결정 + 프로토타입 흔적 카탈로그.
 - 외부 도구 회피 (운영 룰 §7 정합).

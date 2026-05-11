@@ -9,6 +9,7 @@ import { SessionDetail } from './screens/SessionDetail'
 import { ExplainBack } from './screens/ExplainBack'
 import { Share } from './screens/Share'
 import { SelfRecall } from './screens/SelfRecall'
+import { StatusBoard } from './screens/dev/StatusBoard'
 import { NAV_ITEMS } from './lib/seed/navigation'
 
 describe('AppShell + product IA', () => {
@@ -237,6 +238,31 @@ describe('AppShell + product IA', () => {
     expect(screen.getByText('주간 리포트 자동 생성 cron')).toBeInTheDocument()
     expect(screen.getByLabelText('오늘의 셀프 핸드오프')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /저장 후 Today로/ })).toHaveAttribute('href', '/today')
+  })
+
+  it('StatusBoard renders phases + sprints + screens matrix', () => {
+    render(
+      <MemoryRouter initialEntries={['/dev/status']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="dev/status" element={<StatusBoard />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { name: /Agent Work Memory.*현황판/, level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Phase' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'm2 Sprint' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'S2 화면 매트릭스' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '보류 결정' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '프로토타입 흔적' })).toBeInTheDocument()
+    // 진행 중 Phase 1 m2 Build 표시
+    expect(screen.getByText(/m2 Build/)).toBeInTheDocument()
+    // 완료된 sprint
+    expect(screen.getByText('S2.5.c')).toBeInTheDocument()
   })
 
   it('onboarding renders wizard without sidebar', () => {

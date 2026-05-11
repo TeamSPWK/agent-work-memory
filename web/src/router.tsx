@@ -8,6 +8,7 @@ import { SessionDetail } from './screens/SessionDetail'
 import { ExplainBack } from './screens/ExplainBack'
 import { Share } from './screens/Share'
 import { SelfRecall } from './screens/SelfRecall'
+import { StatusBoard } from './screens/dev/StatusBoard'
 import { ONBOARDING_STEPS } from './lib/seed/navigation'
 
 export const router = createBrowserRouter([
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { path: 'incidents/:id', element: <PlaceholderScreen label="Incident" /> },
       { path: 'workspace', element: <PlaceholderScreen label="Workspace" /> },
       { path: 'settings', element: <PlaceholderScreen label="Settings" /> },
+      { path: 'dev/status', element: <StatusBoard /> },
       { path: '*', element: <PlaceholderScreen label="찾을 수 없음" note="요청한 경로가 존재하지 않습니다." /> },
     ],
   },
