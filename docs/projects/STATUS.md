@@ -50,8 +50,8 @@
 | H1 | Sessions 목록 | `/sessions` | ✅ | S2.3 (`c142f6a`) |
 | H1 | Session Detail | `/sessions/:id` | ✅ | S2.4 (`6fd1e01`) |
 | H1 | Explain Back | `/sessions/:id/explain` | ✅ | S2.5.a (`3e97141`) |
-| H1 | 팀 공유 요약 | `/sessions/:id/share` | ⏭️ NEXT | **S2.5.b** |
-| H1 | 셀프 회상 (어제) | `/sessions/yesterday`? (라우트 결정) | ⏸ | S2.5.c |
+| H1 | 팀 공유 요약 | `/sessions/:id/share` | ✅ | S2.5.b (`74905a1`) |
+| H1 | 셀프 회상 (어제) | `/sessions/yesterday` | ✅ | S2.5.c |
 | H2 결제 트리거 | Audit Trail | `/audit` (탭) | ⏸ | S2.6 |
 | H2 | 7대 원칙 패널 | `/audit?tab=principles` | ⏸ | S2.6 |
 | H2 | 체인 무결성 | `/audit?tab=integrity` | ⏸ | S2.6 |
@@ -75,8 +75,8 @@
 | settings | Notifications | `/settings?tab=notif` | ⏸ | S2.10 |
 | settings | Audit Export | `/settings?tab=export` | ⏸ | S2.10 |
 
-**완료 4/28** (Today · Sessions · SessionDetail · ExplainBack).
-**남은 24화면 + onboarding 5 + Billing**.
+**완료 6/28 + 어제 회상 라우트** (H1 회상 사이클 6/6).
+**남은 22화면 + onboarding 5 + Billing**.
 
 ---
 
@@ -118,7 +118,8 @@ PRD §12에 명시. 14화면 영역. 디자인은 v0.2(lock). 코드 이식은 m
 | # | 결정 사항 | 권고 | 결정 시점 |
 |---|----------|------|----------|
 | 1 | `/sessions/:id/share` 라우트 패턴 | nested 형제 `/sessions/:id/share` (ExplainBack과 동일 패턴 확정) | S2.5.b 진입 즉시 |
-| 2 | SelfRecall 라우트 — `/sessions/yesterday` vs `/today?day=yesterday` vs 별도 | `/sessions/yesterday` (별도 화면, /sessions 목록의 어제 필터형) | S2.5.c 진입 |
+| 2 | ~~SelfRecall 라우트~~ | ✅ 적용됨: `/sessions/yesterday` (S2.5.c, `/sessions/:id`보다 specificity 우선) | done |
+| 2b | SelfRecall 진입 경로(발견성) — 사이드바·Today·Sessions 어디서 link? | Today 또는 Sessions에 "어제 회상" link 1개 추가 | S2.6 또는 별도 |
 | 3 | `/incidents/:id` breadcrumb이 Risk 하위 vs Audit 하위 | Risk 하위 (사고는 risk radar에서 점화) | S2.7 진입 |
 | 4 | 외부 페이지 진입 — m2 S5 (Auth 들어올 때) | m2 S5에서 *최소 Auth UI*만, *외부 디자인*은 m2.5 | S5 진입 |
 | 5 | 디자인 파트너 시연 시점 — m2 S2 완료 후 vs S5 완료 후 | S5 완료 후 (실 데이터 + Auth) | S2 완료 시 사용자 결정 |
@@ -139,12 +140,12 @@ PRD §12에 명시. 14화면 영역. 디자인은 v0.2(lock). 코드 이식은 m
 
 ## 다음 진입
 
-**S2.5.b — Share (팀 공유 요약)** — H1 회상 사이클 5/6.
-- v0.1 ShareScreen (h1-operator.jsx line 415~503)
-- /sessions/:id/share (보류 결정 #1 자동 적용)
-- Today · ExplainBack에서 이미 Link 도달 중 (dead-link → 화면 채움)
+**S2.6 — Audit (H2 첫 화면)** — H2 결제 트리거 1/5.
+- v0.1 H2 화면 5개: AuditTrail · 7대 원칙 · 체인 무결성 · PDF export · Plan & Billing
+- 라우트: `/audit` (탭: trail/principles/integrity/pdf, query 또는 nested)
+- Plan & Billing은 `/settings?tab=billing`로 분리 (S2.10)
 
-**그 다음**: S2.5.c SelfRecall → S2.6 Audit → S2.7 Risk/Incident → S2.8 Onboarding 채움 → S2.9 Workspace → S2.10 Settings → m2 S2 완료 → S3+ backend.
+**그 다음**: S2.7 Risk/Incident → S2.8 Onboarding 채움 → S2.9 Workspace → S2.10 Settings → m2 S2 완료 → S3+ backend.
 
 ---
 

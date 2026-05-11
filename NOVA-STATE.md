@@ -1,7 +1,7 @@
 # Nova State
 
-- **Goal**: m2 S2.5.b Share 완료 → S2.5.c SelfRecall 진입 대기 (`/sessions/yesterday`)
-- **Phase**: frontend ingest — m2 S1+S2.1~S2.4+S2.5.a+S2.5.b done. H1 회상 사이클 5/6.
+- **Goal**: m2 S2.5.c SelfRecall 완료 → **H1 회상 사이클 6/6 완성** → S2.6 Audit 진입 대기
+- **Phase**: frontend ingest — m2 S1+S2.1~S2.5 done. H1 6/6, m2 S2 화면 6/28+1(SelfRecall 어제 라우트).
 - **Blocker**: 없음. 후속 결정 보류는 docs/projects/STATUS.md 참조.
 
 ## Tasks
@@ -13,9 +13,10 @@
 | m2 S2.3 Sessions 목록 | done | PASS(qa) — tool 필터 5 + 검색(intent/actor/repo) + 7행 | screens/Sessions.tsx |
 | m2 S2.4 Session Detail | done | PASS(qa) — 대화 7+명령 3+파일 2+매칭 commit 3, s-024 외 mock 한계 배지 | screens/SessionDetail.tsx, seed/sessionDetail.ts |
 | m2 S2.5.a ExplainBack | done | PASS(qa) — 5필드 composer + 우측 3카드 | screens/ExplainBack.tsx |
-| m2 S2.5.b Share | done | PASS(qa) — pre 요약 + 3채널 + H1 검증 카드, clipboard toggle 테스트 | screens/Share.tsx |
-| m2 S2.5.c SelfRecall (어제 회상) | pending | — | `/sessions/yesterday` (STATUS 보류 #2 권고 확정) |
-| m2 S2.6+ Audit/Risk/Workspace/Settings/Onboarding | pending | — | S2.5 완료 후 |
+| m2 S2.5.b Share | done | PASS(qa) — pre 요약 + 3채널 + H1 검증 카드 | screens/Share.tsx |
+| m2 S2.5.c SelfRecall | done | PASS(qa, 조건부) — split layout, match-line ok/extra, 핸드오프 textarea, 셀프 hardcode 주석 | screens/SelfRecall.tsx |
+| **m2 S2.6 Audit (H2 첫 화면)** | ⏭ NEXT | — | /audit (탭: trail/principles/integrity/pdf) |
+| m2 S2.7+ Risk/Workspace/Settings/Onboarding | pending | — | S2.6 완료 후 |
 | m2 S1.1 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | pending | — | 사용자 외부 계정 단계 |
 | 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S2 완료 후 |
 | 법무 4종 실제 문구 자문 | pending | — | legal-pages.md 단계 1~5 |
@@ -41,11 +42,10 @@
 | — | — | — |
 
 ## Last Activity
-- m2 S2.5.b Share (qa-engineer + Playwright 1440×900 light/dark) → PASS — pre 요약(평문 마크다운 X) + 채널 3 + 포함 항목 + H1 검증 카드, clipboard.writeText try/catch + copied toggle 테스트, build 324kB gz 102kB, test 11/11 | 2026-05-11
-- m2 S2.5.a ExplainBack (qa-engineer + Playwright) → PASS — 5필드 composer + 3카드 + nested 형제 라우트 전환, test 8/8 | 2026-05-11
-- m2 S2.4 SessionDetail (qa-engineer + Playwright 1440×900 light/dark) → PASS — 대화 7·명령 3·파일 2·매칭 commit 3+4축 bar, fallback graceful, mock 한계 배지, build 314kB gz 99kB, test 6/6 | 2026-05-11
-- /nova:auto (m2 S2.3 Sessions, orch-mp0v6cb7-exvz, qa-engineer) → PASS — tool 필터 5 + intent/actor/repo 검색 + 7행, build 307kB gz 97kB, test 4/4 | 2026-05-11
-- /nova:review --fast (m2 S2.2 Today, qa-engineer) → PASS(3 후속 결정 권고) — Today 5섹션, build 304kB gz 97kB, test 3/3 | 2026-05-11
+- m2 S2.5.c SelfRecall (qa + Playwright 1440 light/dark) → PASS(조건부) — split layout, match-line ok/extra, 핸드오프, /sessions/yesterday 라우트, **H1 회상 사이클 6/6 완성**, test 12/12 | 2026-05-11
+- m2 S2.5.b Share (qa + Playwright) → PASS — pre 요약 + 3채널 + H1 검증 카드 + clipboard toggle 테스트, test 11/11 | 2026-05-11
+- m2 S2.5.a ExplainBack (qa + Playwright) → PASS — 5필드 composer + 3카드 + nested 형제 라우트 전환, test 8/8 | 2026-05-11
+- m2 S2.4 SessionDetail (qa + Playwright) → PASS — 대화 7·명령 3·파일 2·매칭 commit 3+4축 bar, mock 한계 배지, test 6/6 | 2026-05-11
 
 ## Refs
 - **프로젝트 현황판: `docs/projects/STATUS.md`** (페이즈·sprint·화면 매트릭스·보류 결정·프로토타입 흔적)

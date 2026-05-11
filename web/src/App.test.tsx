@@ -8,6 +8,7 @@ import { Sessions } from './screens/Sessions'
 import { SessionDetail } from './screens/SessionDetail'
 import { ExplainBack } from './screens/ExplainBack'
 import { Share } from './screens/Share'
+import { SelfRecall } from './screens/SelfRecall'
 import { NAV_ITEMS } from './lib/seed/navigation'
 
 describe('AppShell + product IA', () => {
@@ -216,6 +217,26 @@ describe('AppShell + product IA', () => {
     expect(
       screen.getByRole('heading', { name: '세션을 찾을 수 없습니다', level: 1 }),
     ).toBeInTheDocument()
+  })
+
+  it('SelfRecall renders yesterday session split layout', () => {
+    render(
+      <MemoryRouter initialEntries={['/sessions/yesterday']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions/yesterday" element={<SelfRecall />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { name: '셀프 회상 — 어제 한 일', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('나만 보는 회상 모드')).toBeInTheDocument()
+    expect(screen.getByText('주간 리포트 자동 생성 cron')).toBeInTheDocument()
+    expect(screen.getByLabelText('오늘의 셀프 핸드오프')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /저장 후 Today로/ })).toHaveAttribute('href', '/today')
   })
 
   it('onboarding renders wizard without sidebar', () => {

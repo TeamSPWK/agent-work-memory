@@ -7,6 +7,7 @@ import { Sessions } from './screens/Sessions'
 import { SessionDetail } from './screens/SessionDetail'
 import { ExplainBack } from './screens/ExplainBack'
 import { Share } from './screens/Share'
+import { SelfRecall } from './screens/SelfRecall'
 import { ONBOARDING_STEPS } from './lib/seed/navigation'
 
 export const router = createBrowserRouter([
@@ -17,6 +18,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/today" replace /> },
       { path: 'today', element: <Today /> },
       { path: 'sessions', element: <Sessions /> },
+      { path: 'sessions/yesterday', element: <SelfRecall /> },
       { path: 'sessions/:id', element: <SessionDetail /> },
       { path: 'sessions/:id/explain', element: <ExplainBack /> },
       { path: 'sessions/:id/share', element: <Share /> },
