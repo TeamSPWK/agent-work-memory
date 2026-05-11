@@ -1,27 +1,28 @@
 # Nova State
 
 ## Current
-- **Goal**: m2(inside-app) + m2.5(외부 페이지) 코드 이식 준비. v0.1 lock 후 외부 페이지 영역 PRD §12 신설
-- **Phase**: frontend ingest + 외부 페이지 디자인 라운드 (사용자 claude.ai/design 작업 대기)
-- **Blocker**: 외부 페이지 v0.2 시안 받기 전 m2.5 Plan 진입 불가
+- **Goal**: v0.2 lock 완료. m2(inside-app) + m2.5(외부) 코드 이식 진입 준비
+- **Phase**: frontend ingest (두 시안 모두 lock — m2 S1 부트스트랩 시작 대기)
+- **Blocker**: 없음 — 사용자가 m2 S1 / m2.5 S1 진입 명시 시 작업 시작
 
 ## Tasks
 | Task | Status | Verdict | Note |
 |------|--------|---------|------|
-| v0.1 채택 + 저장 (p0-design-v0/) | done | PASS — 23화면, 2.6MB, subset.woff2만 | docs/projects/plans/p0-design-v0/ |
-| m2 Plan 작성 + stack 결정 자문 | done | PASS — (B) Vite+Supabase, 3AI 75% 합의, 8 exit criteria | m2-frontend-from-design.md / verifications/ |
-| PRD v2.1 §12 + p0.2 프롬프트 + 법무 트래커 | done | PASS — 외부 페이지 14화면 영역·법적 필수·1인 운영 투명 | PRD §12 / p0.2-...md / legal-pages.md |
-| 외부 페이지 v0.2 시안 생성 (사용자) | pending | — | claude.ai/design 누적 작업 |
-| m2.5 Plan 작성 (외부 페이지 이식) | pending | — | v0.2 시안 lock 후 |
-| 시안 → 코드 이식 (m2 + m2.5 실행) | pending | — | 두 시안 모두 lock 후 |
+| v0.1 채택 + 저장 (p0-design-v0/) | done | PASS — 23화면 inside-app, 2.6MB | docs/projects/plans/p0-design-v0/ |
+| m2 Plan + stack 결정 자문 | done | PASS — (B) Vite+Supabase, 3AI 75% 합의 | m2-frontend-from-design.md |
+| PRD v2.1 §12 + p0.2 프롬프트 + 법무 트래커 | done | PASS — 외부 페이지 14화면 영역 | PRD §12 / p0.2-...md / legal-pages.md |
+| v0.2 채택 + 저장 + line 359 fix | done | PASS — 14화면 외부 페이지, 2.7MB, raw ID 노출 제거 | docs/projects/plans/p0-design-v0.2/ |
+| m2.5 Plan 작성 (외부 페이지 이식) | done | PASS — CPS + 8 exit criteria + S1~S9 작업 순서 | m2.5-public-pages-from-design.md |
+| 시안 → 코드 이식 (m2 S1 부트스트랩) | pending | — | 사용자 진입 명시 시 시작 |
+| 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S1~S3 완료 후 진입 |
 | 법무 4종 실제 문구 자문 | pending | — | legal-pages.md 단계 1~5 |
 
 ## Recently Done
 | Task | Completed | Verdict | Ref |
 |------|-----------|---------|-----|
-| 디자인 v0.1 보강 (H4 + Workspace + Settings + Risk Radar fill) | 2026-05-11 | PASS — 자가 점검 9/9 | p0-design-v0/chats/chat-2.md |
-| 디자인 v0 (H1·H2·H3 16화면) | 2026-05-10 | PASS | p0-design-v0/chats/chat-1.md |
-| v1 archive + Master Prompt v2 | 2026-05-10 | PASS | legacy-v1 브랜치 / p0-claude-design-prompts.md |
+| 디자인 v0.2 외부 14화면 + chat-3.md 10 결정 | 2026-05-11 | PASS — line 359 fix 외 채택 | p0-design-v0.2/chats/chat-3.md |
+| 디자인 v0+v0.1 inside-app 23화면 | 2026-05-10~11 | PASS — 자가 점검 9/9 | p0-design-v0/chats/chat-{1,2}.md |
+| v1 archive + Master Prompts(v2/v3) | 2026-05-10~11 | PASS | legacy-v1 / p0-...md, p0.1-...md, p0.2-...md |
 
 ## Known Risks (PRD §11 압축)
 | 위험 | 심각도 | 상태 |
@@ -38,13 +39,12 @@
 | — | — | — |
 
 ## Last Activity
+- /nova:check (v0.2 lock + m2.5 Plan) → PASS — 외부 14화면 docs/projects/plans/p0-design-v0.2/(2.7MB), line 359 raw ID 노출 fix, m2.5 8 exit criteria + S1~S9 | 2026-05-11
 - /nova:check (PRD §12 + p0.2 + 법무 트래커) → PASS — 외부 페이지 14화면 영역 신설 + 라운드 3 프롬프트 + 법무 4종 별도 트래킹 | 2026-05-11
-- /nova:check (m2 Plan + stack 자문) → PASS — 3AI 75% 합의, (B) Vite+Supabase 채택, S1~S11 작업 순서 | 2026-05-11
-- /nova:check (디자인 v0.1 lock) → PASS — 23 화면 + Risk Radar 8 카테고리, fonts subset.woff2 9개(2.3MB), tokens.css 패치 | 2026-05-11
+- /nova:check (m2 Plan + stack 자문 + v0.1 lock) → PASS — 3AI 75% 합의 (B) Vite+Supabase, 23화면 inside-app 보존 | 2026-05-11
 
 ## Refs
-- 디자인 시안 lock: docs/projects/plans/p0-design-v0/ (index.html · src/ · tokens · subset 폰트)
-- Plans: p0-claude-design-prompts.md(1차) / p0.1-...round2.md(2차) / p0.2-...round3.md(3차) / m2-frontend-from-design.md
-- PRD v2.1: docs/PRD.md / v1: docs/archive/PRD-v1-tech-validation.md
-- 협업·운영 룰: .claude/rules/{prd-and-strategy-collaboration, operations-sync, instruction-placement}.md
-- v1 자산 회수: `git checkout legacy-v1` 또는 `git show legacy-v1-2026-05-10:<path>`
+- 디자인 lock: p0-design-v0/(inside-app 23화면) + p0-design-v0.2/(외부 14화면)
+- Prompts: p0-...md(1차) / p0.1-...round2.md(2차) / p0.2-...round3.md(3차)
+- Plans: m2-frontend-from-design.md(inside-app) / m2.5-public-pages-from-design.md(외부)
+- PRD v2.1 / 협업 룰 .claude/rules/* / v1 archive: `git checkout legacy-v1`
