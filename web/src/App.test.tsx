@@ -9,6 +9,7 @@ import { SessionDetail } from './screens/SessionDetail'
 import { ExplainBack } from './screens/ExplainBack'
 import { Share } from './screens/Share'
 import { SelfRecall } from './screens/SelfRecall'
+import { Audit } from './screens/Audit'
 import { StatusBoard } from './screens/dev/StatusBoard'
 import { NAV_ITEMS } from './lib/seed/navigation'
 
@@ -238,6 +239,120 @@ describe('AppShell + product IA', () => {
     expect(screen.getByText('주간 리포트 자동 생성 cron')).toBeInTheDocument()
     expect(screen.getByLabelText('오늘의 셀프 핸드오프')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /저장 후 Today로/ })).toHaveAttribute('href', '/today')
+  })
+
+  it('Audit defaults to trail tab with KPI cards and event table', () => {
+    render(
+      <MemoryRouter initialEntries={['/audit']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="audit" element={<Audit />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Audit Trail', level: 1 })).toBeInTheDocument()
+    expect(screen.getByText('AI 변경 검증율 · 30일')).toBeInTheDocument()
+    expect(screen.getByText('미검토')).toBeInTheDocument()
+    expect(screen.getByText('7대 원칙 적용')).toBeInTheDocument()
+    expect(screen.getByText('applicants 테이블 prod 인덱스 적용 완료')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Audit Trail', selected: true })).toBeInTheDocument()
+  })
+
+  it('Audit principles tab links upgrade cta to settings export', () => {
+    render(
+      <MemoryRouter initialEntries={['/audit?tab=principles']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="audit" element={<Audit />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { name: '7대 원칙 적용 상태', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('원칙별 체크리스트')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /업그레이드/ })).toHaveAttribute(
+      'href',
+      '/settings?tab=export',
+    )
+  })
+
+  it('Audit falls back to trail when tab query is unknown', () => {
+    render(
+      <MemoryRouter initialEntries={['/audit?tab=nope']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="audit" element={<Audit />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Audit Trail', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Audit Trail', selected: true })).toBeInTheDocument()
+  })
+
+  it('Audit integrity tab shows mock notice + broken row detail', () => {
+    render(
+      <MemoryRouter initialEntries={['/audit?tab=integrity']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="audit" element={<Audit />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { name: '체인 무결성 결과', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: 'mock 한계 안내' })).toBeInTheDocument()
+    expect(screen.getByText(/ev-2396 · expected_prev=ad9912f · stored_prev=BROKEN/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '백필 후보로 분류' })).toBeInTheDocument()
+  })
+
+  it('Audit pdf tab renders pdf-frame preview + file format seg', () => {
+    render(
+      <MemoryRouter initialEntries={['/audit?tab=pdf']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="audit" element={<Audit />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'PDF export 미리보기', level: 1 })).toBeInTheDocument()
+    expect(screen.getByText(/AI 변경 감사 자료/)).toBeInTheDocument()
+    expect(screen.getByRole('tablist', { name: '파일 형식' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'PDF (한국어)' })).toHaveClass('active')
+    expect(screen.getByText(/가설 H2 검증 포인트/)).toBeInTheDocument()
+  })
+
+  it('Audit tab buttons navigate via query param', () => {
+    render(
+      <MemoryRouter initialEntries={['/audit']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="audit" element={<Audit />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('tab', { name: '체인 무결성' }))
+    expect(
+      screen.getByRole('heading', { name: '체인 무결성 결과', level: 1 }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('tab', { name: 'PDF export' }))
+    expect(
+      screen.getByRole('heading', { name: 'PDF export 미리보기', level: 1 }),
+    ).toBeInTheDocument()
   })
 
   it('StatusBoard renders phases + sprints + screens matrix', () => {

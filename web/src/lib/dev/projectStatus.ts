@@ -111,13 +111,13 @@ export const SCREENS: ScreenRow[] = [
   { group: 'H1', label: '팀 공유 요약', route: '/sessions/:id/share', status: 'done', sprint: 'S2.5.b', commit: '74905a1' },
   { group: 'H1', label: '셀프 회상 (어제)', route: '/sessions/yesterday', status: 'done', sprint: 'S2.5.c', commit: '2e6d594' },
   // H2
-  { group: 'H2', label: 'Audit Trail', route: '/audit', status: 'next', sprint: 'S2.6' },
-  { group: 'H2', label: '7대 원칙 패널', route: '/audit?tab=principles', status: 'pending', sprint: 'S2.6' },
-  { group: 'H2', label: '체인 무결성', route: '/audit?tab=integrity', status: 'pending', sprint: 'S2.6' },
-  { group: 'H2', label: 'PDF export 미리보기', route: '/audit?tab=pdf', status: 'pending', sprint: 'S2.6' },
+  { group: 'H2', label: 'Audit Trail', route: '/audit', status: 'done', sprint: 'S2.6' },
+  { group: 'H2', label: '7대 원칙 패널', route: '/audit?tab=principles', status: 'done', sprint: 'S2.6' },
+  { group: 'H2', label: '체인 무결성', route: '/audit?tab=integrity', status: 'done', sprint: 'S2.6' },
+  { group: 'H2', label: 'PDF export 미리보기', route: '/audit?tab=pdf', status: 'done', sprint: 'S2.6' },
   { group: 'H2', label: 'Plan & Billing', route: '/settings?tab=billing', status: 'pending', sprint: 'S2.10' },
   // H3
-  { group: 'H3', label: 'Risk Radar', route: '/risk', status: 'pending', sprint: 'S2.7' },
+  { group: 'H3', label: 'Risk Radar', route: '/risk', status: 'next', sprint: 'S2.7' },
   { group: 'H3', label: 'Incident Replay', route: '/incidents/:id?tab=replay', status: 'pending', sprint: 'S2.7' },
   { group: 'H3', label: 'Event Detail · 3분리', route: '/incidents/:id?tab=event', status: 'pending', sprint: 'S2.7' },
   { group: 'H3', label: 'Reviewer Brief 연결', route: '/incidents/:id?tab=reviewer', status: 'pending', sprint: 'S2.7' },
@@ -198,7 +198,7 @@ export const PROJECT_META = {
   name: 'Agent Work Memory',
   tagline: 'AI Audit Trail SaaS for Korean SMB',
   ownerEmail: 'jay@spacewalk.tech',
-  currentCommit: '953987a',
+  currentCommit: '84132ba',
   lastUpdated: '2026-05-11',
 }
 
@@ -211,11 +211,11 @@ export type NextAction = {
 
 /** "지금 해야 할 한 가지." Linear inbox 패러다임. */
 export const NEXT_ACTION: NextAction = {
-  sprint: 'S2.6',
-  title: 'Audit — H2 결제 트리거 1/5',
+  sprint: 'S2.7',
+  title: 'Risk Radar — H3 진입',
   detail:
-    'v0.1 H2 화면 4종(AuditTrail · 7대 원칙 · 체인 무결성 · PDF export)을 /audit 탭으로 채움. Billing은 S2.10 settings로 분리.',
-  primaryRoute: '/audit',
+    'v0.1 H3 화면 5종(Risk Radar · Incident Replay · Event Detail · Reviewer Brief · Incident Note)을 /risk + /incidents/:id 탭으로 이식. H2 4/5 완료 — Billing은 S2.10 이연.',
+  primaryRoute: '/risk',
 }
 
 /** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */
