@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppShell } from './layout/AppShell'
 import { OnboardingLayout } from './layout/OnboardingLayout'
 import { PlaceholderScreen } from './screens/PlaceholderScreen'
+import { Today } from './screens/Today'
 import { ONBOARDING_STEPS } from './lib/seed/navigation'
 
 export const router = createBrowserRouter([
@@ -10,7 +11,7 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <Navigate to="/today" replace /> },
-      { path: 'today', element: <PlaceholderScreen label="Today" /> },
+      { path: 'today', element: <Today /> },
       { path: 'sessions', element: <PlaceholderScreen label="Sessions" /> },
       { path: 'sessions/:id', element: <PlaceholderScreen label="Session Detail" /> },
       { path: 'audit', element: <PlaceholderScreen label="Audit" /> },
