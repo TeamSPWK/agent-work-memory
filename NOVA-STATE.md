@@ -1,7 +1,7 @@
 # Nova State
 
-- **Goal**: DT.1 Dashboard 완료(`/dev/status`) → S2.6 Audit 진입 대기 (H2 결제 트리거 1/5)
-- **Phase**: frontend ingest — m2 S1+S2.1~S2.5 + DT.1 done. H1 6/6. 화면 6/28+1.
+- **Goal**: S2.6 Audit 완료(`/audit` 4탭) → S2.7 Risk Radar 진입 대기 (H3)
+- **Phase**: frontend ingest — m2 S1+S2.1~S2.6 + DT.1 done. H1 6/6 + H2 4/5(Billing 이연). 화면 10/28+1.
 - **Blocker**: 없음. 후속 결정·프로토타입 흔적은 `docs/projects/STATUS.md` + `/dev/status` 대시보드 참조.
 
 ## Tasks
@@ -15,8 +15,9 @@
 | m2 S2.5.a ExplainBack | done | PASS(qa) — 5필드 composer + 우측 3카드 | screens/ExplainBack.tsx |
 | m2 S2.5.b Share | done | PASS(qa) — pre 요약 + 3채널 + H1 검증 카드 | screens/Share.tsx |
 | m2 S2.5.c SelfRecall | done | PASS(qa, 조건부) — split layout, match-line ok/extra, 핸드오프 textarea, 셀프 hardcode 주석 | screens/SelfRecall.tsx |
-| **m2 S2.6 Audit (H2 첫 화면)** | ⏭ NEXT | — | /audit (탭: trail/principles/integrity/pdf) |
-| m2 S2.7+ Risk/Workspace/Settings/Onboarding | pending | — | S2.6 완료 후 |
+| m2 S2.6 Audit (H2 4/5) | done | PASS(qa, 조건부) — 4탭 ?tab= 라우팅 + KPI weak 버튼 + mock 한계 배지(role=status) + Billing은 /settings?tab=export 이연 | screens/Audit.tsx + audit/{AuditTrail,Principles,Integrity,PdfPreview}.tsx + seed/audit.ts |
+| **m2 S2.7 Risk Radar + Incident (H3)** | ⏭ NEXT | — | /risk + /incidents/:id (탭: replay/event/reviewer/note) |
+| m2 S2.8+ Workspace/Settings/Onboarding | pending | — | S2.7 완료 후 |
 | m2 S1.1 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | pending | — | 사용자 외부 계정 단계 |
 | 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S2 완료 후 |
 | 법무 4종 실제 문구 자문 | pending | — | legal-pages.md 단계 1~5 |
@@ -42,6 +43,7 @@
 | — | — | — |
 
 ## Last Activity
+- m2 S2.6 Audit (qa + Evaluator) → PASS(조건부) — /audit 4탭(trail/principles/integrity/pdf), useSearchParams 라우팅, AUDIT_EVENTS 8건+broken 1건, COMPLIANCE 7원칙(ok5/warn2), Integrity mock 한계 배지(role=status), Billing은 S2.10 이연(/settings?tab=export Link), test 19/19, Evaluator surgical fix 2건 반영(KPI 3·4 weak 버튼 + PDF 시각 슬라이스) | 2026-05-12
 - DT.1.2 Dashboard 토스 스타일 전면 재설계 → PASS — 큰 숫자 "6/28" + 우측 그룹 mini bars + Phase 가로 stepper(●─●─○─○) + Sprint 컴팩트 리스트(✓/→/◯) + 매트릭스·보류·흔적 details collapse. 한 화면 1 task 원칙 충족 | 2026-05-11
 - DT.1.1 Dashboard 보강 (UX 트렌드 비판 후 surgical) → PASS — NextAction 카드 + 그룹별 진행률 바 | 2026-05-11
 - DT.1 Dashboard (qa + Playwright) → PASS — `/dev/status` StatusBoard(Phase·Sprint·매트릭스·보류·흔적), SSOT projectStatus.ts, test 13/13 | 2026-05-11
@@ -51,6 +53,7 @@
 - m2 S2.4 SessionDetail (qa + Playwright) → PASS — 대화 7·명령 3·파일 2·매칭 commit 3+4축 bar, mock 한계 배지, test 6/6 | 2026-05-11
 
 ## Refs
+- m2 S2.6 Plan: `docs/projects/plans/m2-s2.6-audit.md`
 - **프로젝트 현황판: `docs/projects/STATUS.md`** (페이즈·sprint·화면 매트릭스·보류 결정·프로토타입 흔적)
 - 디자인 lock: p0-design-v0/(inside-app 23화면) + p0-design-v0.2/(외부 14화면)
 - Prompts: p0-...md(1차) / p0.1-...round2.md(2차) / p0.2-...round3.md(3차)
