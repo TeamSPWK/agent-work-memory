@@ -1,26 +1,27 @@
 # Nova State
 
 ## Current
-- **Goal**: 디자인 v0.1 lock 완료 → frontend 코드 이식 (m2 단계)
-- **Phase**: frontend ingest (v0.1 시안 23화면 docs/projects/plans/p0-design-v0/ 보존)
-- **Blocker**: stack 결정 미정 (frontend framework / 백엔드 / 호스팅 / 인증)
+- **Goal**: m2(inside-app) + m2.5(외부 페이지) 코드 이식 준비. v0.1 lock 후 외부 페이지 영역 PRD §12 신설
+- **Phase**: frontend ingest + 외부 페이지 디자인 라운드 (사용자 claude.ai/design 작업 대기)
+- **Blocker**: 외부 페이지 v0.2 시안 받기 전 m2.5 Plan 진입 불가
 
 ## Tasks
 | Task | Status | Verdict | Note |
 |------|--------|---------|------|
-| v0.1 채택 + 저장 (docs/projects/plans/p0-design-v0/) | done | PASS — 23 화면 + Risk Radar 8 카테고리, 2.6MB | subset.woff2만 포함, tokens.css 패치 |
-| m2 Plan 작성 — frontend 이식 + stack 결정 | pending | — | docs/projects/plans/m2-frontend-from-design.md |
-| stack 결정 자문 | pending | — | x_verify 또는 사용자 옵션 제시 |
-| 시안 → 코드 이식 (m2 실행) | pending | — | stack 확정 후 |
+| v0.1 채택 + 저장 (p0-design-v0/) | done | PASS — 23화면, 2.6MB, subset.woff2만 | docs/projects/plans/p0-design-v0/ |
+| m2 Plan 작성 + stack 결정 자문 | done | PASS — (B) Vite+Supabase, 3AI 75% 합의, 8 exit criteria | m2-frontend-from-design.md / verifications/ |
+| PRD v2.1 §12 + p0.2 프롬프트 + 법무 트래커 | done | PASS — 외부 페이지 14화면 영역·법적 필수·1인 운영 투명 | PRD §12 / p0.2-...md / legal-pages.md |
+| 외부 페이지 v0.2 시안 생성 (사용자) | pending | — | claude.ai/design 누적 작업 |
+| m2.5 Plan 작성 (외부 페이지 이식) | pending | — | v0.2 시안 lock 후 |
+| 시안 → 코드 이식 (m2 + m2.5 실행) | pending | — | 두 시안 모두 lock 후 |
+| 법무 4종 실제 문구 자문 | pending | — | legal-pages.md 단계 1~5 |
 
 ## Recently Done
 | Task | Completed | Verdict | Ref |
 |------|-----------|---------|-----|
-| 디자인 v0.1 보강 라운드 (Onboarding/Workspace/Settings + Risk Radar fill) | 2026-05-11 | PASS — chat-2.md 자가 점검 + 검증 체크리스트 9/9 | p0-design-v0/ |
-| 디자인 v0 라운드 (H1·H2·H3 16화면) | 2026-05-10 | PASS | p0-design-v0/chats/chat-1.md |
-| Master Prompt v2 (PRD 11화면 전체) | 2026-05-10 | PASS | docs/projects/plans/p0-claude-design-prompts.md |
-| 2차 라운드 프롬프트 | 2026-05-11 | PASS | docs/projects/plans/p0.1-claude-design-prompts-round2.md |
-| v1 archive (Design-First Restart) | 2026-05-10 | PASS | legacy-v1 브랜치 + tag |
+| 디자인 v0.1 보강 (H4 + Workspace + Settings + Risk Radar fill) | 2026-05-11 | PASS — 자가 점검 9/9 | p0-design-v0/chats/chat-2.md |
+| 디자인 v0 (H1·H2·H3 16화면) | 2026-05-10 | PASS | p0-design-v0/chats/chat-1.md |
+| v1 archive + Master Prompt v2 | 2026-05-10 | PASS | legacy-v1 브랜치 / p0-claude-design-prompts.md |
 
 ## Known Risks (PRD §11 압축)
 | 위험 | 심각도 | 상태 |
@@ -37,15 +38,13 @@
 | — | — | — |
 
 ## Last Activity
-- /nova:check (디자인 v0.1 채택 + 저장) → PASS — 23 화면 + Risk Radar 8 카테고리 lock, fonts subset.woff2 9개만(2.3MB) + tokens.css fallback URL 제거, README/HANDOFF/chats 보존 | 2026-05-11
-- /nova:check (2차 라운드 프롬프트) → PASS — Onboarding H4(가설 띠) + Workspace/Settings(supporting) + Risk Radar 7 카테고리 fill 범위 정의 | 2026-05-11
-- /nova:check (디자인 v0.1 보강) → PASS — H4 5화면 + Workspace 3 + Settings 4 + Risk Radar 7 카테고리, 자가 점검 통과 | 2026-05-11
-- /nova:check (디자인 v0) → PASS — H1/H2/H3 16화면, Wanted LaaS 토큰 + hypothesis 띠 + cross-link 사고 시나리오 | 2026-05-10
+- /nova:check (PRD §12 + p0.2 + 법무 트래커) → PASS — 외부 페이지 14화면 영역 신설 + 라운드 3 프롬프트 + 법무 4종 별도 트래킹 | 2026-05-11
+- /nova:check (m2 Plan + stack 자문) → PASS — 3AI 75% 합의, (B) Vite+Supabase 채택, S1~S11 작업 순서 | 2026-05-11
+- /nova:check (디자인 v0.1 lock) → PASS — 23 화면 + Risk Radar 8 카테고리, fonts subset.woff2 9개(2.3MB), tokens.css 패치 | 2026-05-11
 
 ## Refs
-- 디자인 시안 lock: docs/projects/plans/p0-design-v0/ (index.html · src/ · tokens · 한국어 subset 폰트)
-- 디자인 prompts: docs/projects/plans/p0-claude-design-prompts.md (1차) / p0.1-claude-design-prompts-round2.md (2차)
-- PRD v2: docs/PRD.md / v1: docs/archive/PRD-v1-tech-validation.md
+- 디자인 시안 lock: docs/projects/plans/p0-design-v0/ (index.html · src/ · tokens · subset 폰트)
+- Plans: p0-claude-design-prompts.md(1차) / p0.1-...round2.md(2차) / p0.2-...round3.md(3차) / m2-frontend-from-design.md
+- PRD v2.1: docs/PRD.md / v1: docs/archive/PRD-v1-tech-validation.md
 - 협업·운영 룰: .claude/rules/{prd-and-strategy-collaboration, operations-sync, instruction-placement}.md
-- Areas: docs/areas/{operations, regulatory, customer}/README.md
 - v1 자산 회수: `git checkout legacy-v1` 또는 `git show legacy-v1-2026-05-10:<path>`
