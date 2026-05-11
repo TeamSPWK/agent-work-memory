@@ -1,15 +1,16 @@
-import { useParams } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { useUi } from '../state/ui'
 import type { Persona } from '../state/ui'
-import { PERSONAS, findHypothesis, findScreen } from '../lib/seed/hypotheses'
+import { NAV_ITEMS } from '../lib/seed/navigation'
 import { WORKSPACES } from '../lib/seed/workspaces'
 import { Icon } from '../components/Icon'
 
+const PERSONAS: Persona[] = ['Operator', 'Reviewer', 'Admin']
+
 export function Topbar() {
   const { persona, setPersona, theme, toggleTheme, workspaceId, setWorkspaceId } = useUi()
-  const { hyp = '', screen: screenId = '' } = useParams<{ hyp?: string; screen?: string }>()
-  const h = findHypothesis(hyp)
-  const screen = findScreen(hyp, screenId)
+  const { pathname } = useLocation()
+  const current = NAV_ITEMS.find((item) => pathname === item.to || pathname.startsWith(item.to + '/'))
 
   return (
     <header className="topbar">
@@ -32,16 +33,10 @@ export function Topbar() {
             </option>
           ))}
         </select>
-        {h && (
+        {current && (
           <>
             <Icon name="chev" size={12} />
-            <span>{h.short}</span>
-          </>
-        )}
-        {screen && (
-          <>
-            <Icon name="chev" size={12} />
-            <b>{screen.label}</b>
+            <b>{current.label}</b>
           </>
         )}
       </div>

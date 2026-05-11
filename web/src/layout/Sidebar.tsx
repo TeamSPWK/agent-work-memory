@@ -1,26 +1,19 @@
 import { NavLink } from 'react-router-dom'
-import { HYPOTHESES } from '../lib/seed/hypotheses'
+import { NAV_ITEMS } from '../lib/seed/navigation'
 import { Icon } from '../components/Icon'
 
 export function Sidebar() {
   return (
     <nav className="nav">
-      {HYPOTHESES.map((h) => (
-        <div key={h.id}>
-          <div className="nav-group">{h.label}</div>
-          {h.screens.map((s, i) => (
-            <NavLink
-              key={s.id}
-              to={`/${h.id}/${s.id}`}
-              className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}
-            >
-              <span className="num">{i + 1}</span>
-              <Icon name={s.icon} size={16} />
-              <span>{s.label}</span>
-              {s.pay && <span className="pay">결제</span>}
-            </NavLink>
-          ))}
-        </div>
+      {NAV_ITEMS.map((item) => (
+        <NavLink
+          key={item.id}
+          to={item.to}
+          className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}
+        >
+          <Icon name={item.icon} size={16} />
+          <span>{item.label}</span>
+        </NavLink>
       ))}
     </nav>
   )

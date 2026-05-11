@@ -161,7 +161,7 @@ m2 완료 = 다음 모두 PASS:
 
 | # | 기준 | 측정 |
 |---|---|---|
-| 1 | v0.1 23화면 모두 production 코드로 이식 | 사용자가 시각적으로 v0.1과 차이 없음을 직접 확인 (페이지마다 1회) |
+| 1 | v0.1 28화면 *내용*은 production 코드로 이식, *IA*는 제품 기준으로 변환 | 화면별 내용(데이터·인터랙션·시각)은 v0.1과 정합. IA(네비·그룹·HypothesisBanner)는 제품 사용자 관점으로 재구성 — 가설 그룹화·검증 지표 노출 없음 |
 | 2 | 워크스페이스 격리 (RLS) | 2개 워크스페이스 만들어 한 쪽 데이터가 다른 쪽에서 안 보임을 확인 |
 | 3 | Audit hash chain | 1만 건 이벤트 삽입 후 `hash-chain-verify` 호출 → "PASS, 깨진 행 0" |
 | 4 | PDF export | H2.4에서 "지금 export" 클릭 → Edge Function에서 한글 깨짐 없는 PDF 생성 + Storage 저장 + SHA-256 첨부 |
@@ -180,10 +180,15 @@ S1. 프로젝트 부트스트랩
     Vercel 연결, GitHub Actions(typecheck+test), 토큰·스타일·폰트 import.
     → Exit: localhost에서 빈 페이지 + Wanted LaaS 토큰 적용 확인
 
-S2. 디자인 시안 → 정적 화면 이식 (모든 23화면, mock 데이터)
+S2. 디자인 시안 → 정적 화면 이식 (모든 28화면, mock 데이터)
     v0.1 src/data.jsx → src/lib/seed/*.ts. 라우터·페르소나·다크 토글 동작.
     백엔드 미연결 — 모두 mock.
-    → Exit: criteria #1 충족 (시각 검증)
+    S2.1 — 제품 IA(Today/Sessions/Audit/Risk/Workspace/Settings 평면 6 +
+           /onboarding 분리) + 골격(라우터·layout·시드).
+           HypothesisBanner 제거. v0.1 시연용 IA(가설 H1~H4 그룹화)는 폐기.
+    S2.2~ — H1·H2·H3·H4·ws·settings 화면별 내용 채움(서브 탭은 query 또는
+            nested). 28화면 시각 정합성 확보.
+    → Exit: criteria #1 충족 (각 화면 내용 정합 + 제품 IA 변환)
 
 S3. Supabase 스키마 + RLS
     workspaces / memberships / sessions / audit_events / incidents /
@@ -252,3 +257,4 @@ S11. /nova:check 전체 — 8 criteria PASS 확인 후 m2 완료
 - 2026-05-11 — 보존 정책 문서화 m2 외 별도 작업으로 분리.
 - 2026-05-11 — Cloudflare 옵션은 운영 비용 초과 시 재검토. m2에서 결정 안 함.
 - 2026-05-11 — S1 스캐폴드 시 Vite 8 latest templates 채택. 본 Plan §Solution에 적힌 메이저 버전 대비 실제 채택: React 18→19, TS 5→6, React Router 6→7, Vitest는 신규 채택(4). 모두 호환·strict mode 활성·typecheck/build/test PASS 확인 후 진행. 사용자 승인(2026-05-11).
+- 2026-05-11 — **v0.1 시연용 IA 폐기, 제품 IA 채택**. 사이드바: Today/Sessions/Audit/Risk/Workspace/Settings 평면 6 + /onboarding 분리. v0.1 가설 그룹화(H1~H4)와 HypothesisBanner는 *디자인 시연 도구*로 식별 — 실제 사용자(Operator/Admin/Reviewer)는 가설 라벨을 모름. 28화면 *내용*은 보존, *IA*만 변환. §exit criteria #1과 §작업 순서 S2도 함께 갱신. S2.1 골격(commit `aab0bb7`)은 시연 IA였으므로 제품 IA로 재작성. 사용자 결정(2026-05-11).
