@@ -10,19 +10,18 @@ import {
   SPRINTS,
   groupProgress,
 } from '../../lib/dev/projectStatus'
-import type { PhaseStatus, ScreenStatus, SprintStatus } from '../../lib/dev/projectStatus'
-import { Icon } from '../../components/Icon'
+import type { ScreenStatus, SprintStatus } from '../../lib/dev/projectStatus'
 
-const PHASE_TONE: Record<PhaseStatus, { bg: string; fg: string; label: string }> = {
-  done: { bg: 'var(--c-green-50)', fg: '#fff', label: '완료' },
-  active: { bg: 'var(--primary-normal)', fg: '#fff', label: '진행 중' },
-  pending: { bg: 'var(--bg-subtle)', fg: 'var(--text-assistive)', label: '대기' },
+const SPRINT_MARK: Record<SprintStatus, string> = {
+  done: '✓',
+  next: '→',
+  pending: '◯',
 }
 
-const SPRINT_TONE: Record<SprintStatus, string> = {
-  done: 'green',
-  next: 'orange',
-  pending: 'neutral',
+const SPRINT_COLOR: Record<SprintStatus, string> = {
+  done: 'var(--status-positive)',
+  next: 'var(--primary-strong)',
+  pending: 'var(--text-disable)',
 }
 
 const SCREEN_TONE: Record<ScreenStatus, string> = {
@@ -39,402 +38,460 @@ const SCREEN_LABEL: Record<ScreenStatus, string> = {
   pending: '대기',
 }
 
+const PHASE_MARK: Record<string, string> = {
+  done: '●',
+  active: '●',
+  pending: '○',
+}
+
 export function StatusBoard() {
   const total = SCREENS.length
   const done = SCREENS.filter((s) => s.status === 'done').length
   const groups = Array.from(new Set(SCREENS.map((s) => s.group)))
+  const activeSprintId = SPRINTS.find((s) => s.status === 'next')?.id ?? '—'
 
   return (
-    <>
-      <div className="page-h">
-        <div>
-          <div className="eyebrow">Dev-Track · /dev/status</div>
-          <h1>{PROJECT_META.name} — 현황판</h1>
-          <p>
-            {PROJECT_META.tagline} · 1인 운영(<code>{PROJECT_META.ownerEmail}</code>) · 최신 커밋{' '}
-            <code>{PROJECT_META.currentCommit}</code> · 갱신 {PROJECT_META.lastUpdated}
-          </p>
-        </div>
-        <div className="actions">
-          <div
-            style={{
-              padding: '8px 12px',
-              borderRadius: 999,
-              background: 'var(--primary-light)',
-              color: 'var(--primary-strong)',
-              font: 'var(--t-label1-strong)',
-            }}
-          >
-            화면 {done} / {total}
-          </div>
-        </div>
-      </div>
+    <div style={{ maxWidth: 960, margin: '0 auto' }}>
+      <Header done={done} total={total} groups={groups} />
+      <NextActionBlock />
+      <PhaseStepper />
+      <SprintList activeSprintId={activeSprintId} />
 
-      <section
-        className="card"
+      <details style={detailsStyle}>
+        <summary style={summaryStyle}>화면 매트릭스 — {done}/{total}</summary>
+        <ScreenMatrix groups={groups} />
+      </details>
+
+      <details style={detailsStyle}>
+        <summary style={summaryStyle}>
+          보류 결정 ({PENDING_DECISIONS.filter((d) => !d.resolved).length})
+        </summary>
+        <PendingDecisions />
+      </details>
+
+      <details style={detailsStyle}>
+        <summary style={summaryStyle}>프로토타입 흔적 ({PROTOTYPE_MARKS.length})</summary>
+        <PrototypeList />
+      </details>
+    </div>
+  )
+}
+
+const detailsStyle = {
+  marginTop: 16,
+  padding: '12px 16px',
+  background: 'var(--bg-base)',
+  border: '1px solid var(--line-soft)',
+  borderRadius: 12,
+}
+
+const summaryStyle = {
+  cursor: 'pointer',
+  listStyle: 'none',
+  font: 'var(--t-label1-strong)',
+  color: 'var(--text-strong)',
+}
+
+function Header({ done, total, groups }: { done: number; total: number; groups: string[] }) {
+  return (
+    <header style={{ padding: '32px 0 24px' }}>
+      <div className="eyebrow" style={{ marginBottom: 4 }}>
+        Dev-Track · /dev/status
+      </div>
+      <h1
         style={{
-          marginBottom: 16,
-          background: 'var(--primary-light)',
-          borderColor: 'transparent',
-          padding: 20,
+          font: 'var(--t-heading3)',
+          color: 'var(--text-strong)',
+          margin: '0 0 6px 0',
         }}
       >
-        <div className="row between" style={{ alignItems: 'flex-start', gap: 16 }}>
-          <div style={{ flex: 1 }}>
-            <div
-              className="eyebrow"
-              style={{ color: 'var(--primary-strong)', marginBottom: 4 }}
-            >
-              지금 해야 할 한 가지 · {NEXT_ACTION.sprint}
-            </div>
-            <div
-              style={{
-                font: 'var(--t-heading2)',
-                color: 'var(--primary-strong)',
-                marginBottom: 6,
-              }}
-            >
-              {NEXT_ACTION.title}
-            </div>
-            <div
-              style={{
-                font: 'var(--t-body2)',
-                color: 'var(--primary-strong)',
-                opacity: 0.85,
-              }}
-            >
-              {NEXT_ACTION.detail}
-            </div>
-          </div>
-          {NEXT_ACTION.primaryRoute && (
-            <Link
-              className="btn primary"
-              to={NEXT_ACTION.primaryRoute}
-              style={{ flexShrink: 0 }}
-            >
-              <Icon name="arrow" size={14} />
-              현재 stub 보기
-            </Link>
-          )}
-        </div>
-      </section>
+        {PROJECT_META.name} <span style={{ color: 'var(--text-assistive)', fontWeight: 400 }}>— 현황판</span>
+      </h1>
+      <div className="muted" style={{ font: 'var(--t-caption1)', marginBottom: 24 }}>
+        {PROJECT_META.tagline} · {PROJECT_META.ownerEmail} · {PROJECT_META.currentCommit} ·{' '}
+        {PROJECT_META.lastUpdated}
+      </div>
 
-      <section className="card" style={{ marginBottom: 16 }}>
-        <div className="card-h">
-          <h3>Phase</h3>
-          <span className="sub">전체 단계 진행</span>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1.4fr',
+          gap: 32,
+          alignItems: 'center',
+        }}
+      >
+        <div>
+          <div
+            style={{
+              font: 'var(--t-display2)',
+              color: 'var(--text-strong)',
+              lineHeight: 1,
+              fontFeatureSettings: '"tnum"',
+            }}
+          >
+            {done}{' '}
+            <span style={{ color: 'var(--text-disable)', fontWeight: 400 }}>/ {total}</span>
+          </div>
+          <div className="muted" style={{ font: 'var(--t-label2)', marginTop: 6 }}>
+            화면 완료 · m2 S2
+          </div>
         </div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${PHASES.length}, 1fr)`,
-            gap: 12,
-          }}
-        >
-          {PHASES.map((p) => {
-            const tone = PHASE_TONE[p.status]
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {groups.map((g) => {
+            const s = groupProgress(g)
             return (
               <div
-                key={p.id}
+                key={g}
                 style={{
-                  padding: 12,
-                  borderRadius: 12,
-                  border: '1px solid var(--line-soft)',
-                  background: p.status === 'active' ? 'var(--primary-light)' : 'var(--bg-base)',
+                  display: 'grid',
+                  gridTemplateColumns: '60px 56px 1fr',
+                  gap: 10,
+                  alignItems: 'center',
                 }}
               >
-                <div
+                <span
                   style={{
-                    display: 'inline-flex',
-                    padding: '2px 8px',
-                    borderRadius: 999,
-                    background: tone.bg,
-                    color: tone.fg,
-                    font: 'var(--t-caption1-strong)',
+                    font: 'var(--t-label2-strong)',
+                    color: 'var(--text-neutral)',
                   }}
                 >
-                  {tone.label}
-                </div>
-                <div
+                  {g}
+                </span>
+                <span
+                  className="tnum"
                   style={{
-                    font: 'var(--t-label1-strong)',
-                    color: 'var(--text-strong)',
-                    marginTop: 8,
+                    font: 'var(--t-caption1)',
+                    color: s.pct === 100 ? 'var(--status-positive)' : 'var(--text-assistive)',
                   }}
                 >
-                  {p.label}
+                  {s.done}/{s.total} · {s.pct}%
+                </span>
+                <div className="bar thin" style={{ height: 4 }}>
+                  <i style={{ width: s.pct + '%' }} />
                 </div>
-                <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 4 }}>
-                  Exit · {p.exit}
-                </div>
-                {p.note && (
-                  <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 4 }}>
-                    {p.note}
-                  </div>
-                )}
               </div>
             )
           })}
         </div>
-      </section>
+      </div>
+    </header>
+  )
+}
 
-      <section className="card" style={{ marginBottom: 16 }}>
-        <div className="card-h">
-          <h3>m2 Sprint</h3>
-          <span className="sub">현재 Phase 1 · 11개 sprint</span>
+function NextActionBlock() {
+  return (
+    <section
+      style={{
+        marginTop: 8,
+        padding: '20px 24px',
+        background: 'var(--primary-light)',
+        borderRadius: 16,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 16,
+      }}
+    >
+      <div style={{ flex: 1 }}>
+        <div
+          style={{
+            font: 'var(--t-caption1-strong)',
+            color: 'var(--primary-strong)',
+            opacity: 0.7,
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            marginBottom: 4,
+          }}
+        >
+          다음 · {NEXT_ACTION.sprint}
         </div>
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: 10,
+            font: 'var(--t-heading2)',
+            color: 'var(--primary-strong)',
+            marginBottom: 4,
           }}
         >
-          {SPRINTS.map((s) => (
-            <div
-              key={s.id}
-              style={{
-                padding: 12,
-                borderRadius: 10,
-                border:
-                  '1px solid ' +
-                  (s.status === 'next' ? 'var(--c-orange-50)' : 'var(--line-soft)'),
-                background: s.status === 'next' ? 'var(--c-orange-95)' : 'var(--bg-base)',
-              }}
-            >
-              <div className="row between" style={{ alignItems: 'center' }}>
-                <div className="strong tnum" style={{ font: 'var(--t-label1-strong)' }}>
-                  {s.id}
-                </div>
-                <span className={`tag ${SPRINT_TONE[s.status]}`}>
-                  {s.status === 'done' ? '완료' : s.status === 'next' ? '다음' : '대기'}
-                </span>
-              </div>
-              <div
-                style={{
-                  font: 'var(--t-label2)',
-                  color: 'var(--text-normal)',
-                  marginTop: 6,
-                }}
-              >
-                {s.goal}
-              </div>
-              {s.exit && (
-                <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 4 }}>
-                  Exit · {s.exit}
-                </div>
-              )}
-              {s.commit && (
-                <div className="muted tnum mono" style={{ font: 'var(--t-caption1)', marginTop: 4 }}>
-                  {s.commit}
-                </div>
-              )}
-              {s.note && (
-                <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 4 }}>
-                  {s.note}
-                </div>
-              )}
-            </div>
-          ))}
+          {NEXT_ACTION.title}
         </div>
-      </section>
+        <div
+          style={{
+            font: 'var(--t-label2)',
+            color: 'var(--primary-strong)',
+            opacity: 0.8,
+          }}
+        >
+          {NEXT_ACTION.detail}
+        </div>
+      </div>
+      {NEXT_ACTION.primaryRoute && (
+        <Link className="btn primary" to={NEXT_ACTION.primaryRoute}>
+          현재 stub →
+        </Link>
+      )}
+    </section>
+  )
+}
 
-      <section className="card" style={{ marginBottom: 16 }}>
-        <div className="card-h">
-          <h3>S2 화면 매트릭스</h3>
-          <span className="sub">v0.1 inside-app 28화면 + onboarding 5 + Billing</span>
-        </div>
-        {groups.map((g) => {
-          const stats = groupProgress(g)
+function PhaseStepper() {
+  return (
+    <section style={{ marginTop: 32 }}>
+      <h2
+        style={{
+          font: 'var(--t-label2-strong)',
+          color: 'var(--text-neutral)',
+          margin: '0 0 12px 0',
+        }}
+      >
+        Phase
+      </h2>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${PHASES.length}, 1fr)`,
+          gap: 4,
+          position: 'relative',
+        }}
+      >
+        {PHASES.map((p, i) => {
+          const fg =
+            p.status === 'done'
+              ? 'var(--status-positive)'
+              : p.status === 'active'
+              ? 'var(--primary-strong)'
+              : 'var(--text-disable)'
+          const isLast = i === PHASES.length - 1
           return (
-          <div key={g} style={{ marginTop: 12 }}>
-            <div
-              className="row"
-              style={{ alignItems: 'center', gap: 12, marginBottom: 6 }}
-            >
+            <div key={p.id} style={{ position: 'relative' }}>
               <div
-                className="strong"
-                style={{
-                  font: 'var(--t-label1-strong)',
-                  color: 'var(--text-strong)',
-                  minWidth: 80,
-                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}
               >
-                {g}
+                <span style={{ font: 'var(--t-heading3)', color: fg, lineHeight: 1 }}>
+                  {PHASE_MARK[p.status]}
+                </span>
+                {!isLast && (
+                  <div
+                    style={{
+                      flex: 1,
+                      height: 2,
+                      background:
+                        p.status === 'done'
+                          ? 'var(--status-positive)'
+                          : 'var(--line-soft)',
+                    }}
+                  />
+                )}
               </div>
               <div
-                className="tnum"
                 style={{
-                  font: 'var(--t-caption1-strong)',
-                  color:
-                    stats.pct === 100
-                      ? 'var(--status-positive)'
-                      : stats.pct > 0
-                      ? 'var(--primary-strong)'
-                      : 'var(--text-assistive)',
-                  minWidth: 60,
+                  font: 'var(--t-label2-strong)',
+                  color: p.status === 'pending' ? 'var(--text-assistive)' : 'var(--text-strong)',
                 }}
               >
-                {stats.done}/{stats.total} · {stats.pct}%
+                {p.label.split(' — ')[0]}
               </div>
-              <div className="bar thin" style={{ flex: 1, maxWidth: 320 }}>
-                <i style={{ width: stats.pct + '%' }} />
+              <div className="muted" style={{ font: 'var(--t-caption2)', marginTop: 2 }}>
+                {p.label.split(' — ')[1] ?? ''}
               </div>
             </div>
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>화면</th>
-                  <th>라우트</th>
-                  <th>상태</th>
-                  <th>Sprint</th>
-                  <th>커밋</th>
-                </tr>
-              </thead>
-              <tbody>
-                {SCREENS.filter((s) => s.group === g).map((s) => (
-                  <tr key={s.route}>
-                    <td>{s.label}</td>
-                    <td>
-                      <code className="mono">{s.route}</code>
-                    </td>
-                    <td>
-                      <span className={`tag ${SCREEN_TONE[s.status]}`}>
-                        {SCREEN_LABEL[s.status]}
-                      </span>
-                    </td>
-                    <td className="muted tnum">{s.sprint}</td>
-                    <td className="muted tnum mono">{s.commit ?? '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
           )
         })}
-      </section>
+      </div>
+    </section>
+  )
+}
 
-      <section className="card" style={{ marginBottom: 16 }}>
-        <div className="card-h">
-          <h3>Dev-Track</h3>
-          <span className="sub">m2 본 트랙과 분리된 메타 작업</span>
+function SprintList({ activeSprintId }: { activeSprintId: string }) {
+  const allSprints = [...SPRINTS, ...DEV_TRACK_SPRINTS]
+  return (
+    <section style={{ marginTop: 32 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+          marginBottom: 12,
+        }}
+      >
+        <h2 style={{ font: 'var(--t-label2-strong)', color: 'var(--text-neutral)', margin: 0 }}>
+          m2 Sprint
+        </h2>
+        <div className="muted" style={{ font: 'var(--t-caption1)' }}>
+          현재 {activeSprintId} · 총 {allSprints.length}
         </div>
-        <ul style={{ margin: 0, paddingLeft: 16, color: 'var(--text-normal)' }}>
-          {DEV_TRACK_SPRINTS.map((dt) => (
-            <li key={dt.id} style={{ marginBottom: 4 }}>
-              <span className="strong">{dt.id}</span> · {dt.goal}{' '}
-              <span className={`tag ${SPRINT_TONE[dt.status]}`}>
-                {dt.status === 'done' ? '완료' : dt.status === 'next' ? '현재' : '대기'}
-              </span>
-              {dt.note && (
-                <span className="muted" style={{ font: 'var(--t-caption1)', marginLeft: 6 }}>
-                  · {dt.note}
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="grid-split">
-        <div className="card">
-          <div className="card-h">
-            <h3>보류 결정</h3>
-            <span className="sub">진입 전 확정 권고</span>
-          </div>
-          <ul
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {allSprints.map((s) => (
+          <div
+            key={s.id}
             style={{
-              margin: 0,
-              paddingLeft: 0,
-              listStyle: 'none',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
+              display: 'grid',
+              gridTemplateColumns: '24px 64px 1fr auto',
+              gap: 12,
+              alignItems: 'center',
+              padding: '10px 0',
+              borderBottom: '1px solid var(--line-soft)',
             }}
           >
-            {PENDING_DECISIONS.map((d) => (
-              <li
-                key={d.id}
-                style={{
-                  padding: 10,
-                  borderRadius: 10,
-                  border: '1px solid var(--line-soft)',
-                  background: d.resolved ? 'var(--bg-subtle)' : 'var(--bg-base)',
-                  opacity: d.resolved ? 0.7 : 1,
-                }}
-              >
-                <div
-                  className="strong"
-                  style={{
-                    font: 'var(--t-label1-strong)',
-                    textDecoration: d.resolved ? 'line-through' : 'none',
-                  }}
-                >
-                  [{d.id}] {d.topic}
-                </div>
-                <div style={{ font: 'var(--t-label2)', color: 'var(--text-normal)', marginTop: 4 }}>
-                  → {d.recommendation}
-                </div>
-                <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 4 }}>
-                  결정 시점: {d.resolveBy}
-                  {d.resolved && ' · ✅ 적용됨'}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="card">
-          <div className="card-h">
-            <h3>프로토타입 흔적</h3>
-            <span className="sub">자연 통합 — 별도 sprint 없음</span>
+            <span
+              style={{
+                font: 'var(--t-heading3)',
+                color: SPRINT_COLOR[s.status],
+                lineHeight: 1,
+                textAlign: 'center',
+              }}
+            >
+              {SPRINT_MARK[s.status]}
+            </span>
+            <span
+              className="tnum"
+              style={{
+                font: 'var(--t-label1-strong)',
+                color: s.status === 'pending' ? 'var(--text-assistive)' : 'var(--text-strong)',
+              }}
+            >
+              {s.id}
+            </span>
+            <span
+              style={{
+                font: 'var(--t-label1)',
+                color: s.status === 'pending' ? 'var(--text-assistive)' : 'var(--text-normal)',
+              }}
+            >
+              {s.goal}
+            </span>
+            <span
+              className="muted tnum mono"
+              style={{ font: 'var(--t-caption1)', minWidth: 60, textAlign: 'right' }}
+            >
+              {s.commit ?? (s.status === 'next' ? '진행 중' : s.status === 'pending' ? '—' : '')}
+            </span>
           </div>
-          <ul
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function ScreenMatrix({ groups }: { groups: string[] }) {
+  return (
+    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {groups.map((g) => (
+        <div key={g}>
+          <div
             style={{
-              margin: 0,
-              paddingLeft: 0,
-              listStyle: 'none',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
+              font: 'var(--t-label2-strong)',
+              color: 'var(--text-neutral)',
+              marginBottom: 6,
             }}
           >
-            {PROTOTYPE_MARKS.map((m) => (
-              <li
-                key={m.id}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '24px 1fr auto',
-                  gap: 10,
-                  padding: '8px 10px',
-                  borderRadius: 8,
-                  background: 'var(--bg-subtle)',
-                }}
-              >
-                <span className="muted tnum" style={{ font: 'var(--t-caption1)' }}>
-                  #{m.id}
-                </span>
-                <div>
-                  <div style={{ font: 'var(--t-label2)', color: 'var(--text-normal)' }}>
-                    {m.trace}
-                  </div>
-                  {m.note && (
-                    <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 2 }}>
-                      {m.note}
-                    </div>
-                  )}
-                </div>
-                <span
-                  className="muted tnum"
-                  style={{ font: 'var(--t-caption1)', alignSelf: 'center' }}
-                >
-                  {m.resolveWhen}
-                </span>
-              </li>
-            ))}
-          </ul>
+            {g}
+          </div>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>화면</th>
+                <th>라우트</th>
+                <th>상태</th>
+                <th>Sprint</th>
+                <th>커밋</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SCREENS.filter((s) => s.group === g).map((s) => (
+                <tr key={s.route}>
+                  <td>{s.label}</td>
+                  <td>
+                    <code className="mono">{s.route}</code>
+                  </td>
+                  <td>
+                    <span className={`tag ${SCREEN_TONE[s.status]}`}>{SCREEN_LABEL[s.status]}</span>
+                  </td>
+                  <td className="muted tnum">{s.sprint}</td>
+                  <td className="muted tnum mono">{s.commit ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </section>
-    </>
+      ))}
+    </div>
+  )
+}
+
+function PendingDecisions() {
+  return (
+    <ul
+      style={{
+        marginTop: 12,
+        padding: 0,
+        listStyle: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}
+    >
+      {PENDING_DECISIONS.map((d) => (
+        <li
+          key={d.id}
+          style={{
+            padding: '10px 12px',
+            borderRadius: 8,
+            background: d.resolved ? 'transparent' : 'var(--bg-subtle)',
+            opacity: d.resolved ? 0.5 : 1,
+          }}
+        >
+          <div
+            style={{
+              font: 'var(--t-label1-strong)',
+              color: 'var(--text-strong)',
+              textDecoration: d.resolved ? 'line-through' : 'none',
+            }}
+          >
+            [{d.id}] {d.topic}
+          </div>
+          <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 2 }}>
+            → {d.recommendation} · {d.resolveBy}
+            {d.resolved && ' · ✅'}
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function PrototypeList() {
+  return (
+    <ul
+      style={{
+        marginTop: 12,
+        padding: 0,
+        listStyle: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+      }}
+    >
+      {PROTOTYPE_MARKS.map((m) => (
+        <li
+          key={m.id}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '24px 1fr auto',
+            gap: 12,
+            padding: '6px 0',
+          }}
+        >
+          <span className="muted tnum" style={{ font: 'var(--t-caption1)' }}>
+            #{m.id}
+          </span>
+          <span style={{ font: 'var(--t-label2)', color: 'var(--text-normal)' }}>{m.trace}</span>
+          <span className="muted tnum" style={{ font: 'var(--t-caption1)' }}>
+            {m.resolveWhen}
+          </span>
+        </li>
+      ))}
+    </ul>
   )
 }

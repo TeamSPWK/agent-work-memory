@@ -254,11 +254,12 @@ describe('AppShell + product IA', () => {
     expect(
       screen.getByRole('heading', { name: /Agent Work Memory.*현황판/, level: 1 }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Phase' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'm2 Sprint' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'S2 화면 매트릭스' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '보류 결정' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '프로토타입 흔적' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Phase', level: 2 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'm2 Sprint', level: 2 })).toBeInTheDocument()
+    // 화면 매트릭스·보류·흔적은 details/summary로 collapse
+    expect(screen.getByText(/화면 매트릭스/)).toBeInTheDocument()
+    expect(screen.getByText(/보류 결정/)).toBeInTheDocument()
+    expect(screen.getByText(/프로토타입 흔적/)).toBeInTheDocument()
     // 진행 중 Phase 1 m2 Build 표시
     expect(screen.getByText(/m2 Build/)).toBeInTheDocument()
     // 완료된 sprint
