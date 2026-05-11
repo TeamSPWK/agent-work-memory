@@ -4,6 +4,7 @@ import { AppShell } from './layout/AppShell'
 import { OnboardingLayout } from './layout/OnboardingLayout'
 import { PlaceholderScreen } from './screens/PlaceholderScreen'
 import { Today } from './screens/Today'
+import { Sessions } from './screens/Sessions'
 import { NAV_ITEMS } from './lib/seed/navigation'
 
 describe('AppShell + product IA', () => {
@@ -48,6 +49,26 @@ describe('AppShell + product IA', () => {
       'href',
       expect.stringMatching(/^\/sessions\/s-\d+\?tab=explain$/),
     )
+  })
+
+  it('Sessions list renders tool filter + table with 7 rows', () => {
+    render(
+      <MemoryRouter initialEntries={['/sessions']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions" element={<Sessions />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Sessions', level: 1 })).toBeInTheDocument()
+    const filter = screen.getByRole('tablist', { name: '도구 필터' })
+    for (const tool of ['All', 'Claude Code', 'Cursor', 'Codex', 'Gemini']) {
+      expect(filter).toContainElement(screen.getByRole('button', { name: tool }))
+    }
+    expect(screen.getByPlaceholderText('의도·작업자·repo 검색')).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: '열기 →' })).toHaveLength(7)
   })
 
   it('onboarding renders wizard without sidebar', () => {

@@ -7,5 +7,6 @@ dist
 .env.*
 !.env.example
 .nova/
+.nova-orchestration.json
 .claude/scheduled_tasks.lock
 .playwright-mcp/

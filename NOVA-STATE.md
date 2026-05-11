@@ -1,24 +1,21 @@
 # Nova State
 
 ## Current
-- **Goal**: m2 S2.2 Today 화면 완료 → Sessions 화면 진입 대기
-- **Phase**: frontend ingest — m2 S1+S2.1+S2.2(Today) done.
-- **Blocker**: 없음 — Today 시각 검증 + Sessions 진입 합의 대기. 후속 결정 보류: (1) eyebrow 정책, (2) 팀 공유 수치 동적 vs v0.1 정적, (3) 날짜 하드코딩 vs new Date().
+- **Goal**: m2 S2.3 Sessions 목록 완료 → S2.4 Session Detail 진입 대기
+- **Phase**: frontend ingest — m2 S1+S2.1+S2.2+S2.3 done. H1 회상 사이클 2/6.
+- **Blocker**: 없음 — Sessions 시각 검증 + S2.4 진입 대기. 후속 결정 보류: eyebrow 정책 / 날짜 동적화 / 필터·오늘 dead-button.
 
 ## Tasks
 | Task | Status | Verdict | Note |
 |------|--------|---------|------|
-| v0.1 채택 + 저장 (p0-design-v0/) | done | PASS — 23화면 inside-app, 2.6MB | docs/projects/plans/p0-design-v0/ |
-| m2 Plan + stack 결정 자문 | done | PASS — (B) Vite+Supabase, 3AI 75% 합의 | m2-frontend-from-design.md |
-| PRD v2.1 §12 + p0.2 프롬프트 + 법무 트래커 | done | PASS — 외부 페이지 14화면 영역 | PRD §12 / p0.2-...md / legal-pages.md |
-| v0.2 채택 + 저장 + line 359 fix | done | PASS — 14화면 외부 페이지, 2.7MB, raw ID 노출 제거 | docs/projects/plans/p0-design-v0.2/ |
-| m2.5 Plan 작성 (외부 페이지 이식) | done | PASS — CPS + 8 exit criteria + S1~S9 작업 순서 | m2.5-public-pages-from-design.md |
-| 시안 → 코드 이식 (m2 S1 부트스트랩) | done | PASS(local) — typecheck/build/test/dev HTTP 200 | web/ + tokens/global.css + fonts + CI |
-| m2 S2.1 제품 IA + 골격 (네비 6 + /onboarding wizard) | done | PASS(qa-engineer, 1 minor) — 9 라우트 HTTP 200, 시연 IA 폐기 | navigation seed, AppShell + OnboardingLayout |
-| m2 S1.1 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | pending | — | 사용자 외부 계정 단계, S2 사용자 검증 후 |
-| m2 S2.2 Today 화면 | done | PASS(qa-engineer) — KPI 4 + 타임라인 + 설명 부족 + TODO + 팀 공유 카드 | screens/Today.tsx, seed/sessions.ts, components/RiskChip.tsx |
-| m2 S2.3~ Sessions/Audit/Risk/Workspace/Settings 화면 채움 | pending | — | S2.2 시각 검증 통과 후. /incidents/:id breadcrumb 결정 필요 |
-| 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S1~S3 완료 후 진입 |
+| m2 S1 부트스트랩 | done | PASS — Vite+React19+TS6 strict, CI | web/ + tokens/global.css + fonts |
+| m2 S2.1 제품 IA + 골격 | done | PASS(qa) — 평면 네비 6 + /onboarding wizard | navigation seed + Layout 5 |
+| m2 S2.2 Today 화면 | done | PASS(qa) — KPI 4 + 타임라인 + 설명 부족 + TODO + 팀 공유 | screens/Today.tsx |
+| m2 S2.3 Sessions 목록 | done | PASS(qa) — tool 필터 5 + 검색(intent/actor/repo) + 7행 | screens/Sessions.tsx |
+| m2 S2.4 Session Detail | pending | — | /sessions/:id 채움. /incidents/:id breadcrumb 결정 필요 |
+| m2 S2.5+ Audit/Risk/Workspace/Settings/Onboarding | pending | — | S2.4 완료 후 |
+| m2 S1.1 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | pending | — | 사용자 외부 계정 단계 |
+| 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S2 완료 후 |
 | 법무 4종 실제 문구 자문 | pending | — | legal-pages.md 단계 1~5 |
 
 ## Recently Done
@@ -26,7 +23,6 @@
 |------|-----------|---------|-----|
 | 디자인 v0.2 외부 14화면 + chat-3.md 10 결정 | 2026-05-11 | PASS — line 359 fix 외 채택 | p0-design-v0.2/chats/chat-3.md |
 | 디자인 v0+v0.1 inside-app 23화면 | 2026-05-10~11 | PASS — 자가 점검 9/9 | p0-design-v0/chats/chat-{1,2}.md |
-| v1 archive + Master Prompts(v2/v3) | 2026-05-10~11 | PASS | legacy-v1 / p0-...md, p0.1-...md, p0.2-...md |
 
 ## Known Risks (PRD §11 압축)
 | 위험 | 심각도 | 상태 |
@@ -43,13 +39,10 @@
 | — | — | — |
 
 ## Last Activity
-- /nova:review --fast (m2 S2.2 Today 화면, nova:qa-engineer 독립 평가) → PASS(3 후속 결정 권고: eyebrow 정책·팀 공유 수치·날짜 하드코딩) — Today 5섹션(KPI 4 + 타임라인 + 설명 부족 + TODO + 팀 공유) v0.1 정합, RiskChip null/low/med/high, gotoSession → Link /sessions/:id, build 304kB gz 97kB, test 3/3, dev 6 라우트 HTTP 200 | 2026-05-11
-- /nova:review --fast (m2 S2.1 제품 IA 재작성, nova:qa-engineer 독립 평가) → PASS(1 minor: incidents breadcrumb은 S2.2 결정) — 시연 IA 폐기, 평면 네비 6(Today/Sessions/Audit/Risk/Workspace/Settings) + /onboarding wizard layout 분리, HypothesisBanner·hypotheses.ts 삭제, navigation seed, useLocation 매칭, build 297kB gz 94kB, test 2/2, dev 9 라우트 HTTP 200 | 2026-05-11
-- /nova:review --fast (m2 S2.1 골격 — *시연 IA*, 이후 제품 IA로 재작성 결정으로 폐기) → PASS but 폐기됨 — Zustand+HYPOTHESES 6그룹 28화면+HypothesisBanner | 2026-05-11
-- /nova:review --fast (m2 S1 부트스트랩, nova:qa-engineer 독립 평가) → PASS — web/ Vite+React19+TS6+RR7+TanStack5+Zustand5+Vitest4, tokens/global.css 이식(폰트 url /fonts/), CI(typecheck+build+test), build 191kB gz 60kB, smoke test 1/1, dev HTTP 200 | 2026-05-11
-- /nova:review --fast (m2 S1 부트스트랩, nova:qa-engineer 독립 평가) → PASS — web/ Vite+React19+TS6+RR7+TanStack5+Zustand5+Vitest4, tokens/global.css 이식(폰트 url /fonts/), CI(typecheck+build+test), build 191kB gz 60kB, smoke test 1/1, dev HTTP 200 | 2026-05-11
-- /nova:check (v0.2 lock + m2.5 Plan) → PASS — 외부 14화면 docs/projects/plans/p0-design-v0.2/(2.7MB), line 359 raw ID 노출 fix, m2.5 8 exit criteria + S1~S9 | 2026-05-11
-- /nova:check (PRD §12 + p0.2 + 법무 트래커) → PASS — 외부 페이지 14화면 영역 신설 + 라운드 3 프롬프트 + 법무 4종 별도 트래킹 | 2026-05-11
+- /nova:auto (m2 S2.3 Sessions 목록, orch-mp0v6cb7-exvz, qa-engineer 독립 평가) → PASS — tool 필터 5 + intent/actor/repo 검색(placeholder/필터 정합 surgical fix) + 테이블 7행, gotoSession → Link /sessions/:id, build 307kB gz 97kB, test 4/4, dev 3 라우트 HTTP 200 | 2026-05-11
+- /nova:review --fast (m2 S2.2 Today 화면, qa-engineer 독립 평가) → PASS(3 후속 결정 권고: eyebrow·팀 공유 수치·날짜 하드코딩) — Today 5섹션 v0.1 정합, build 304kB gz 97kB, test 3/3 | 2026-05-11
+- /nova:review --fast (m2 S2.1 제품 IA 재작성, qa-engineer 독립 평가) → PASS(1 minor: incidents breadcrumb은 S2.2 결정) — 시연 IA 폐기, 평면 네비 6 + /onboarding wizard, build 297kB gz 94kB, test 2/2 | 2026-05-11
+- /nova:review --fast (m2 S1 부트스트랩, qa-engineer 독립 평가) → PASS — Vite+React19+TS6+RR7+TanStack5+Zustand5+Vitest4, tokens/global.css 이식, CI(typecheck+build+test), build 191kB gz 60kB, test 1/1 | 2026-05-11
 
 ## Refs
 - 디자인 lock: p0-design-v0/(inside-app 23화면) + p0-design-v0.2/(외부 14화면)

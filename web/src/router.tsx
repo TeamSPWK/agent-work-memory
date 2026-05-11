@@ -3,6 +3,7 @@ import { AppShell } from './layout/AppShell'
 import { OnboardingLayout } from './layout/OnboardingLayout'
 import { PlaceholderScreen } from './screens/PlaceholderScreen'
 import { Today } from './screens/Today'
+import { Sessions } from './screens/Sessions'
 import { ONBOARDING_STEPS } from './lib/seed/navigation'
 
 export const router = createBrowserRouter([
@@ -12,7 +13,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/today" replace /> },
       { path: 'today', element: <Today /> },
-      { path: 'sessions', element: <PlaceholderScreen label="Sessions" /> },
+      { path: 'sessions', element: <Sessions /> },
       { path: 'sessions/:id', element: <PlaceholderScreen label="Session Detail" /> },
       { path: 'audit', element: <PlaceholderScreen label="Audit" /> },
       { path: 'risk', element: <PlaceholderScreen label="Risk Radar" /> },
