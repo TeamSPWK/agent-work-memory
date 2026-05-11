@@ -6,6 +6,7 @@ import { Today } from './screens/Today'
 import { Sessions } from './screens/Sessions'
 import { SessionDetail } from './screens/SessionDetail'
 import { ExplainBack } from './screens/ExplainBack'
+import { Share } from './screens/Share'
 import { ONBOARDING_STEPS } from './lib/seed/navigation'
 
 export const router = createBrowserRouter([
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
       { path: 'sessions', element: <Sessions /> },
       { path: 'sessions/:id', element: <SessionDetail /> },
       { path: 'sessions/:id/explain', element: <ExplainBack /> },
+      { path: 'sessions/:id/share', element: <Share /> },
       { path: 'audit', element: <PlaceholderScreen label="Audit" /> },
       { path: 'risk', element: <PlaceholderScreen label="Risk Radar" /> },
       { path: 'incidents/:id', element: <PlaceholderScreen label="Incident" /> },

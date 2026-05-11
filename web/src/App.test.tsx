@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { AppShell } from './layout/AppShell'
 import { OnboardingLayout } from './layout/OnboardingLayout'
@@ -7,6 +7,7 @@ import { Today } from './screens/Today'
 import { Sessions } from './screens/Sessions'
 import { SessionDetail } from './screens/SessionDetail'
 import { ExplainBack } from './screens/ExplainBack'
+import { Share } from './screens/Share'
 import { NAV_ITEMS } from './lib/seed/navigation'
 
 describe('AppShell + product IA', () => {
@@ -142,6 +143,71 @@ describe('AppShell + product IA', () => {
         <Routes>
           <Route path="/" element={<AppShell />}>
             <Route path="sessions/:id/explain" element={<ExplainBack />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { name: '세션을 찾을 수 없습니다', level: 1 }),
+    ).toBeInTheDocument()
+  })
+
+  it('Share renders summary preview + channels + back link', () => {
+    render(
+      <MemoryRouter initialEntries={['/sessions/s-024/share']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions/:id/share" element={<Share />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: '팀 공유 요약', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '요약 미리보기' })).toBeInTheDocument()
+    expect(screen.getByText(/B2B SaaS 워크스페이스 · AI 작업 요약/)).toBeInTheDocument()
+    for (const ch of ['Slack #ai-work', 'Notion · 일일 메모리', '이메일 (팀 메일링)']) {
+      expect(screen.getByText(ch)).toBeInTheDocument()
+    }
+    expect(screen.getByRole('link', { name: /← Explain Back/ })).toHaveAttribute(
+      'href',
+      '/sessions/s-024/explain',
+    )
+  })
+
+  it('Share copy button toggles label after clipboard write', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/sessions/s-024/share']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions/:id/share" element={<Share />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    const btn = screen.getByRole('button', { name: '전체 복사' })
+    fireEvent.click(btn)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '복사 완료' })).toBeInTheDocument()
+    })
+    expect(writeText).toHaveBeenCalled()
+  })
+
+  it('Share falls back when id is unknown', () => {
+    render(
+      <MemoryRouter initialEntries={['/sessions/s-999/share']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions/:id/share" element={<Share />} />
           </Route>
         </Routes>
       </MemoryRouter>,
