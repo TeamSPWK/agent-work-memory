@@ -1,35 +1,42 @@
 # Agent Work Memory
 
-AI 에이전트(Claude Code, Codex, Cursor)와 팀이 같이 일할 때 대화·커밋·변경 파일·실행 명령·위험 이벤트를
-하루 단위 작업 기억으로 묶어 사람이 다시 설명 가능한 단위로 검증하는 로컬 우선 도구.
+**AI Audit Trail SaaS for Korean SMB** — AI 에이전트가 자율적으로 만드는 변경(코드·DB·인프라)을 팀이 검토·감사·복원할 수 있게 하는 한국 B2B SaaS.
 
+> **현재 단계: Design-First Restart (2026-05-10~)**.
+> v1 구현은 `legacy-v1` 브랜치 + `legacy-v1-2026-05-10` 태그로 보존. main은 디자인·운영·문서만.
+> 자세한 배경은 `README.md`.
+>
 > Cross-agent 진입점은 `AGENTS.md` (브리지). 본 문서가 운영 헌법.
 
 ## Start Here
-- 현재 상태 / 스프린트 Goal / Blocker: `NOVA-STATE.md`
-- 제품 요구·UX·데이터 계약: `docs/PRD.md`, `docs/UX_FLOWS.md`, `docs/DATA_CONTRACT.md`
-- 캡처 전략 / 디자인 시스템: `docs/TERMINAL_CAPTURE.md`, `docs/DESIGN_SYSTEM.md`
-- 경쟁/오픈소스 맥락: `docs/COMPETITIVE_LANDSCAPE.md`, `docs/OPEN_SOURCE_LEVERAGE.md`
+- 현재 상태 / Phase / Blocker: `NOVA-STATE.md`
+- 제품 정의 (v2): `docs/PRD.md`. v1 보존: `docs/archive/PRD-v1-tech-validation.md`
+- 디자인 prompt (Claude Artifact): `docs/projects/plans/p0-claude-design-prompts.md`
+- UX·디자인: `docs/UX_FLOWS.md`, `docs/DESIGN_SYSTEM.md`
+- 시장·경쟁: `docs/COMPETITIVE_LANDSCAPE.md`, `docs/OPEN_SOURCE_LEVERAGE.md`
+- 데이터·캡처 (참고): `docs/DATA_CONTRACT.md`, `docs/TERMINAL_CAPTURE.md`
 
-## Stack
-- Frontend: Vite 8 + React 18 + TypeScript 5.7 (단일 SPA, `src/App.tsx`)
-- CLI: Node ESM (`bin/awm.mjs`, 명령 `awm`)
-- 데이터: 로컬 `.awm/` (요약·링크·리뷰·문서 상태만 저장. 원문 transcript 저장 X)
+## Stack — TBD (디자인 수렴 후 결정)
 
-## Build & Verify
-```bash
-npm install
-npm run build       # tsc + vite build
-npm run cli -- help # CLI 진입점 확인
-npm run mvp         # build → ingest --limit 30 → serve :5173 (수동 점검용)
-npm run dev         # vite dev server (UI 작업 시)
-```
+v1에서 *Vite 8 + React 18 + TS 5.7 SPA + Node ESM CLI + 로컬 `.awm/`*를 사용했고, M1 단계에서 Clerk·Supabase Tokyo·Fly.io NRT·Row-level RLS·Workspace API Key로 결정한 바 있음. 모두 v1 자산 / `legacy-v1` 브랜치에서 회수 가능.
 
-검증 명령:
-- 타입/빌드: `npm run build`
-- CLI 동작: `npm run cli -- ingest --limit 30 && npm run cli -- today`
-- UI 회귀: `http://127.0.0.1:5173/` 에서 골든 패스(오늘/작업 패킷/문서함) 수기 점검
-- 린트/테스트 스크립트는 아직 없음 — TODO(owner): 추가 시점에 본 섹션 갱신
+본 단계에서는 **stack 결정 새로**. 디자인 시안 수렴 후 다음 우선순위로 결정:
+1. *시각 시안의 데이터·인터랙션 패턴* 분석
+2. *1인 운영 가능성* (managed services 우선)
+3. *한국 latency·결제·세금계산서* 정합
+
+## Build & Verify — 미정
+
+본 단계엔 빌드 명령 없음. Claude.ai Artifacts에서 시안 작업.
+
+## Non-Negotiables (advisory — 강제 미설치)
+- `.env`, `.secret/`, `*.pem`, `*.key`, 액세스 토큰을 커밋·로그·이슈에 노출하지 않는다.
+- v2 시작점에는 `.awm/`·`.nova/` 사용자 데이터 디렉토리 없음. v2 구현 시 `docs/areas/regulatory/` 정책 따라 결정.
+- 3개 이상 파일 수정 → 계획 먼저, 승인 후 구현 (사용자 글로벌 규칙).
+- git commit/push는 사용자 명시적 요청 시에만.
+
+> Enforcement gap: 위 규칙은 현재 settings/hooks/CI로 막히지 않은 advisory다.
+> 강제가 필요해지면 `.claude/settings.json` deny + pre-commit hook 추가를 별도 결정으로 처리.
 
 ## Non-Negotiables (advisory — 강제 미설치)
 - `.env`, `.secret/`, `*.pem`, `*.key`, 액세스 토큰을 커밋·로그·이슈에 노출하지 않는다.
@@ -70,6 +77,21 @@ PRD/페르소나/GTM/Roadmap 작성·수정 시 반드시 `.claude/rules/prd-and
 - 자주 쓰는 진입점: `/nova:next`, `/nova:plan`, `/nova:check`, `/nova:review`, `/nova:claude-md`.
 - 지침이 누락된 것 같으면 `/memory`로 로드된 파일 확인.
 - 본 파일은 Claude 운영 헌법 + 라우터로 유지한다. 다른 에이전트 공통 계약은 `AGENTS.md` 브리지가 본 파일을 가리킨다.
+
+## v1 자산 회수 (필요 시)
+
+v1 코드는 `legacy-v1` 브랜치 + `legacy-v1-2026-05-10` tag에 전체 보존. 회수 명령:
+```bash
+git show legacy-v1-2026-05-10:bin/match.mjs > /tmp/match-v1.mjs   # 단일 파일
+git checkout legacy-v1 -- bin/match.mjs                            # cherry-pick
+git checkout legacy-v1                                              # 전체 v1 보기
+```
+
+v1에서 검증된 자산 (참고만 — 본 단계 시작점은 *시각 디자인*):
+- 매칭 P1 — 4축 가중 점수, 11/11 critical
+- 영속화 S1~S2.5 — 원자적 쓰기, corruption isolation
+- GitHub App webhook — duplicate/retry-safety 검증
+- Calm Operations 디자인 토큰 277개 (시각 자산은 디자인 수렴 후 인용 가능)
 
 ## Known Mistakes
 (아직 기록된 항목 없음. 사고 발생 시 여기 누적.)

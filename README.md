@@ -1,66 +1,69 @@
 # Agent Work Memory
 
-Claude Code, Codex, Cursor 같은 AI 에이전트와 팀이 함께 작업할 때 대화, 커밋, 변경 파일, 실행 명령, 위험 이벤트를 연결해 하루 작업 맥락을 복원하는 팀 기반 작업 기억 시스템입니다.
+> **AI Audit Trail SaaS for Korean SMB.**
+> AI 에이전트가 자율적으로 만드는 변경(코드·DB·인프라)을 팀이 검토·감사·복원할 수 있게 하는 한국 B2B SaaS.
 
-AI 에이전트가 만든 결과를 그대로 믿는 것이 아니라, 사람이 다시 설명할 수 있는 단위로 묶고 검증하는 것이 목표입니다.
+## 현재 단계 — Design-First Restart (2026-05-10~)
 
-## Keywords
+본 레포는 **디자인 우선 단계**입니다. v1 구현(2025-09 ~ 2026-05) 8개월치 코드는 본 시점에 의도적으로 archive하고, *PRD 가치를 시각으로 먼저 검증한 뒤 새로 구현*하는 방향으로 전환했습니다.
 
-AI agent, agent memory, Claude Code, Codex, Cursor, vibe coding, AI coding workflow, local-first developer tools, work log, code review, team collaboration, markdown evidence, terminal session review.
+- **현재 main**: 디자인·운영·문서만 (코드 X)
+- **legacy 브랜치**: `legacy-v1` — v1 구현 전체 보존 (CLI·SPA·매칭·영속화·GitHub App)
+- **legacy tag**: `legacy-v1-2026-05-10` — restart 직전 시점 lock
+- 필요 시 `git checkout legacy-v1` 또는 `git show legacy-v1-2026-05-10:<path>` 로 회수
 
-## 현재 MVP
+### 왜 archive했는가
 
-- 로컬 Claude Code / Codex CLI 세션 탐지
-- 최근 세션을 작업 영역과 요청 주제 기준으로 묶는 작업 패킷
-- 세션별 작업 브리프, 대화 흐름, 증거 품질, 처리 타임라인
-- 로컬 Git 커밋 후보 연결과 맞음/아님 판단
-- 확인 필요 작업을 마크다운 문서로 저장
-- 저장된 문서를 문서함에서 미리보기/복사
-- Claude, Codex, Git, 확인 문서 수집 상태 진단
+P0.1 prototype(`src/screens/Audit.tsx` v1)을 만들어 사용자 dogfooding한 결과 *"PRD를 느껴볼 수준이 아니다"* 판정. 코드 인프라(Vite·App.tsx 2,666줄·토큰 시스템)가 *시각 탐색*을 느리게 만든다고 판단. *디자인 → 코드* 순서로 재정렬.
 
-원문 전체 transcript는 기본 저장하지 않습니다. 로컬 `.awm` 디렉터리에 요약, 링크, 리뷰, 문서 상태만 저장합니다.
+## 운영 정체성
 
-## 문서
+- **1인 창업자** (jay@spacewalk.tech, Spacewalk 사업자)
+- **타겟**: 한국 SMB 10~50명 (SaaS·이커머스). 비개발자/개발자 같은 워크스페이스
+- **결제 트리거**: 인공지능기본법 2026-01-22 시행 (audit) + Replit·PocketOS급 사고 예방
+- **카테고리**: AI Audit Trail for SMB (외부) / Evidence Graph (내부 모델)
 
-- [PRD](./docs/PRD.md)
-- [UX Flows](./docs/UX_FLOWS.md)
-- [Design System](./docs/DESIGN_SYSTEM.md)
-- [Data Contract](./docs/DATA_CONTRACT.md)
-- [Terminal Capture Strategy](./docs/TERMINAL_CAPTURE.md)
-- [Competitive Landscape](./docs/COMPETITIVE_LANDSCAPE.md)
-- [Open Source Leverage Plan](./docs/OPEN_SOURCE_LEVERAGE.md)
+## 다음 단계
 
-## MVP 실행
+1. **Design Prototype** — Claude.ai Artifacts에 `docs/projects/plans/p0-claude-design-prompts.md` Master Prompt v2 던져 11개 화면 시각 시안
+2. **시안 수렴** — Audit Trail / Reviewer Brief / Incident Replay 핵심 3개 + Onboarding·Today·Sessions·Risk Radar·Settings 보조 화면 deep dive
+3. **시안 → 코드 이식** — 새 stack 결정 (디자인 수렴 후 백엔드 결정 재검토)
+4. **결제·세금계산서 연결** — D1 디자인 파트너 5팀 진입
 
-```bash
-npm run mvp
-```
+## 핵심 문서
 
-실행 후 브라우저에서 엽니다.
+| 영역 | 위치 |
+|------|------|
+| 제품 정의 | [docs/PRD.md](./docs/PRD.md) (v2, 2026-05-10) |
+| v1 PRD (보존) | [docs/archive/PRD-v1-tech-validation.md](./docs/archive/PRD-v1-tech-validation.md) |
+| 시장·경쟁 | [docs/COMPETITIVE_LANDSCAPE.md](./docs/COMPETITIVE_LANDSCAPE.md), [docs/OPEN_SOURCE_LEVERAGE.md](./docs/OPEN_SOURCE_LEVERAGE.md) |
+| UX·디자인 | [docs/UX_FLOWS.md](./docs/UX_FLOWS.md), [docs/DESIGN_SYSTEM.md](./docs/DESIGN_SYSTEM.md) |
+| 데이터·캡처 | [docs/DATA_CONTRACT.md](./docs/DATA_CONTRACT.md), [docs/TERMINAL_CAPTURE.md](./docs/TERMINAL_CAPTURE.md) |
+| 운영 (PARA) | [docs/areas/operations/](./docs/areas/operations/), [docs/areas/regulatory/](./docs/areas/regulatory/), [docs/areas/customer/](./docs/areas/customer/) |
+| 디자인 prompt | [docs/projects/plans/p0-claude-design-prompts.md](./docs/projects/plans/p0-claude-design-prompts.md) |
+| 협업 룰 | [.claude/rules/](./.claude/rules/) — PRD 5원칙 + 운영 동기화 |
+| 현재 상태 | [NOVA-STATE.md](./NOVA-STATE.md) |
+| AI 협업 헌법 | [CLAUDE.md](./CLAUDE.md), [AGENTS.md](./AGENTS.md) |
 
-```txt
-http://127.0.0.1:5173/
-```
-
-`npm run mvp`는 빌드 후 최근 30개의 로컬 Claude Code/Codex 세션 파일을 인덱싱하고, 그 결과를 오늘, 작업 패킷, 작업 확인, 문서함, 수집 설정 화면에 연결합니다.
-
-세션 시간대와 가까운 로컬 Git 커밋은 커밋 후보로 자동 연결됩니다. GitHub App 전에도
-작업 세션과 결과 증거의 1차 연결을 확인할 수 있습니다.
-`연결 확인`을 누르면 세션-커밋 확정 연결이 `.awm/links.json`에 저장됩니다.
-
-오늘 화면의 `기록 저장`은 현재 보이는 작업 요약을 `.awm/wiki/YYYY-MM-DD-daily.md`로 저장합니다.
-
-작업 확인의 `문서로 남기기`, `처리 완료`, `계속 확인` 판단은 `.awm/reviews.json`에 저장되고, 다음 ingest 때 확인 큐와 작업 패킷에 반영됩니다.
-
-## 로컬 CLI
+## v1 구현 회수 (필요 시)
 
 ```bash
-npm run cli -- help
-npm run cli -- ingest --limit 30
-npm run cli -- discover
-npm run cli -- today
+# 옛 코드 보기
+git checkout legacy-v1
+
+# 특정 파일만 회수
+git show legacy-v1-2026-05-10:bin/match.mjs > /tmp/match-v1.mjs
+
+# 옛 자산 cherry-pick
+git checkout legacy-v1 -- bin/match.mjs
 ```
 
-`Capture Setup` 화면에서는 로컬 세션 탐지 상태를, `Today` 화면에서는 실제 ingest된
-작업 기억을 볼 수 있습니다. GitHub App 연동은 다음 단계이며 현재 MVP는 로컬
-세션 인덱스와 터미널 캡처 prototype을 우선 제공합니다.
+v1에서 검증된 자산 (참고만):
+- 매칭 P1 — 4축 가중 점수 (시간·경로·브랜치·파일), 11/11 critical 통과
+- 영속화 S1~S2.5 — 원자적 쓰기·corruption isolation·표준 에러 envelope
+- GitHub App — webhook receiver + 중복 처리 + retry-safety
+- Calm Operations 디자인 토큰 — 277개 hex 0개
+
+## 라이선스 / 비공개
+
+본 레포는 비공개입니다. Spacewalk 사업자 명의 진행.

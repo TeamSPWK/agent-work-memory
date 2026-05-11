@@ -8,3 +8,4 @@ dist
 !.env.example
 .nova/
 .claude/scheduled_tasks.lock
+.playwright-mcp/

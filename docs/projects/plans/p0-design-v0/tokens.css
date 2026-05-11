@@ -1,0 +1,282 @@
+/* =============================================================
+   Wanted LaaS — Design Tokens
+   Reconstructed from the Wanted LaaS design system Figma.
+   Single source of truth for color, type, spacing, radius, shadow.
+   ============================================================= */
+
+@font-face {
+  font-family: 'Pretendard';
+  src: url('fonts/Pretendard-Thin.subset.woff2') format('woff2');
+  font-weight: 100; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('fonts/Pretendard-ExtraLight.subset.woff2') format('woff2');
+  font-weight: 200; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('fonts/Pretendard-Light.subset.woff2') format('woff2');
+  font-weight: 300; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('fonts/Pretendard-Regular.subset.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('fonts/Pretendard-Medium.subset.woff2') format('woff2');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('fonts/Pretendard-SemiBold.subset.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('fonts/Pretendard-Bold.subset.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('fonts/Pretendard-ExtraBold.subset.woff2') format('woff2');
+  font-weight: 800; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('fonts/Pretendard-Black.subset.woff2') format('woff2');
+  font-weight: 900; font-style: normal; font-display: swap;
+}
+
+:root {
+  /* ─── Atomic — Common ─── */
+  --c-common-100: #ffffff;
+  --c-common-0:   #000000;
+
+  /* ─── Atomic — Cool Neutral (primary text/surface scale) ─── */
+  --c-cool-99: #fafafa;
+  --c-cool-98: #f7f7f8;
+  --c-cool-97: #f4f4f5;
+  --c-cool-96: #f0f0f2;
+  --c-cool-95: #ebebee;
+  --c-cool-90: #dbdcdf;
+  --c-cool-80: #c2c4c8;
+  --c-cool-70: #aeb0b6;
+  --c-cool-60: #989ba2;
+  --c-cool-50: #7d808a;
+  --c-cool-40: #70737c;
+  --c-cool-30: #55585f;
+  --c-cool-25: #46474c;
+  --c-cool-22: #3d3e43;
+  --c-cool-20: #37383c;
+  --c-cool-15: #2e2f33;
+  --c-cool-10: #1b1c1e;
+  --c-cool-5:  #131316;
+  --c-cool-2:  #0a0a0c;
+
+  /* ─── Atomic — Hue palette (50 = canonical step) ─── */
+  --c-blue-95: #eaf2fe;
+  --c-blue-80: #b4d0ff;
+  --c-blue-60: #5089ff;
+  --c-blue-50: #3385ff;
+  --c-blue-45: #0066ff;   /* primary-normal */
+  --c-blue-40: #005eeb;
+  --c-blue-30: #0048b5;
+  --c-blue-20: #003278;
+
+  --c-orange-95: #fff1e3;
+  --c-orange-50: #ff7919;  /* accent-normal */
+  --c-orange-39: #c45a09;
+  --c-orange-30: #8e3f00;
+
+  --c-red-95: #ffeeee;
+  --c-red-50: #ff4242;     /* status-negative */
+  --c-red-40: #d72c2c;
+
+  --c-redorange-48: #e84a1c;
+
+  --c-lime-50: #aee300;
+  --c-lime-37: #6f9300;
+
+  --c-green-50: #00bf40;   /* status-positive */
+  --c-green-40: #009933;
+
+  --c-cyan-50: #0098b2;
+  --c-cyan-40: #007a8f;
+
+  --c-lightblue-50: #19a3e6;
+  --c-lightblue-40: #0c80b8;
+
+  --c-violet-50: #9747ff;
+  --c-violet-45: #8233f0;
+
+  --c-purple-50: #b740d6;
+  --c-purple-40: #9229ad;
+
+  --c-pink-50: #ff4d8a;
+  --c-pink-46: #e63973;
+
+  /* ─── Semantic — Light theme (default) ─── */
+  --bg-base:                #ffffff;
+  --bg-elevated:            #fafafa;
+  --bg-subtle:              rgba(112,115,124,0.05);
+  --bg-pressed:             rgba(112,115,124,0.08);
+  --bg-hovered:             rgba(112,115,124,0.05);
+  --bg-overlay-dim:         rgba(0,0,0,0.40);
+
+  --surface-card:           #ffffff;
+  --surface-section:        rgba(112,115,124,0.05);
+
+  --line-soft:              rgba(112,115,124,0.16);
+  --line-default:           rgba(112,115,124,0.22);
+  --line-strong:            rgba(112,115,124,0.40);
+  --line-divider:           #000000;
+
+  --text-strong:            #000000;     /* major heading */
+  --text-normal:            #17171a;     /* body */
+  --text-neutral:           #2e2f33;     /* label */
+  --text-alternative:       rgba(46,47,51,0.88);
+  --text-assistive:         #70737c;     /* helper */
+  --text-disable:           #c2c4c8;
+  --text-inverse:           #ffffff;
+  --text-on-color:          #ffffff;
+
+  --primary-normal:         #0066ff;     /* blue-45 */
+  --primary-strong:         #005eeb;     /* blue-40 */
+  --primary-hovered:        #003278;
+  --primary-pressed:        #0048b5;
+  --primary-heavy:          #0048b5;
+  --primary-light:          #eaf2fe;
+
+  --accent-normal:          #ff7919;     /* orange-50 */
+  --accent-strong:          #c45a09;
+  --accent-light:           #fff1e3;
+
+  --status-positive:        #00bf40;
+  --status-cautionary:      #ff7919;
+  --status-negative:        #ff4242;
+  --status-informative:     #0066ff;
+
+  --interaction-inactive:   #aeb0b6;     /* cool-70 */
+  --interaction-disable:    #f4f4f5;     /* cool-98 */
+
+  --static-white:           #ffffff;
+  --static-black:           #000000;
+
+  /* ─── Radii ─── */
+  --r-2:  2px;
+  --r-4:  4px;
+  --r-6:  6px;
+  --r-8:  8px;
+  --r-10: 10px;
+  --r-12: 12px;
+  --r-16: 16px;
+  --r-20: 20px;
+  --r-24: 24px;
+  --r-32: 32px;
+  --r-40: 40px;
+  --r-full: 9999px;
+
+  /* ─── Spacing scale (4-base) ─── */
+  --s-2: 2px;
+  --s-4: 4px;
+  --s-6: 6px;
+  --s-8: 8px;
+  --s-10: 10px;
+  --s-12: 12px;
+  --s-14: 14px;
+  --s-16: 16px;
+  --s-20: 20px;
+  --s-24: 24px;
+  --s-32: 32px;
+  --s-40: 40px;
+  --s-48: 48px;
+  --s-56: 56px;
+  --s-64: 64px;
+  --s-80: 80px;
+  --s-96: 96px;
+  --s-128: 128px;
+
+  /* ─── Shadows (from observed alpha shadows) ─── */
+  --shadow-emphasize: 0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(23,23,23,0.07);
+  --shadow-strong:    0 4px 16px rgba(23,23,23,0.10), 0 1px 4px rgba(0,0,0,0.08);
+  --shadow-heavy:     0 8px 28px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
+  --shadow-overlay:   0 16px 48px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08);
+
+  /* ─── Type scale (px / line-height) ─── */
+  --t-display1: 700 56px/1.25 'Pretendard', sans-serif;
+  --t-display2: 700 48px/1.25 'Pretendard', sans-serif;
+  --t-title1:   700 36px/1.334 'Pretendard', sans-serif;
+  --t-title2:   700 28px/1.358 'Pretendard', sans-serif;
+  --t-title3:   700 24px/1.334 'Pretendard', sans-serif;
+  --t-heading1: 700 22px/1.36 'Pretendard', sans-serif;
+  --t-heading2: 600 20px/1.40 'Pretendard', sans-serif;
+  --t-heading3: 600 17px/1.412 'Pretendard', sans-serif;
+  --t-body1-strong: 600 16px/1.5 'Pretendard', sans-serif;
+  --t-body1: 500 16px/1.5 'Pretendard', sans-serif;
+  --t-body2-strong: 600 15px/1.467 'Pretendard', sans-serif;
+  --t-body2: 500 15px/1.467 'Pretendard', sans-serif;
+  --t-label1-strong: 600 14px/1.43 'Pretendard', sans-serif;
+  --t-label1: 500 14px/1.43 'Pretendard', sans-serif;
+  --t-label2-strong: 600 13px/1.385 'Pretendard', sans-serif;
+  --t-label2: 500 13px/1.385 'Pretendard', sans-serif;
+  --t-caption1-strong: 600 12px/1.334 'Pretendard', sans-serif;
+  --t-caption1: 500 12px/1.334 'Pretendard', sans-serif;
+  --t-caption2: 500 11px/1.273 'Pretendard', sans-serif;
+
+  /* Letter-spacing (per Figma values) */
+  --ls-display: -0.027em;
+  --ls-title:   -0.024em;
+  --ls-heading: -0.017em;
+  --ls-body:     0.006em;
+  --ls-label:    0.006em;
+  --ls-caption:  0.031em;
+}
+
+/* ─── Dark theme variant ─── */
+[data-theme="dark"] {
+  --bg-base:        #131316;
+  --bg-elevated:    #1b1c1e;
+  --bg-subtle:      rgba(255,255,255,0.04);
+  --bg-pressed:     rgba(255,255,255,0.08);
+  --bg-hovered:     rgba(255,255,255,0.05);
+
+  --surface-card:    #1b1c1e;
+  --surface-section: rgba(255,255,255,0.04);
+
+  --line-soft:    rgba(255,255,255,0.12);
+  --line-default: rgba(255,255,255,0.22);
+  --line-strong:  rgba(255,255,255,0.40);
+  --line-divider: #ffffff;
+
+  --text-strong:      #ffffff;
+  --text-normal:      #ebebee;
+  --text-neutral:     #c2c4c8;
+  --text-alternative: rgba(235,235,238,0.88);
+  --text-assistive:   #989ba2;
+  --text-disable:     #46474c;
+  --text-inverse:     #000000;
+
+  --primary-normal:  #3385ff;
+  --primary-strong:  #5089ff;
+  --primary-light:   rgba(0,102,255,0.14);
+
+  --accent-light:    rgba(255,121,25,0.14);
+
+  --interaction-inactive: #55585f;
+  --interaction-disable:  #2e2f33;
+}
+
+/* ─── Base reset bound to tokens ─── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font: var(--t-body1);
+  letter-spacing: var(--ls-body);
+  color: var(--text-normal);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
