@@ -1196,9 +1196,9 @@ describe('AppShell + product IA', () => {
     // 사업자 미등록 placeholder
     expect(screen.getByText('[사업자 등록 후 입력]')).toBeInTheDocument()
     expect(screen.getByText('[신고 후 입력]')).toBeInTheDocument()
-    // Landing h1
+    // Landing h1 — 질문형(audience 확장 후)
     expect(
-      screen.getByRole('heading', { level: 1, name: /AI가 만든 변경을/ }),
+      screen.getByRole('heading', { level: 1, name: /어제 AI에게 시킨 일/ }),
     ).toBeInTheDocument()
   })
 
@@ -1288,7 +1288,7 @@ describe('AppShell + product IA', () => {
     }
   })
 
-  it('Landing /landing — Hero h1 + 9 섹션 + 3 value cards + 4 news + 4 flow + 7 principles + 3 tiers + 5 FAQ', () => {
+  it('Landing /landing — Hero 질문형 h1 + 3 가치(회상·검토·복원) + 2 news + 4 flow + 3 tiers + 7 FAQ', () => {
     render(
       <MemoryRouter initialEntries={['/landing']}>
         <Routes>
@@ -1299,58 +1299,64 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    // Hero
+    // Hero — 질문형 h1 + 학생/초심자 안내
     expect(
-      screen.getByRole('heading', { level: 1, name: /AI가 만든 변경을.*다시 설명할 수 있게/ }),
+      screen.getByRole('heading', { level: 1, name: /어제 AI에게 시킨 일/ }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/인공지능기본법 §27 · 2026-01-22 시행됨/)).toBeInTheDocument()
-    // CTA 2 (Hero 영역, 같은 /signup link가 footer/dark에도 있어 getAllByRole)
-    const signupCTAs = screen.getAllByRole('link', { name: /5분 안에 워크스페이스 만들기/ })
+    expect(screen.getByText(/개인은 무료. 학생 · 인디 사용자도/)).toBeInTheDocument()
+    // dev 가설/법 chip은 더 이상 hero에 표시되지 않음
+    expect(screen.queryByText(/2026-01-22 시행됨/)).not.toBeInTheDocument()
+
+    // CTA (signup + pricing 보기) — hero + dark CTA 등 여러 곳에 존재
+    const signupCTAs = screen.getAllByRole('link', { name: /5분 안에 시작하기/ })
     expect(signupCTAs.length).toBeGreaterThanOrEqual(2)
     expect(signupCTAs[0]).toHaveAttribute('href', '/signup')
 
-    // 3 가치 카드
+    // 3 가치 카드 — H 라벨 제거, 평이한 한국어
     expect(screen.getByRole('heading', { level: 3, name: '회상' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 3, name: '감사' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 3, name: '1차 원인' })).toBeInTheDocument()
-    expect(screen.getAllByText('미설명 세션 비율').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByRole('heading', { level: 3, name: '검토' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: '복원' })).toBeInTheDocument()
+    // 출처 없는 mock 숫자(62% / 62분 등) 제거 확인
+    expect(screen.queryByText(/62%/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/62분/)).not.toBeInTheDocument()
+    // H1/H2/H3 가치 태그 제거
+    expect(screen.queryByText(/^H1$/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^H2$/)).not.toBeInTheDocument()
 
-    // 4 news (외부 보도)
-    expect(screen.getByText(/Newsweek · 2025-07/)).toBeInTheDocument()
-    expect(screen.getByText(/PocketOS · 9초 전체 삭제/)).toBeInTheDocument()
-    expect(screen.getByText(/METR · 체감 vs 실측 괴리/)).toBeInTheDocument()
+    // 외부 보도 2개로 축약(Replit + PocketOS만)
+    expect(screen.getByText(/Replit · DB 삭제/)).toBeInTheDocument()
+    expect(screen.getByText(/PocketOS · 9초 삭제/)).toBeInTheDocument()
+    expect(screen.queryByText(/UK 학생 33% AI 작성/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/METR · 체감/)).not.toBeInTheDocument()
 
-    // 4 flow steps
+    // 4 flow steps + H 라벨 제거
     for (const s of ['01', '02', '03', '04']) {
       expect(screen.getByText(s)).toBeInTheDocument()
     }
+    expect(screen.getByText('AI 도구 연결')).toBeInTheDocument()
+    expect(screen.getByText('자동 기록')).toBeInTheDocument()
+    expect(screen.getByText('자동 요약')).toBeInTheDocument()
+    expect(screen.getByText('검토 · 공유')).toBeInTheDocument()
+    // H4 · 5분 온보딩 같은 내부 가설 라벨 부재
+    expect(screen.queryByText(/H4 · 5분 온보딩/)).not.toBeInTheDocument()
 
-    // 7 principles — '권고' 2개, 'ok' 5개 (.ls 셀)
-    const allOk = screen.getAllByText('ok')
-    expect(allOk.length).toBeGreaterThanOrEqual(5)
-    expect(screen.getAllByText('권고').length).toBe(2)
+    // 7원칙 카드는 제거됨 (1인 운영 환경/Reviewer SLA 등)
+    expect(screen.queryByText(/Reviewer SLA 1인 운영/)).not.toBeInTheDocument()
 
-    // 3 tiers + 디자인 파트너 chip (Pricing과 동일 role=group 패턴)
+    // 3 tiers + 디자인 파트너 chip
     expect(screen.getByText('디자인 파트너 5팀 한정 50%')).toBeInTheDocument()
     const tierList = screen.getByRole('group', { name: '플랜 미리보기' })
     for (const n of ['Free', 'Team', 'Business']) {
       expect(within(tierList).getByText(n)).toBeInTheDocument()
     }
 
-    // FAQ 5개 + 첫 번째 open
-    const faqQuestions = [
-      '인공지능기본법 §27이 정말 시행됐나요?',
-      '원문 대화 transcript가 저장되나요?',
-      '1인 창업자가 만든다는데, 24/7 응답 보장은?',
-      'Reviewer / Admin도 결제 대상인가요?',
-      '디자인 파트너 50% 할인은 언제까지?',
-    ]
-    for (const q of faqQuestions) {
-      expect(screen.getByText(q)).toBeInTheDocument()
-    }
+    // FAQ 7개 + 학생/개인 안내 포함
+    expect(screen.getByText('AWM은 정확히 무엇을 해주나요?')).toBeInTheDocument()
+    expect(screen.getByText('개인도 쓸 수 있나요? 학생도?')).toBeInTheDocument()
+    expect(screen.getByText('AI 처음 써보는데 사용할 수 있나요?')).toBeInTheDocument()
 
-    // 9. dark footer CTA strip
-    expect(screen.getByText('5분이면 첫 세션이 Today에 뜹니다.')).toBeInTheDocument()
+    // dark CTA strip
+    expect(screen.getByText('5분이면 첫 세션이 자동 기록됩니다.')).toBeInTheDocument()
   })
 
   it('Pricing /pricing — 3 tier full(items 전체) + dp-chip + AOP 정의 + 비교표 12행 + FAQ 5 + dark CTA', () => {

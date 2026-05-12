@@ -1,46 +1,47 @@
 export type ValueColor = 'blue' | 'violet' | 'orange'
 
 export type ValueBlock = {
-  h: 'H1' | 'H2' | 'H3'
+  id: 'recall' | 'review' | 'replay'
   title: string
-  desc: string
-  metric: string
-  from: string
-  to: string
+  sub: string
+  examples: string[]
   color: ValueColor
-  mini: string[]
 }
 
+/** 평이한 한국어 — H1/H2/H3 라벨, 출처 없는 mock 숫자 제거 */
 export const PUBLIC_VALUE: ValueBlock[] = [
   {
-    h: 'H1',
+    id: 'recall',
     title: '회상',
-    desc: 'Today + Explain Back 으로 어제 AI에게 시킨 일을 다시 설명할 수 있게.',
-    metric: '미설명 세션 비율',
-    from: '62%',
-    to: '≤ 15%',
+    sub: '어제 AI에 시킨 일을 5문장 안에 다시 설명할 수 있게 됩니다.',
+    examples: [
+      '오늘의 미설명 세션 자동 알림',
+      '5필드 설명 양식 자동 채움',
+      '팀 공유 요약 1-clip',
+    ],
     color: 'blue',
-    mini: ['오늘의 미설명 12건', '어제 47건 · 23건 회상 완료', '팀 공유 요약 자동 생성'],
   },
   {
-    h: 'H2',
-    title: '감사',
-    desc: '변조 불가 해시 체인 + 7대 원칙 패널 + PDF export. 인공지능기본법 §27 자동 보고서.',
-    metric: '결제 트리거 전환율',
-    from: '—',
-    to: '≥ 30%',
+    id: 'review',
+    title: '검토',
+    sub: '팀원이 의도·변경·맥락을 한 화면에 보고 빠르게 검토합니다.',
+    examples: [
+      'Reviewer Brief — 의도 vs 결과',
+      '변경 파일·명령 cross-link',
+      '승인 / 차단 / 보강 요청',
+    ],
     color: 'violet',
-    mini: ['해시 체인 무결성 ✓', '7대 원칙 5 ok · 2 권고', 'PDF · 인공지능기본법 §27 양식'],
   },
   {
-    h: 'H3',
-    title: '1차 원인',
-    desc: 'Timeline + 후보·확실·불명 3분리. 사고 후 평균 도출 시간 60분 → 10분.',
-    metric: '1차 원인 도출 시간 (median)',
-    from: '62분',
-    to: '≤ 10분',
+    id: 'replay',
+    title: '복원',
+    sub: '사고가 났을 때 타임라인을 시간순으로 다시 재생합니다.',
+    examples: [
+      '시간순 이벤트 자동 정렬',
+      '후보 · 확실 · 불명 3 분리',
+      '사건 ↔ 세션 ↔ commit 연결',
+    ],
     color: 'orange',
-    mini: ['사건 ↔ 세션 ↔ commit 자동 cross-link', '타임라인 8 이벤트 자동 정렬', 'Reviewer Brief 1-clip 공유'],
   },
 ]
 
@@ -51,40 +52,30 @@ export type NewsItem = {
   link: string
 }
 
+/** 외부 보도 — 2개로 축약 (Replit · PocketOS). 공포 마케팅 톤 회피. */
 export const PUBLIC_NEWS: NewsItem[] = [
   {
     src: 'Newsweek · 2025-07',
-    quote: 'Replit Agent가 동결 명령에도 프로덕션 DB를 삭제하고 1,206명 데이터를 잃었다.',
-    chip: 'Replit Agent · prod DB 삭제',
+    quote: 'Replit AI 에이전트가 동결 명령에도 프로덕션 DB를 삭제하고 1,206명 데이터를 잃었다.',
+    chip: 'Replit · DB 삭제',
     link: '외부 보도',
   },
   {
-    src: 'X · 인디 개발자 thread · 2025-09',
-    quote: "Cursor Agent가 9초 만에 모바일 OS 코드베이스의 모든 파일을 지웠다. 'Pocket OS' 사건.",
-    chip: 'PocketOS · 9초 전체 삭제',
+    src: '인디 개발자 thread · 2025-09',
+    quote: 'AI 에이전트가 9초 만에 모바일 OS 코드베이스의 모든 파일을 지웠다.',
+    chip: 'PocketOS · 9초 삭제',
     link: '외부 thread',
-  },
-  {
-    src: 'BBC · 2025-02',
-    quote: '영국 대학생 33%가 생성형 AI로 과제를 작성한다고 응답. 학사 신뢰 시스템에 균열.',
-    chip: 'UK 학생 33% AI 작성',
-    link: '외부 보도',
-  },
-  {
-    src: 'METR · 2025-03 study',
-    quote: "숙련 개발자는 AI로 '20% 빨라졌다' 체감했지만, 실측은 평균 19% 더 느렸다.",
-    chip: 'METR · 체감 vs 실측 괴리',
-    link: 'study paper',
   },
 ]
 
 export type FlowStep = { step: string; name: string; desc: string }
 
+/** 평이한 한국어 — 내부 가설 라벨(H1~H4) 제거. */
 export const PUBLIC_FLOW: FlowStep[] = [
-  { step: '01', name: 'H4 · 5분 온보딩',    desc: '워크스페이스 생성 → AI 도구 connect → 첫 세션 import.' },
-  { step: '02', name: 'H1 · Operator 회상', desc: 'Today에서 어제 AI에 시킨 일을 5문장 안에 다시 설명.' },
-  { step: '03', name: 'H3 · 10분 1차 원인', desc: '사고 발생 시 timeline + 3분리로 평균 60분 → 10분.' },
-  { step: '04', name: 'H2 · 감사·결제',     desc: '해시 체인 + 7대 원칙 PDF로 인공지능기본법 §27 보고서 자동 export.' },
+  { step: '01', name: 'AI 도구 연결',  desc: 'Claude Code · Cursor · Codex · ChatGPT를 5분 안에 연결합니다.' },
+  { step: '02', name: '자동 기록',     desc: '대화 의도 · 명령 · 변경 파일 · 결과를 자동으로 저장합니다.' },
+  { step: '03', name: '자동 요약',     desc: '어제 한 일을 5문장으로 요약하고 위험 신호를 알립니다.' },
+  { step: '04', name: '검토 · 공유',   desc: '팀이 검토하고 PDF로 export. 사고 시 시간순 재생도 가능합니다.' },
 ]
 
 export type PrincipleRow = { name: string; state: 'ok' | 'warn'; note: string }
@@ -178,24 +169,32 @@ export type FaqItem = { q: string; a: string }
 
 export const PUBLIC_FAQ_LANDING: FaqItem[] = [
   {
-    q: '인공지능기본법 §27이 정말 시행됐나요?',
-    a: '2026-01-22 시행. AI를 사용한 운영 활동에 대한 기록·보고 의무가 발생합니다. AWM은 §27 권고 양식에 맞춘 PDF 보고서를 자동 생성합니다.',
+    q: 'AWM은 정확히 무엇을 해주나요?',
+    a: 'AI 도구(Claude Code · Cursor · Codex · ChatGPT 등)를 쓸 때 의도 · 명령 · 변경 결과를 자동으로 기록하고 5문장 요약을 만듭니다. 어제 시킨 일을 다시 설명하거나, 사고가 났을 때 원인을 찾을 때 시간을 줄여줍니다.',
   },
   {
-    q: '원문 대화 transcript가 저장되나요?',
-    a: '저장되지 않습니다. AWM은 의도 / 변경 / 결과 메타데이터만 해시 체인으로 기록합니다 (PRD §6.3 · §11.5). 가입·약관·개인정보처리방침 5지점에 동일 원칙을 반복 명시합니다.',
+    q: '개인도 쓸 수 있나요? 학생도?',
+    a: '네. Free 플랜이 1인 인디 / 학생 / 평가용으로 제공됩니다. 결제 단위는 *지난 30일 1회 이상 AI 작업이 기록된 사용자(Active Operator)* 이며, 혼자 쓰면 결제 없이 평가할 수 있습니다.',
+  },
+  {
+    q: 'AI 처음 써보는데 사용할 수 있나요?',
+    a: 'AWM은 AI 도구를 쓸 때 백그라운드에서 자동 기록되는 서비스입니다. AI 사용 능력은 필요 없고, 가입 후 도구 연결만 하면 됩니다.',
+  },
+  {
+    q: '원문 대화는 저장되나요?',
+    a: '저장되지 않습니다. 의도 / 변경 / 결과 메타데이터만 해시 체인으로 기록합니다. 가입 · 약관 · 개인정보처리방침에 같은 원칙을 명시합니다.',
   },
   {
     q: '1인 창업자가 만든다는데, 24/7 응답 보장은?',
-    a: '보장하지 않습니다. 응답은 영업시간 1~2 영업일, 무음 시간대 (밤 9시 ~ 오전 8시)에는 자동 응답으로 안내합니다. 상태 페이지는 무음 시간에도 사고 발생 시 즉시 갱신합니다.',
+    a: '보장하지 않습니다. 응답은 영업시간 1~2 영업일, 무음 시간대(밤 9시 ~ 오전 8시)에는 자동 응답으로 안내합니다. 상태 페이지는 무음 시간에도 사고 발생 시 즉시 갱신합니다.',
   },
   {
-    q: 'Reviewer / Admin도 결제 대상인가요?',
-    a: '아니요. 결제 단위는 *Active Operator* 입니다. 지난 30일 1회 이상 AI 작업이 기록된 사용자만 카운트됩니다. Reviewer·Admin은 활동량 무관 무료입니다.',
+    q: '인공지능기본법 §27 자동 보고서는 무엇인가요?',
+    a: '2026-01-22 시행된 한국 법규로, AI를 사용한 운영 활동에 대한 기록·보고 의무가 발생합니다. AWM은 §27 권고 양식에 맞춘 PDF 보고서를 자동 생성합니다. 개인은 신경 쓸 필요가 없는 항목입니다.',
   },
   {
     q: '디자인 파트너 50% 할인은 언제까지?',
-    a: '선착순 5팀 · 기간 한정 없음. 5팀이 채워지면 자동 종료됩니다. 디자인 파트너는 격주 인터뷰 1회를 조건으로 합니다.',
+    a: '선착순 5팀 · 기간 한정 없음. 5팀이 채워지면 자동 종료됩니다. 격주 인터뷰 1회를 조건으로 합니다.',
   },
 ]
 

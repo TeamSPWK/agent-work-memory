@@ -6,7 +6,6 @@ import {
   PUBLIC_FLOW,
   PUBLIC_HERO_PREVIEW,
   PUBLIC_NEWS,
-  PUBLIC_PRINCIPLES,
   PUBLIC_TIERS,
   PUBLIC_VALUE,
 } from '../../lib/seed/publicLanding'
@@ -14,47 +13,42 @@ import {
 export function Landing() {
   return (
     <>
-      {/* 1. Hero — Toss style: 1-column centered */}
+      {/* 1. Hero — 질문형, 학생/초심자까지 30초 이해 */}
       <section className="hero" aria-label="Hero">
         <div className="pub-inner">
-          <div className="eyebrow-row">
-            <span className="law-chip">
-              <Icon name="audit" size={14} /> 인공지능기본법 §27 · 2026-01-22 시행됨
-            </span>
-          </div>
           <h1>
-            AI가 만든 변경을
+            어제 AI에게 시킨 일,
             <br />
-            사람이 <em>다시 설명할 수 있게.</em>
+            오늘 <em>다시 설명할 수 있나요?</em>
           </h1>
           <p className="sub">
-            AWM은 AI 도구가 남긴 결과를 사람의 회상·감사·1차 원인 도출 사이클로 다시 연결합니다.
-            인공지능기본법 §27 권고 양식의 PDF 보고서를 자동 생성합니다.
+            AWM은 AI 도구가 한 일을 자동으로 기록하고 5문장으로 요약합니다.
+            어제 시킨 일을 다시 설명하거나, 사고가 났을 때 원인을 찾을 때 시간을 줄여줍니다.
           </p>
           <div className="ctas">
             <Link to="/signup" className="btn primary lg">
-              5분 안에 워크스페이스 만들기 <Icon name="arrow" size={14} />
+              5분 안에 시작하기 <Icon name="arrow" size={14} />
             </Link>
             <Link to="/pricing" className="btn lg">
-              디자인 파트너 신청 <Icon name="share" size={14} />
+              가격 · 플랜 보기 <Icon name="chev" size={14} />
             </Link>
           </div>
           <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 14 }}>
-            선착순 5팀 · 격주 인터뷰 1회 조건 · 50% 할인
+            개인은 무료. 학생 · 인디 사용자도 평가용으로 사용할 수 있습니다.
           </div>
         </div>
       </section>
 
-      {/* 1b. Operator preview — separate section under hero */}
+      {/* 1b. Operator preview */}
       <section className="sec tight" aria-labelledby="sec-preview">
         <div className="pub-inner">
           <div className="eyebrow-pub" style={{ textAlign: 'center' }}>
-            오늘의 미설명 세션 · v0.1 미리보기
+            예시 — 자동으로 기록되는 모습
           </div>
           <h2 id="sec-preview" className="sr-only">
-            오늘의 미설명 세션 미리보기
+            자동 기록 예시
           </h2>
-          <aside className="preview-card" aria-label="오늘의 미설명 세션 미리보기">
+          <aside className="preview-card" aria-label="자동 기록 예시">
             {PUBLIC_HERO_PREVIEW.map((p) => (
               <div key={p.title} className="pp">
                 <div className={'icn ' + p.kind} aria-hidden="true">
@@ -76,309 +70,236 @@ export function Landing() {
                 color: 'var(--text-assistive)',
               }}
             >
-              <span>미설명 세션 비율</span>
-              <span>
-                <b style={{ color: 'var(--text-strong)' }}>
-                  62% <Icon name="arrow" size={10} /> 14%
-                </b>{' '}
-                · 4주 운영 mock
-              </span>
+              <span>예시 화면 — 가입 전 시연용</span>
+              <span className="muted">실제 데이터는 가입 후 표시</span>
             </div>
           </aside>
         </div>
       </section>
 
-      {/* 2. 가치 3블록 */}
+      {/* 2. 무엇이 다른가 — 가치 3카드 */}
       <section className="sec center" aria-labelledby="sec-value">
         <div className="pub-inner">
-        <div className="eyebrow-pub">3 가지 가설 · v0.1에서 검증 시작</div>
-        <h2 id="sec-value">회상 · 감사 · 1차 원인 — 사이클 한 바퀴.</h2>
-        <p className="lead">
-          AI는 빠르게 만들고, 사람은 더 빠르게 잊는다. 그래서 AWM은 만든 결과를 사람이 다시 설명할 수 있게 돌려놓습니다.
-        </p>
-        <div className="val-grid">
-          {PUBLIC_VALUE.map((v) => (
-            <article key={v.h} className="val-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className={'tag ' + v.color}>{v.h}</span>
-                <span className="muted" style={{ font: 'var(--t-caption1)' }}>
-                  {v.metric}
-                </span>
-              </div>
-              <div className="vmetric">
-                <span className="from">{v.from}</span>
-                <Icon name="arrow" size={14} />
-                <b>{v.to}</b>
-              </div>
-              <h3>{v.title}</h3>
-              <p>{v.desc}</p>
-              <div className="mini-screen" aria-label={`${v.title} 미리보기`}>
-                {v.mini.map((m, i) => (
-                  <div key={m} className="row1">
-                    <div
-                      className={
-                        'bar1 ' + (i === 0 ? 'acc' : i === 1 ? 'red' : 'gn')
-                      }
-                      style={{ flex: '0 0 32px' }}
-                      aria-hidden="true"
-                    />
-                    <span>{m}</span>
-                  </div>
-                ))}
-              </div>
-              <Link to="/landing" className="link">
-                v0.1 화면 보기 <Icon name="chev" size={12} />
-              </Link>
-            </article>
-          ))}
-        </div>
+          <div className="eyebrow-pub">무엇이 다른가</div>
+          <h2 id="sec-value">회상 · 검토 · 복원 — 세 가지를 자동화합니다.</h2>
+          <p className="lead">
+            AI는 빠르게 만들고, 사람은 더 빠르게 잊습니다. AWM은 *어제 시킨 일*과
+            *팀이 검토할 일*과 *사고의 원인*을 자동으로 기록합니다.
+          </p>
+          <div className="val-grid">
+            {PUBLIC_VALUE.map((v) => (
+              <article key={v.id} className="val-card">
+                <h3>{v.title}</h3>
+                <p>{v.sub}</p>
+                <div className="mini-screen" aria-label={`${v.title} 예시`}>
+                  {v.examples.map((m, i) => (
+                    <div key={m} className="row1">
+                      <div
+                        className={
+                          'bar1 ' + (i === 0 ? 'acc' : i === 1 ? 'red' : 'gn')
+                        }
+                        style={{ flex: '0 0 32px' }}
+                        aria-hidden="true"
+                      />
+                      <span>{m}</span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* 3. 사회적 증거 */}
+      {/* 3. 사회적 증거 — 2개 축약, 톤 다운 */}
       <section className="sec alt center" aria-labelledby="sec-news">
         <div className="pub-inner">
-        <div className="eyebrow-pub">왜 지금인가 · 외부 보도 사례</div>
-        <h2 id="sec-news">AI가 만든 결과, 사람이 더 이상 설명할 수 없다.</h2>
-        <p className="lead">
-          아래는 PRD §1.4에 인용된 외부 보도·연구 사례입니다. AWM은 가상 인물·회사명을 만들지 않습니다.
-        </p>
-        <div className="news-grid">
-          {PUBLIC_NEWS.map((n) => (
-            <article key={n.src} className="news-card">
-              <div className="src">{n.src}</div>
-              <div className="quote">&ldquo;{n.quote}&rdquo;</div>
-              <div className="qmeta">
-                <span className="tag neutral">{n.chip}</span>
-                <span className="link">
-                  {n.link} <Icon name="chev" size={12} />
-                </span>
-              </div>
-            </article>
-          ))}
-        </div>
+          <div className="eyebrow-pub">왜 만들었나</div>
+          <h2 id="sec-news">AI가 만든 결과를 사람이 더 이상 설명할 수 없습니다.</h2>
+          <p className="lead">
+            AI 에이전트가 자율적으로 코드 · DB를 변경하면서 사고가 빈번해지고 있습니다.
+            AWM은 그런 사고가 났을 때 *원인을 찾는 데 걸리는 시간*을 줄입니다.
+          </p>
+          <div className="news-grid">
+            {PUBLIC_NEWS.map((n) => (
+              <article key={n.src} className="news-card">
+                <div className="src">{n.src}</div>
+                <div className="quote">&ldquo;{n.quote}&rdquo;</div>
+                <div className="qmeta">
+                  <span className="tag neutral">{n.chip}</span>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* 4. 어떻게 작동하는가 */}
+      {/* 4. 어떻게 작동하는가 — 평이한 4단계 */}
       <section className="sec center" aria-labelledby="sec-flow">
         <div className="pub-inner">
-        <div className="eyebrow-pub">어떻게 작동하는가</div>
-        <h2 id="sec-flow">한 사이클에 4 단계.</h2>
-        <p className="lead">
-          5분 안에 첫 세션이 Today에 뜨고, 다음날부터 회상 → 감사 → 1차 원인까지 이어집니다.
-        </p>
-        <div className="flow-grid">
-          {PUBLIC_FLOW.map((f) => (
-            <div key={f.step} className="flow-step">
-              <div className="stp">{f.step}</div>
-              <div className="nm">{f.name}</div>
-              <div className="desc">{f.desc}</div>
-            </div>
-          ))}
-        </div>
-        </div>
-      </section>
-
-      {/* 5. 인공지능기본법 카드 */}
-      <section className="sec alt center" aria-labelledby="sec-law">
-        <div className="pub-inner">
-        <div className="eyebrow-pub">인공지능기본법 §27 · 7대 원칙 자동 보고서</div>
-        <h2 id="sec-law">5개 항목 ok · 2개 보강 권고 — PDF로 한 번에.</h2>
-        <p className="lead">
-          Settings → Audit Export에서 기간을 고르면 §27 권고 양식의 PDF가 생성됩니다.
-        </p>
-        <div className="law-card">
-          <div className="lhead">
-            <h3>워크스페이스 자동 점검</h3>
-            <p>최근 30일 활동 기준 · 매일 자동 갱신 · 결과는 PDF 첫 페이지에 포함됩니다.</p>
-            <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div className="kpi">
-                <span className="v">5 / 7</span>
-                <span className="l">충족 항목</span>
+          <div className="eyebrow-pub">어떻게 작동하는가</div>
+          <h2 id="sec-flow">5분 안에 시작해서 매일 자동.</h2>
+          <p className="lead">
+            도구 연결 한 번이면, 매일 자동으로 기록 · 요약 · 위험 신호 알림이 들어옵니다.
+          </p>
+          <div className="flow-grid">
+            {PUBLIC_FLOW.map((f) => (
+              <div key={f.step} className="flow-step">
+                <div className="stp">{f.step}</div>
+                <div className="nm">{f.name}</div>
+                <div className="desc">{f.desc}</div>
               </div>
-              <div className="kpi">
-                <span className="v" style={{ color: 'var(--status-cautionary)' }}>
-                  2 / 7
-                </span>
-                <span className="l">보강 권고</span>
-              </div>
-            </div>
-          </div>
-          <ul className="lbody" aria-label="7대 원칙 상태">
-            {PUBLIC_PRINCIPLES.map((p) => (
-              <li key={p.name} className="law-row">
-                <span className={'ic ' + (p.state === 'ok' ? 'ok' : 'warn')} aria-hidden="true">
-                  {p.state === 'ok' ? '✓' : '!'}
-                </span>
-                <div>
-                  <div className="lt">{p.name}</div>
-                  <div className="lst">{p.note}</div>
-                </div>
-                <span
-                  className="ls"
-                  style={{
-                    color:
-                      p.state === 'ok'
-                        ? 'var(--status-positive)'
-                        : 'var(--status-cautionary)',
-                  }}
-                >
-                  {p.state === 'ok' ? 'ok' : '권고'}
-                </span>
-              </li>
             ))}
-          </ul>
-        </div>
+          </div>
         </div>
       </section>
 
-      {/* 6. 1인 운영 fold-below */}
+      {/* 5. 1인 운영 fold */}
       <section className="sec tight">
         <div className="pub-inner">
-        <div className="solo-fold">
-          <div className="who">
-            <div className="pic" aria-hidden="true">J</div>
-            <div>
-              <b style={{ font: 'var(--t-body1-strong)', color: 'var(--text-strong)' }}>
-                Spacewalk · jay
-              </b>
-              <div className="muted" style={{ font: 'var(--t-caption1)' }}>
-                1인 창업자 · {PUBLIC_BIZ.email}
+          <div className="solo-fold">
+            <div className="who">
+              <div className="pic" aria-hidden="true">J</div>
+              <div>
+                <b style={{ font: 'var(--t-body1-strong)', color: 'var(--text-strong)' }}>
+                  Spacewalk · jay
+                </b>
+                <div className="muted" style={{ font: 'var(--t-caption1)' }}>
+                  1인 창업자 · {PUBLIC_BIZ.email}
+                </div>
               </div>
             </div>
+            <p>
+              AWM은 1인 창업자가 만들고 있습니다. 24/7 SLA · 엔터프라이즈 영업은 하지 않습니다.
+              <b> 왜 1인인지, 어떻게 보완하는지</b>는 회사 페이지에 솔직하게 적었습니다.
+            </p>
+            <Link to="/company" className="link">
+              회사 페이지 <Icon name="chev" size={12} />
+            </Link>
           </div>
-          <p>
-            AWM은 1인 창업자가 만들고 있습니다. 24/7 SLA·엔터프라이즈 영업은 하지 않습니다.
-            <b> 왜 1인인지, 어떻게 보완하는지</b>는 회사 페이지에 솔직하게 적었습니다.
-          </p>
-          <Link to="/company" className="link">
-            회사 페이지 <Icon name="chev" size={12} />
-          </Link>
-        </div>
         </div>
       </section>
 
-      {/* 7. 가격 미리보기 */}
+      {/* 6. 가격 미리보기 */}
       <section className="sec alt center" aria-labelledby="sec-tiers">
         <div className="pub-inner">
-        <div className="eyebrow-pub">가격 미리보기</div>
-        <h2 id="sec-tiers">3 티어 · 디자인 파트너 5팀 한정 50%.</h2>
-        <p className="lead">
-          결제 단위는 Active Operator (지난 30일 1회 이상 AI 작업이 기록된 사용자). Reviewer·Admin은 활동 무관 무료.
-        </p>
-        <div className="tier-grid" role="group" aria-label="플랜 미리보기">
-          {PUBLIC_TIERS.map((t) => (
-            <article
-              key={t.id}
-              className={'tier' + (t.id === 'team' ? ' feat' : '')}
-            >
-              {t.dp50 && <div className="dp50">디자인 파트너 5팀 한정 50%</div>}
-              <div>
-                <div className="tname">{t.name}</div>
-                <div className="tdesc">{t.desc}</div>
-              </div>
-              <div className="tprice">
-                {t.priceStrike && <span className="strike">{t.priceStrike}</span>}
-                <span className="v">{t.priceLabel}</span>
-                <span className="per">{t.per}</span>
-              </div>
-              <Link
-                to={t.id === 'business' ? '/pricing' : '/signup'}
-                className="btn primary tcta"
+          <div className="eyebrow-pub">가격</div>
+          <h2 id="sec-tiers">개인 무료 · 팀 결제는 일하는 사람만.</h2>
+          <p className="lead">
+            결제 단위는 *지난 30일 1회 이상 AI 작업이 기록된 사용자*. 검토자 · 관리자는 활동 무관 무료입니다.
+          </p>
+          <div className="tier-grid" role="group" aria-label="플랜 미리보기">
+            {PUBLIC_TIERS.map((t) => (
+              <article
+                key={t.id}
+                className={'tier' + (t.id === 'team' ? ' feat' : '')}
               >
-                {t.cta}
-              </Link>
-              <ul>
-                {t.items.slice(0, 4).map((it) => (
-                  <li key={it.t} className={it.ok ? '' : 'no'}>
-                    {it.t}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-        <div style={{ textAlign: 'center', marginTop: 18 }}>
-          <Link to="/pricing" className="link">
-            전체 비교 표 · FAQ 5개 보기 <Icon name="chev" size={12} />
-          </Link>
-        </div>
+                {t.dp50 && <div className="dp50">디자인 파트너 5팀 한정 50%</div>}
+                <div>
+                  <div className="tname">{t.name}</div>
+                  <div className="tdesc">{t.desc}</div>
+                </div>
+                <div className="tprice">
+                  {t.priceStrike && <span className="strike">{t.priceStrike}</span>}
+                  <span className="v">{t.priceLabel}</span>
+                  <span className="per">{t.per}</span>
+                </div>
+                <Link
+                  to={t.id === 'business' ? '/pricing' : '/signup'}
+                  className="btn primary tcta"
+                >
+                  {t.cta}
+                </Link>
+                <ul>
+                  {t.items.slice(0, 4).map((it) => (
+                    <li key={it.t} className={it.ok ? '' : 'no'}>
+                      {it.t}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 18 }}>
+            <Link to="/pricing" className="link">
+              전체 비교 표 · FAQ 5개 보기 <Icon name="chev" size={12} />
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* 8. FAQ */}
+      {/* 7. FAQ — 학생/초심자용 추가 */}
       <section className="sec center" aria-labelledby="sec-faq">
         <div className="pub-inner">
-        <div className="eyebrow-pub">FAQ</div>
-        <h2 id="sec-faq">자주 묻는 5 가지.</h2>
-        <div className="faq" style={{ maxWidth: 820, margin: '0 auto' }}>
-          {PUBLIC_FAQ_LANDING.map((f, i) => (
-            <details key={f.q} open={i === 0}>
-              <summary>{f.q}</summary>
-              <div className="a">{f.a}</div>
-            </details>
-          ))}
-        </div>
+          <div className="eyebrow-pub">자주 묻는 질문</div>
+          <h2 id="sec-faq">{PUBLIC_FAQ_LANDING.length} 가지.</h2>
+          <div className="faq" style={{ maxWidth: 820, margin: '0 auto' }}>
+            {PUBLIC_FAQ_LANDING.map((f, i) => (
+              <details key={f.q} open={i === 0}>
+                <summary>{f.q}</summary>
+                <div className="a">{f.a}</div>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* 9. Footer CTA strip */}
+      {/* 8. dark CTA */}
       <section className="sec dark">
         <div className="pub-inner">
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 16,
-          }}
-        >
-          <div>
-            <div
-              style={{
-                font: 'var(--t-caption1-strong)',
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.6)',
-                marginBottom: 6,
-              }}
-            >
-              지금 시작
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 16,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  font: 'var(--t-caption1-strong)',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.6)',
+                  marginBottom: 6,
+                }}
+              >
+                지금 시작
+              </div>
+              <h2 style={{ margin: 0 }}>5분이면 첫 세션이 자동 기록됩니다.</h2>
+              <p
+                style={{
+                  margin: '8px 0 0',
+                  color: 'rgba(255,255,255,0.7)',
+                  font: 'var(--t-body1)',
+                }}
+              >
+                AI 도구 연결 → 자동 기록 시작. 별도 설정 없음.
+              </p>
             </div>
-            <h2 style={{ margin: 0 }}>5분이면 첫 세션이 Today에 뜹니다.</h2>
-            <p
-              style={{
-                margin: '8px 0 0',
-                color: 'rgba(255,255,255,0.7)',
-                font: 'var(--t-body1)',
-              }}
-            >
-              가입 → AI 도구 connect → 첫 세션 import → Reviewer 지정 → 완료.
-            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <Link
+                to="/signup"
+                className="btn lg"
+                style={{ background: '#fff', color: 'var(--text-strong)' }}
+              >
+                5분 안에 시작하기
+              </Link>
+              <Link
+                to="/pricing"
+                className="btn lg"
+                style={{
+                  background: 'transparent',
+                  color: '#fff',
+                  borderColor: 'rgba(255,255,255,0.3)',
+                }}
+              >
+                가격 보기
+              </Link>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <Link
-              to="/signup"
-              className="btn lg"
-              style={{ background: '#fff', color: 'var(--text-strong)' }}
-            >
-              5분 안에 워크스페이스 만들기
-            </Link>
-            <Link
-              to="/pricing"
-              className="btn lg"
-              style={{
-                background: 'transparent',
-                color: '#fff',
-                borderColor: 'rgba(255,255,255,0.3)',
-              }}
-            >
-              가격 보기
-            </Link>
-          </div>
-        </div>
         </div>
       </section>
     </>
