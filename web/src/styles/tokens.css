@@ -150,13 +150,13 @@
   --primary-heavy:          #0048b5;
   --primary-light:          #eaf2fe;
 
-  --accent-normal:          #ff7919;     /* orange-50 */
-  --accent-strong:          #c45a09;
+  --accent-normal:          #ff7919;     /* orange-50 — UI 3:1 */
+  --accent-strong:          #9b4607;     /* WCAG AA 텍스트 4.5:1+ on white (was #c45a09 3.94:1) */
   --accent-light:           #fff1e3;
 
-  --status-positive:        #00bf40;
-  --status-cautionary:      #ff7919;
-  --status-negative:        #ff4242;
+  --status-positive:        #006d25;     /* WCAG AA 텍스트 6.5:1 on white (was #00bf40 2.46:1). UI dot/bg는 c-green-50 활용 */
+  --status-cautionary:      #b25500;     /* WCAG AA 4.5:1+ on white (was #ff7919 2.62:1) */
+  --status-negative:        #cc1f1f;     /* WCAG AA 5.9:1 on white (was #ff4242 3.44:1) */
   --status-informative:     #0066ff;
 
   --interaction-inactive:   #aeb0b6;     /* cool-70 */

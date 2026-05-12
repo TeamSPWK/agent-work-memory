@@ -2,6 +2,7 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import { INCIDENT_TABS } from '../lib/seed/navigation'
 import { INCIDENT } from '../lib/seed/incident'
 import { Icon } from '../components/Icon'
+import { tabKeyHandler } from '../lib/useTabKeyboard'
 import { Replay } from './incident/Replay'
 import { Note } from './incident/Note'
 import { EventDetail } from './incident/EventDetail'
@@ -121,21 +122,36 @@ export function Incident() {
         {INCIDENT_TABS.map((t) => (
           <button
             key={t.id}
+            id={`incident-tab-${t.id}`}
             type="button"
             role="tab"
             aria-selected={tab === t.id}
+            aria-controls={`incident-panel-${t.id}`}
+            tabIndex={tab === t.id ? 0 : -1}
             className={tab === t.id ? 'active' : ''}
             onClick={() => setTab(t.id as TabId)}
+            onKeyDown={tabKeyHandler(
+              INCIDENT_TABS.map((x) => x.id) as TabId[],
+              tab,
+              setTab,
+            )}
           >
             {t.label}
           </button>
         ))}
       </div>
 
-      {tab === 'replay' && <Replay />}
-      {tab === 'note' && <Note />}
-      {tab === 'event' && <EventDetail />}
-      {tab === 'reviewer' && <ReviewerBrief />}
+      <div
+        role="tabpanel"
+        id={`incident-panel-${tab}`}
+        aria-labelledby={`incident-tab-${tab}`}
+        tabIndex={0}
+      >
+        {tab === 'replay' && <Replay />}
+        {tab === 'note' && <Note />}
+        {tab === 'event' && <EventDetail />}
+        {tab === 'reviewer' && <ReviewerBrief />}
+      </div>
     </>
   )
 }

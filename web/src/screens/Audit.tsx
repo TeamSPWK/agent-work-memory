@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 import { AUDIT_TABS } from '../lib/seed/navigation'
 import { Icon } from '../components/Icon'
+import { tabKeyHandler } from '../lib/useTabKeyboard'
 import { AuditTrail } from './audit/AuditTrail'
 import { Principles } from './audit/Principles'
 import { Integrity } from './audit/Integrity'
@@ -24,7 +25,7 @@ const HEADERS: Record<TabId, { eyebrow: string; title: string; sub: string }> = 
   integrity: {
     eyebrow: '변조 불가성 검증',
     title: '체인 무결성 결과',
-    sub: '각 row의 SHA-256 해시 + 직전 hash chain 연결. 깨진 구간을 시각으로 표시합니다.',
+    sub: '각 기록의 변조 방지 서명이 이전 기록과 정확히 연결되는지 확인합니다. 깨진 구간을 시각으로 표시합니다.',
   },
   pdf: {
     eyebrow: '감사 자료 export · 1-pager',
@@ -112,21 +113,36 @@ export function Audit() {
         {AUDIT_TABS.map((t) => (
           <button
             key={t.id}
+            id={`audit-tab-${t.id}`}
             type="button"
             role="tab"
             aria-selected={tab === t.id}
+            aria-controls={`audit-panel-${t.id}`}
+            tabIndex={tab === t.id ? 0 : -1}
             className={tab === t.id ? 'active' : ''}
             onClick={() => setTab(t.id as TabId)}
+            onKeyDown={tabKeyHandler(
+              AUDIT_TABS.map((x) => x.id) as TabId[],
+              tab,
+              setTab,
+            )}
           >
             {t.label}
           </button>
         ))}
       </div>
 
-      {tab === 'trail' && <AuditTrail />}
-      {tab === 'principles' && <Principles />}
-      {tab === 'integrity' && <Integrity />}
-      {tab === 'pdf' && <PdfPreview />}
+      <div
+        role="tabpanel"
+        id={`audit-panel-${tab}`}
+        aria-labelledby={`audit-tab-${tab}`}
+        tabIndex={0}
+      >
+        {tab === 'trail' && <AuditTrail />}
+        {tab === 'principles' && <Principles />}
+        {tab === 'integrity' && <Integrity />}
+        {tab === 'pdf' && <PdfPreview />}
+      </div>
     </>
   )
 }

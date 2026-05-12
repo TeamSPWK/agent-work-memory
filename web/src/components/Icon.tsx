@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { memo, type CSSProperties, type ReactNode } from 'react'
 
 type IconProps = {
   name: string
@@ -212,10 +212,22 @@ const paths: Record<string, ReactNode> = {
   ),
 }
 
-export function Icon({ name, size = 18, className = '', style }: IconProps) {
+/* paths 객체가 모듈 로드 시 React 노드 48개를 일괄 생성하므로, Icon 자체는 memo로
+ * 재사용해 부모 re-render 시 불필요한 reconciliation을 줄인다. SVG sprite로의 전환은 별도 sprint. */
+function IconImpl({ name, size = 18, className = '', style }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={className} style={style} aria-hidden>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      className={className}
+      style={style}
+      aria-hidden="true"
+      focusable="false"
+    >
       {paths[name] ?? null}
     </svg>
   )
 }
+
+export const Icon = memo(IconImpl)

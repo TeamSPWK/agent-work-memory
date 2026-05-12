@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { SETTINGS_TABS } from '../lib/seed/navigation'
+import { tabKeyHandler } from '../lib/useTabKeyboard'
 import { Profile } from './settings/Profile'
 import { Integrations } from './settings/Integrations'
 import { Notifications } from './settings/Notifications'
@@ -63,22 +64,37 @@ export function Settings() {
         {SETTINGS_TABS.map((t) => (
           <button
             key={t.id}
+            id={`settings-tab-${t.id}`}
             type="button"
             role="tab"
             aria-selected={tab === t.id}
+            aria-controls={`settings-panel-${t.id}`}
+            tabIndex={tab === t.id ? 0 : -1}
             className={tab === t.id ? 'active' : ''}
             onClick={() => setTab(t.id as TabId)}
+            onKeyDown={tabKeyHandler(
+              SETTINGS_TABS.map((x) => x.id) as TabId[],
+              tab,
+              setTab,
+            )}
           >
             {t.label}
           </button>
         ))}
       </div>
 
-      {tab === 'profile' && <Profile />}
-      {tab === 'integrations' && <Integrations />}
-      {tab === 'notif' && <Notifications />}
-      {tab === 'export' && <AuditExport />}
-      {tab === 'billing' && <Billing />}
+      <div
+        role="tabpanel"
+        id={`settings-panel-${tab}`}
+        aria-labelledby={`settings-tab-${tab}`}
+        tabIndex={0}
+      >
+        {tab === 'profile' && <Profile />}
+        {tab === 'integrations' && <Integrations />}
+        {tab === 'notif' && <Notifications />}
+        {tab === 'export' && <AuditExport />}
+        {tab === 'billing' && <Billing />}
+      </div>
     </>
   )
 }

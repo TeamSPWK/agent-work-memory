@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 import { WORKSPACE_TABS } from '../lib/seed/navigation'
 import { Icon } from '../components/Icon'
+import { tabKeyHandler } from '../lib/useTabKeyboard'
 import { Members } from './workspace/Members'
 import { Invite } from './workspace/Invite'
 import { Roles } from './workspace/Roles'
@@ -76,20 +77,35 @@ export function Workspace() {
         {WORKSPACE_TABS.map((t) => (
           <button
             key={t.id}
+            id={`workspace-tab-${t.id}`}
             type="button"
             role="tab"
             aria-selected={tab === t.id}
+            aria-controls={`workspace-panel-${t.id}`}
+            tabIndex={tab === t.id ? 0 : -1}
             className={tab === t.id ? 'active' : ''}
             onClick={() => setTab(t.id as TabId)}
+            onKeyDown={tabKeyHandler(
+              WORKSPACE_TABS.map((x) => x.id) as TabId[],
+              tab,
+              setTab,
+            )}
           >
             {t.label}
           </button>
         ))}
       </div>
 
-      {tab === 'members' && <Members />}
-      {tab === 'invite' && <Invite />}
-      {tab === 'roles' && <Roles />}
+      <div
+        role="tabpanel"
+        id={`workspace-panel-${tab}`}
+        aria-labelledby={`workspace-tab-${tab}`}
+        tabIndex={0}
+      >
+        {tab === 'members' && <Members />}
+        {tab === 'invite' && <Invite />}
+        {tab === 'roles' && <Roles />}
+      </div>
     </>
   )
 }

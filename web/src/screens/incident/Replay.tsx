@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   INCIDENT,
@@ -53,18 +53,27 @@ function BucketCard({
   )
 }
 
+const EVENTS_BY_ID = new Map(INCIDENT.events.map((e) => [e.id, e]))
+
 export function Replay() {
   const [selected, setSelected] = useState<string>(
     INCIDENT.events.find((e) => e.focus)?.id ?? INCIDENT.events[0].id,
   )
   const [, setParams] = useSearchParams()
-  const ev = INCIDENT.events.find((e) => e.id === selected) ?? INCIDENT.events[0]
+  const ev = EVENTS_BY_ID.get(selected) ?? INCIDENT.events[0]
   const xPct = (x: number) => ((x - INCIDENT_X_MIN) / (INCIDENT_X_MAX - INCIDENT_X_MIN)) * 100
-  const totalBuckets =
-    INCIDENT.buckets.likely.length +
-    INCIDENT.buckets.verified.length +
-    INCIDENT.buckets.unknown.length
-  const highEvents = INCIDENT.events.filter((e) => e.sev === 'high').length
+  /* INCIDENT 시드는 mount 시점 상수 — render마다 재계산 불필요 */
+  const totalBuckets = useMemo(
+    () =>
+      INCIDENT.buckets.likely.length +
+      INCIDENT.buckets.verified.length +
+      INCIDENT.buckets.unknown.length,
+    [],
+  )
+  const highEvents = useMemo(
+    () => INCIDENT.events.filter((e) => e.sev === 'high').length,
+    [],
+  )
 
   return (
     <>
