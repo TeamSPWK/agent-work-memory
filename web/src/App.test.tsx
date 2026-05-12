@@ -18,20 +18,11 @@ import { Settings } from './screens/Settings'
 import { PublicShell } from './layout/PublicShell'
 import { Landing } from './routes/public/Landing'
 import { Pricing } from './routes/public/Pricing'
-import {
-  Signup,
-  Login,
-  Reset,
-  Terms,
-  Privacy,
-  Refund,
-  Business,
-  Company,
-  Status as PublicStatus,
-  Err404,
-  Err500,
-  Maint,
-} from './routes/public/PublicStub'
+import { Signup, Login, Reset } from './routes/public/Auth'
+import { Company } from './routes/public/Company'
+import { Status as PublicStatus } from './routes/public/Status'
+import { Terms, Privacy, Refund, Business } from './routes/public/Legal'
+import { Err404, Err500, Maint } from './routes/public/Errors'
 import { PUBLIC_ROUTES } from './lib/seed/public'
 import { Workspace as OnboardingWs } from './screens/onboarding/Workspace'
 import { Connect } from './screens/onboarding/Connect'
@@ -99,7 +90,7 @@ describe('AppShell + product IA', () => {
     expect(screen.getByRole('heading', { name: 'Sessions', level: 1 })).toBeInTheDocument()
     const filter = screen.getByRole('tablist', { name: '도구 필터' })
     for (const tool of ['All', 'Claude Code', 'Cursor', 'Codex', 'Gemini']) {
-      expect(filter).toContainElement(screen.getByRole('button', { name: tool }))
+      expect(filter).toContainElement(screen.getByRole('tab', { name: tool }))
     }
     expect(screen.getByPlaceholderText('의도·작업자·repo 검색')).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: '열기 →' })).toHaveLength(7)
@@ -686,11 +677,16 @@ describe('AppShell + product IA', () => {
     const enabledNext = screen.getByRole('link', { name: /다음 — 첫 세션 import/ })
     expect(enabledNext).toHaveAttribute('href', '/onboarding/import')
 
-    // claude_code 해제 → connectedCount 0 → button disabled
+    // claude_code 해제 → connectedCount 0 → button disabled + hint 표시
     fireEvent.click(screen.getByRole('button', { name: '연결 해제' }))
-    expect(
-      screen.getByRole('button', { name: /다음 — 첫 세션 import/ }),
-    ).toBeDisabled()
+    const disabledBtn = screen.getByRole('button', { name: /다음 — 첫 세션 import/ })
+    expect(disabledBtn).toBeDisabled()
+    // a11y — aria-describedby가 hint와 연결
+    expect(disabledBtn).toHaveAttribute('aria-describedby', 'connect-disabled-hint')
+    expect(screen.getByText(/최소 1개 AI 도구를 연결한 뒤/)).toHaveAttribute(
+      'id',
+      'connect-disabled-hint',
+    )
 
     // cursor 연결 → OAuth modal → 허용 → connectedCount 1 → 다시 Link
     fireEvent.click(screen.getAllByRole('button', { name: /연결$/ })[0])
@@ -838,7 +834,8 @@ describe('AppShell + product IA', () => {
     expect(screen.getByText('2명 추가됨 · 초대 메일은 한국어로 발송됩니다.')).toBeInTheDocument()
     // 역할 radiogroup
     expect(screen.getByRole('radiogroup', { name: '사전 지정 역할' })).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: /Operator/ })).toBeChecked()
+    // 무료 역할 Reviewer가 default — DSA Art.25 사용자에게 유리한 기본값
+    expect(screen.getByRole('radio', { name: /Reviewer/ })).toBeChecked()
     // 발송 버튼
     expect(
       screen.getByRole('button', { name: /2명에게 초대 메일 발송/ }),
@@ -1075,20 +1072,19 @@ describe('AppShell + product IA', () => {
     )
 
     expect(screen.getByRole('heading', { name: 'Plan & Billing', level: 1 })).toBeInTheDocument()
-    // 현재 플랜 (Starter · 100,000원/월) + 한도 5/5 progressbar
-    expect(screen.getByText(/Starter · 100,000원\/월/)).toBeInTheDocument()
-    expect(screen.getByText('5 / 5명')).toBeInTheDocument()
-    const usageBar = screen.getByRole('progressbar', { name: 'Active Operator 사용량' })
-    expect(usageBar).toHaveAttribute('aria-valuenow', '100')
-    // 5 플랜 비교 group
+    // 현재 플랜 (Team · 100,000원/월) — 외부 PUBLIC_TIERS와 정합
+    expect(screen.getByText(/Team · 100,000원\/월/)).toBeInTheDocument()
+    // 무제한 플랜이라 progressbar 없음 — "무제한 플랜" 안내 텍스트
+    expect(screen.getByText(/무제한 플랜 — Active Operator는 청구 단위로만/)).toBeInTheDocument()
+    // 3 플랜 비교 group — 외부 Free/Team/Business와 정합
     const plans = screen.getByRole('group', { name: '플랜 비교' })
-    for (const n of ['Free', 'Starter', 'Team', 'Pro', 'Enterprise']) {
+    for (const n of ['Free', 'Team', 'Business']) {
       expect(within(plans).getByText(n)).toBeInTheDocument()
     }
-    // 현재/추천 태그
+    // 현재/추천 태그 (Team이 둘 다 보유)
     expect(within(plans).getByText('현재')).toBeInTheDocument()
     expect(within(plans).getByText('추천')).toBeInTheDocument()
-    // 현재 플랜 버튼 disabled (5개 중 Starter만)
+    // 현재 플랜 버튼 disabled (3개 중 Team)
     expect(screen.getByRole('button', { name: '현재 플랜' })).toBeDisabled()
     // 세금계산서 4 필드 (htmlFor)
     expect(screen.getByLabelText('사업자등록번호')).toHaveValue('000-00-00000')
@@ -1097,9 +1093,9 @@ describe('AppShell + product IA', () => {
     expect(screen.getByRole('button', { name: '2026-04 세금계산서 다운로드' })).toBeInTheDocument()
     // 결제 수단 (신한카드 ****1234)
     expect(screen.getByText(/신한카드 · \*\*\*\*-\*\*\*\*-\*\*\*\*-1234/)).toBeInTheDocument()
-    // 사용량 알림 — 80%/100% default checked, ±20% default unchecked
+    // 사용량 알림 — 80%/100%/±20% 모두 default checked (소비자 보호 default on)
     expect(screen.getByLabelText('Active OP 80% 도달')).toBeChecked()
-    expect(screen.getByLabelText('월 청구액 ±20% 변동')).not.toBeChecked()
+    expect(screen.getByLabelText('월 청구액 ±20% 변동')).toBeChecked()
   })
 
   it('Settings Billing: 연결제 25% toggle switches plan prices to /년 with discount math', () => {
@@ -1114,14 +1110,14 @@ describe('AppShell + product IA', () => {
     )
 
     const plans = screen.getByRole('group', { name: '플랜 비교' })
-    // 월간 default — Starter 100,000원 (헤더 카드의 100,000원과 분리)
+    // 월간 default — Team 100,000원, Business 300,000원
     expect(within(plans).getByText('100,000원')).toBeInTheDocument()
-    // 연결제 toggle
+    expect(within(plans).getByText('300,000원')).toBeInTheDocument()
+    // 연결제 toggle — Team = round(100000 * 0.75 * 12 / 1000) * 1000 = 900,000원/년
     fireEvent.click(screen.getByRole('checkbox', { name: '연결제 25% 할인' }))
-    // Starter = round(100000 * 0.75 * 12 / 1000) * 1000 = 900,000원/년
     expect(within(plans).getByText('900,000원')).toBeInTheDocument()
-    // Enterprise(null) → "협의"
-    expect(within(plans).getByText('협의')).toBeInTheDocument()
+    // Business = round(300000 * 0.75 * 12 / 1000) * 1000 = 2,700,000원/년
+    expect(within(plans).getByText('2,700,000원')).toBeInTheDocument()
   })
 
   it('Settings tab navigation: click tab updates query + heading', async () => {
@@ -1217,7 +1213,9 @@ describe('AppShell + product IA', () => {
       screen.queryByRole('region', { name: '외부 페이지 안내' }),
     ).not.toBeInTheDocument()
     expect(screen.queryByText('측정 지표 없음')).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '회사', level: 2 })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 1, name: /AI가 만든 변경을/ }),
+    ).toBeInTheDocument()
   })
 
   it('StatusBoard — 외부 페이지 가설 섹션이 PUBLIC_HYPS를 표시한다', () => {
@@ -1246,28 +1244,29 @@ describe('AppShell + product IA', () => {
     ).toBeInTheDocument()
   })
 
-  it('12 PublicStub routes dispatch — landing(S2.a) / pricing(S2.b) 별도', () => {
+  it('14 PUBLIC_ROUTES dispatch — 모든 라우트가 실제 페이지로 mount', () => {
     const elements: Record<string, ReactElement> = {
+      '/landing': <Landing />,
+      '/pricing': <Pricing />,
       '/signup': <Signup />,
       '/login': <Login />,
       '/reset': <Reset />,
+      '/company': <Company />,
+      '/status': <PublicStatus />,
       '/legal/terms': <Terms />,
       '/legal/privacy': <Privacy />,
       '/legal/refund': <Refund />,
       '/legal/business': <Business />,
-      '/company': <Company />,
-      '/status': <PublicStatus />,
       '/404': <Err404 />,
       '/500': <Err500 />,
       '/maintenance': <Maint />,
     }
-    const stubRoutes = PUBLIC_ROUTES.filter(
-      (r) => r.id !== 'landing' && r.id !== 'pricing',
+    expect(PUBLIC_ROUTES).toHaveLength(14)
+    expect(new Set(Object.keys(elements))).toEqual(
+      new Set(PUBLIC_ROUTES.map((r) => r.path)),
     )
-    expect(stubRoutes).toHaveLength(12)
-    expect(Object.keys(elements)).toHaveLength(stubRoutes.length)
 
-    for (const route of stubRoutes) {
+    for (const route of PUBLIC_ROUTES) {
       const { unmount } = render(
         <MemoryRouter initialEntries={[route.path]}>
           <Routes>
@@ -1277,13 +1276,9 @@ describe('AppShell + product IA', () => {
           </Routes>
         </MemoryRouter>,
       )
-      expect(
-        screen.getByRole('heading', { name: route.label, level: 2 }),
-      ).toBeInTheDocument()
-      expect(screen.getByText(`path · ${route.path}`)).toBeInTheDocument()
-      expect(
-        screen.getByText(`noindex · ${route.noindex ? 'true' : 'false'}`),
-      ).toBeInTheDocument()
+      // 실제 페이지 컴포넌트가 PublicShell 내부에 mount — main 영역에 콘텐츠 존재
+      const main = screen.getByRole('main')
+      expect(main).not.toBeEmptyDOMElement()
       unmount()
     }
   })
@@ -1303,7 +1298,7 @@ describe('AppShell + product IA', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: /어제 AI에게 시킨 일/ }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/개인은 무료. 학생 · 인디 사용자도/)).toBeInTheDocument()
+    expect(screen.getByText(/개인은 무료\(보존 7일\)\. 학생 · 인디 사용자도/)).toBeInTheDocument()
     // dev 가설/법 chip은 더 이상 hero에 표시되지 않음
     expect(screen.queryByText(/2026-01-22 시행됨/)).not.toBeInTheDocument()
 
@@ -1410,7 +1405,7 @@ describe('AppShell + product IA', () => {
       '미사용 시 환불되나요?',
       'Operator 외 멤버는 무료인가요?',
       '인공지능기본법 자동 보고서가 정말 PDF로 나오나요?',
-      '1인 운영이라는데 다운타임 보장은?',
+      '다운타임·SLA는 어떻게 되나요?',
       '데이터는 어디에 저장되나요?',
     ]) {
       expect(screen.getByText(q)).toBeInTheDocument()
@@ -1428,5 +1423,506 @@ describe('AppShell + product IA', () => {
 
     // dark CTA
     expect(screen.getByText('가격을 보셨으면 다음은 5분.')).toBeInTheDocument()
+  })
+
+  it('Signup /signup — form + 약관 필수 체크 + OAuth + 가입 후 5분 미리보기', () => {
+    render(
+      <MemoryRouter initialEntries={['/signup']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="signup" element={<Signup />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    // h2 + audience 카피
+    expect(
+      screen.getByRole('heading', { level: 2, name: '5분 안에 워크스페이스 만들기.' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/개인·학생도 평가용으로/)).toBeInTheDocument()
+
+    // 내부 가설 라벨 부재 (H4 / PRD §)
+    expect(screen.queryByText(/H4 화면/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/PRD §/)).not.toBeInTheDocument()
+
+    // OAuth 버튼 + 이메일/비밀번호 필드
+    expect(screen.getByRole('button', { name: /Google로 계속하기/ })).toBeInTheDocument()
+    expect(screen.getByLabelText('이메일')).toBeInTheDocument()
+    expect(screen.getByLabelText(/비밀번호/)).toBeInTheDocument()
+
+    // 필수 약관 체크박스 — 정통망법 §22 명시적 동의, 기본 unchecked + submit disabled
+    const submit = screen.getByRole('button', {
+      name: /가입하고 워크스페이스 만들기/,
+    })
+    expect(submit).toBeDisabled()
+    const required = screen.getByRole('checkbox', { name: /\(필수\)/ })
+    expect(required).not.toBeChecked()
+    fireEvent.click(required)
+    expect(required).toBeChecked()
+    expect(submit).not.toBeDisabled()
+    fireEvent.click(required)
+    expect(submit).toBeDisabled()
+
+    // 5분 미리보기 5단계
+    const aside = screen.getByLabelText('가입 후 진행 미리보기')
+    expect(within(aside).getByText(/1\. 워크스페이스 생성/)).toBeInTheDocument()
+    expect(
+      within(aside).getByText(/5\. 완료 · Today 화면으로 이동/),
+    ).toBeInTheDocument()
+    expect(within(aside).getByText('≤ 5분')).toBeInTheDocument()
+
+    // 약관 링크
+    const main = screen.getByRole('main')
+    expect(within(main).getByRole('link', { name: '이용약관' })).toHaveAttribute(
+      'href',
+      '/legal/terms',
+    )
+    expect(within(main).getByRole('link', { name: '개인정보처리방침' })).toHaveAttribute(
+      'href',
+      '/legal/privacy',
+    )
+    expect(within(main).getByRole('link', { name: '로그인' })).toHaveAttribute(
+      'href',
+      '/login',
+    )
+  })
+
+  it('Login /login — form + 매직 링크 + 로그인 유지 + 재설정 link', () => {
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="login" element={<Login />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: '다시 오신 것을 환영합니다.' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Google로 계속하기/ })).toBeInTheDocument()
+    expect(screen.getByLabelText('이메일')).toBeInTheDocument()
+    expect(screen.getByLabelText('비밀번호')).toBeInTheDocument()
+    expect(
+      screen.getByRole('checkbox', { name: /이 기기에서 로그인 유지/ }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /이메일로 매직 링크 받기/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^로그인$/ })).toBeInTheDocument()
+
+    const main = screen.getByRole('main')
+    expect(
+      within(main).getByRole('link', { name: '비밀번호를 잊으셨나요?' }),
+    ).toHaveAttribute('href', '/reset')
+    expect(within(main).getByRole('link', { name: '가입하기' })).toHaveAttribute(
+      'href',
+      '/signup',
+    )
+
+    // 워크스페이스 안내 aside
+    const aside = screen.getByLabelText('워크스페이스 안내')
+    expect(
+      within(aside).getByText(/이메일 1개 = 워크스페이스 N개/),
+    ).toBeInTheDocument()
+    expect(
+      within(aside).getByRole('link', { name: '비밀번호 재설정' }),
+    ).toHaveAttribute('href', '/reset')
+  })
+
+  it('Reset /reset — submit toggles sent state + mail preview', () => {
+    render(
+      <MemoryRouter initialEntries={['/reset']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="reset" element={<Reset />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    // 초기 상태
+    expect(
+      screen.getByRole('heading', { level: 2, name: '비밀번호 재설정.' }),
+    ).toBeInTheDocument()
+    const emailInput = screen.getByLabelText('가입 이메일') as HTMLInputElement
+    expect(emailInput).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '재설정 링크 보내기' }),
+    ).toBeInTheDocument()
+
+    // 발송 mail mock — 발송 전에도 우측에 미리보기 노출
+    const aside = screen.getByLabelText('발송 메일 미리보기')
+    expect(
+      within(aside).getByText('[AWM] 비밀번호 재설정 안내'),
+    ).toBeInTheDocument()
+    expect(within(aside).getByText('비밀번호 재설정하기')).toBeInTheDocument()
+
+    // submit → sent state
+    fireEvent.change(emailInput, { target: { value: 'someone@company.com' } })
+    fireEvent.submit(emailInput.form!)
+    expect(
+      screen.getByRole('heading', { level: 2, name: '재설정 링크를 보냈습니다.' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('발송 완료')
+
+    // 다시 보내기 → 폼 복귀
+    fireEvent.click(screen.getByRole('button', { name: '다른 이메일로 다시 보내기' }))
+    expect(
+      screen.getByRole('heading', { level: 2, name: '비밀번호 재설정.' }),
+    ).toBeInTheDocument()
+  })
+
+  it('Company /company — 일반 회사 소개 톤 (1인 표현 부재) + 디자인 파트너 모집 + 사업자 정보', () => {
+    render(
+      <MemoryRouter initialEntries={['/company']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="company" element={<Company />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    // Hero h1
+    expect(
+      screen.getByRole('heading', { level: 1, name: /AI가 만든 변경을/ }),
+    ).toBeInTheDocument()
+
+    // 1인 표현 외부 노출 부재
+    const main = screen.getByRole('main')
+    expect(within(main).queryByText(/1인 창업자/)).not.toBeInTheDocument()
+    expect(within(main).queryByText(/1인 운영/)).not.toBeInTheDocument()
+    expect(within(main).queryByText(/왜 1인/)).not.toBeInTheDocument()
+
+    // 미션 + 안 하는 것 (섹션당 h2 1개 + h3 1개)
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'AI 자율성과 검토 가능성을 동시에.' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 3, name: '지킬 수 있는 약속만.' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/24\/7 SLA · 실시간 채팅 응답/)).toBeInTheDocument()
+    expect(screen.getByText(/엔터프라이즈 영업 · 온사이트 미팅/)).toBeInTheDocument()
+
+    // 연락 + 디자인 파트너 (sec-partner h2 1개 + h3 2개)
+    expect(
+      screen.getByRole('heading', { level: 2, name: '연락과 디자인 파트너 모집.' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 3, name: '먼저 메일 또는 채널톡으로.' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 3, name: '선착순 5팀 · 50% 할인 · 격주 인터뷰 1회.' }),
+    ).toBeInTheDocument()
+
+    // 메일 보내기 — mailto 링크
+    const mailLink = within(main).getByRole('link', { name: /메일 보내기/ })
+    expect(mailLink.getAttribute('href')).toMatch(/^mailto:/)
+    // 디자인 파트너 신청 — mailto subject 포함
+    const partnerLink = within(main).getByRole('link', { name: '디자인 파트너 신청' })
+    expect(partnerLink.getAttribute('href')).toMatch(/^mailto:/)
+
+    // 마지막 CTA — signup + status 두 링크
+    expect(
+      within(main).getByRole('link', { name: /5분 안에 워크스페이스 만들기/ }),
+    ).toHaveAttribute('href', '/signup')
+    expect(within(main).getByRole('link', { name: /상태 페이지 보기/ })).toHaveAttribute(
+      'href',
+      '/status',
+    )
+  })
+
+  it('Status /status — 준비 단계 안내 + 5 서비스 행 + 공개 예정 지표 4 + 사고 이력 빈 상태', () => {
+    render(
+      <MemoryRouter initialEntries={['/status']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="status" element={<PublicStatus />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    // Hero
+    expect(
+      screen.getByRole('heading', { level: 1, name: /현재 AWM은/ }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/v2\.0 출시 전이라 production 시스템/)).toBeInTheDocument()
+
+    // 1인 표현 부재
+    const main = screen.getByRole('main')
+    expect(within(main).queryByText(/1인 창업자/)).not.toBeInTheDocument()
+    expect(within(main).queryByText(/1인 운영/)).not.toBeInTheDocument()
+
+    // 5 서비스 행
+    const services = screen.getByRole('list', { name: '서비스 구성요소 상태' })
+    const rows = within(services).getAllByRole('listitem')
+    expect(rows).toHaveLength(5)
+    expect(within(services).getByText('웹 콘솔 (web)')).toBeInTheDocument()
+    expect(within(services).getByText('API · Audit Layer')).toBeInTheDocument()
+    expect(within(services).getByText('PDF export (§27)')).toBeInTheDocument()
+
+    // 모든 상태가 '준비 중' (pre-launch)
+    const preLaunchBadges = within(services).getAllByText('준비 중')
+    expect(preLaunchBadges).toHaveLength(5)
+
+    // 공개 예정 지표 4
+    const promises = screen.getByRole('list', { name: '공개 예정 지표 목록' })
+    const promiseRows = within(promises).getAllByRole('listitem')
+    expect(promiseRows).toHaveLength(4)
+    expect(within(promises).getByText('30일 uptime')).toBeInTheDocument()
+    expect(within(promises).getByText('주요 사고 이력')).toBeInTheDocument()
+
+    // 사고 이력 빈 상태
+    expect(
+      screen.getByRole('heading', { level: 2, name: '현재 기록된 사고 없음.' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: '사고 이력 없음' })).toBeInTheDocument()
+
+    // 알림 신청 mailto
+    const alertCta = within(main).getByRole('link', { name: /메일로 알림 신청/ })
+    expect(alertCta.getAttribute('href')).toMatch(/^mailto:/)
+
+    // cross-link to company + pricing
+    expect(within(main).getByRole('link', { name: '회사 페이지' })).toHaveAttribute(
+      'href',
+      '/company',
+    )
+    expect(within(main).getByRole('link', { name: '가격 페이지' })).toHaveAttribute(
+      'href',
+      '/pricing',
+    )
+  })
+
+  it('Legal /legal/terms — LegalShell + 목차 12 + 본문 placeholder + 1인 외부 노출 X', () => {
+    render(
+      <MemoryRouter initialEntries={['/legal/terms']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="legal/terms" element={<Terms />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: '이용약관' }),
+    ).toBeInTheDocument()
+
+    // 목차 12 항목 (terms TOC)
+    const toc = screen.getByRole('complementary', { name: '목차' })
+    const tocItems = within(toc).getAllByRole('listitem')
+    expect(tocItems).toHaveLength(12)
+    expect(within(toc).getByText('제1조 (목적)')).toBeInTheDocument()
+    expect(within(toc).getByText('제12조 (개정 이력)')).toBeInTheDocument()
+
+    // 자문 callout
+    expect(screen.getByRole('heading', { level: 4, name: '법무 자문 후 작성 예정' })).toBeInTheDocument()
+
+    // 1인 외부 노출 부재
+    const main = screen.getByRole('main')
+    expect(within(main).queryByText(/1인 창업자/)).not.toBeInTheDocument()
+    expect(within(main).queryByText(/1인 운영/)).not.toBeInTheDocument()
+    // PRD § 외부 노출 부재 (§27 법령 번호는 OK)
+    expect(within(main).queryByText(/PRD §/)).not.toBeInTheDocument()
+    expect(within(main).queryByText(/§11\.5/)).not.toBeInTheDocument()
+    // 내부 버전 라벨 부재
+    expect(within(main).queryByText(/v0\.2/)).not.toBeInTheDocument()
+
+    // TOC anchor 정합 — TOC 12 링크 모두 본문 h3 id sec-0~11과 매칭
+    const tocLinks = within(toc).getAllByRole('link')
+    expect(tocLinks).toHaveLength(12)
+    tocLinks.forEach((link, i) => {
+      const href = link.getAttribute('href')
+      expect(href).toBe(`#sec-${i}`)
+      const target = main.querySelector(`#sec-${i}`)
+      expect(target).not.toBeNull()
+      expect(target?.tagName.toLowerCase()).toBe('h3')
+    })
+
+    // refund cross-link
+    expect(within(main).getByRole('link', { name: '환불 정책' })).toHaveAttribute(
+      'href',
+      '/legal/refund',
+    )
+  })
+
+  it('Legal /legal/privacy — 목차 12 + 핵심 callout 2 + §27 법령 번호 노출 OK', () => {
+    render(
+      <MemoryRouter initialEntries={['/legal/privacy']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="legal/privacy" element={<Privacy />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: '개인정보처리방침' }),
+    ).toBeInTheDocument()
+    const toc = screen.getByRole('complementary', { name: '목차' })
+    expect(within(toc).getAllByRole('listitem')).toHaveLength(12)
+    expect(
+      screen.getByRole('heading', { level: 4, name: 'AWM은 AI 도구의 원문 대화를 저장하지 않습니다' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 4, name: '§27 권고 보존 항목 (2026-01-22 시행)' }),
+    ).toBeInTheDocument()
+
+    // 보유 기간 표 — 3 티어
+    const main = screen.getByRole('main')
+    expect(within(main).getByText('7일')).toBeInTheDocument()
+    expect(within(main).getByText('90일')).toBeInTheDocument()
+    expect(within(main).getByText('5년 (인공지능기본법 §27 권고)')).toBeInTheDocument()
+
+    // PRD § 외부 노출 부재
+    expect(within(main).queryByText(/PRD §/)).not.toBeInTheDocument()
+    expect(within(main).queryByText(/§11\.5/)).not.toBeInTheDocument()
+  })
+
+  it('Legal /legal/refund — 3-column 환불 표 + 디자인 파트너/트라이얼/정가 결제', () => {
+    render(
+      <MemoryRouter initialEntries={['/legal/refund']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="legal/refund" element={<Refund />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: '환불 정책' }),
+    ).toBeInTheDocument()
+
+    // TOC 5항 (refund)
+    const toc = screen.getByRole('complementary', { name: '목차' })
+    expect(within(toc).getAllByRole('listitem')).toHaveLength(5)
+
+    // 3-column 환불 표 — 디자인 파트너 / 트라이얼 / 정가 결제 header
+    const table = screen.getByRole('table', { name: '환불 조건' })
+    expect(within(table).getByRole('columnheader', { name: '디자인 파트너' })).toBeInTheDocument()
+    expect(within(table).getByRole('columnheader', { name: '트라이얼' })).toBeInTheDocument()
+    expect(within(table).getByRole('columnheader', { name: '정가 결제' })).toBeInTheDocument()
+
+    // 토스페이먼츠 SLA + PopBill
+    const main = screen.getByRole('main')
+    expect(
+      within(main).getByRole('heading', { level: 3, name: /결제 취소 SLA \(토스페이먼츠\)/ }),
+    ).toBeInTheDocument()
+    expect(within(main).getByText(/PopBill을 통해 자동 정정/)).toBeInTheDocument()
+  })
+
+  it('Legal /legal/business — 사업자 정보 placeholder + 회사/상태 cross-link + 1인 부재', () => {
+    render(
+      <MemoryRouter initialEntries={['/legal/business']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="legal/business" element={<Business />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: '사업자 정보' }),
+    ).toBeInTheDocument()
+    const toc = screen.getByRole('complementary', { name: '목차' })
+    expect(within(toc).getAllByRole('listitem')).toHaveLength(4)
+
+    // 사업자 정보 4행 — bizNo/ecommNo/주소 placeholder
+    const main = screen.getByRole('main')
+    expect(within(main).getByText('[사업자 등록 후 입력]')).toBeInTheDocument()
+    expect(within(main).getByText('[신고 후 입력]')).toBeInTheDocument()
+    expect(within(main).getByText('[사업장 등록 후 입력]')).toBeInTheDocument()
+
+    // company + status cross-link
+    expect(within(main).getByRole('link', { name: '회사 페이지' })).toHaveAttribute(
+      'href',
+      '/company',
+    )
+    expect(within(main).getByRole('link', { name: '상태 페이지' })).toHaveAttribute(
+      'href',
+      '/status',
+    )
+
+    // 1인 외부 노출 부재 (디자인 소스의 "1인 운영 안내" 섹션 제거됨)
+    expect(within(main).queryByText(/1인 창업자/)).not.toBeInTheDocument()
+    expect(within(main).queryByText(/1인 운영/)).not.toBeInTheDocument()
+  })
+
+  it('Err404 /404 — code 404 + 제목 + 3 cross-link', () => {
+    render(
+      <MemoryRouter initialEntries={['/404']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="404" element={<Err404 />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    const main = screen.getByRole('main')
+    const card = within(main).getByLabelText('404 — 페이지 없음')
+    expect(within(card).getByText('404')).toBeInTheDocument()
+    expect(
+      within(card).getByRole('heading', { level: 1, name: '찾으시는 페이지를 찾을 수 없습니다.' }),
+    ).toBeInTheDocument()
+
+    // 3 cross-link
+    expect(within(card).getByRole('link', { name: /Today로/ })).toHaveAttribute('href', '/today')
+    expect(within(card).getByRole('link', { name: '랜딩' })).toHaveAttribute('href', '/landing')
+    expect(within(card).getByRole('link', { name: /상태 페이지/ })).toHaveAttribute('href', '/status')
+
+    // 1인 외부 노출 부재
+    expect(within(card).queryByText(/1인/)).not.toBeInTheDocument()
+  })
+
+  it('Err500 /500 — code 500 + 외부 의존성 안내 + status inline link', () => {
+    render(
+      <MemoryRouter initialEntries={['/500']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="500" element={<Err500 />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    const main = screen.getByRole('main')
+    const card = within(main).getByLabelText('500 — 서버 오류')
+    expect(within(card).getByText('500')).toBeInTheDocument()
+    expect(
+      within(card).getByRole('heading', { level: 1, name: '일시적인 오류가 발생했습니다.' }),
+    ).toBeInTheDocument()
+    expect(within(card).getByText(/OpenAI · Anthropic · 토스페이먼츠/)).toBeInTheDocument()
+
+    // desc 본문 안의 inline 상태 페이지 link + 하단 cross-link 둘 다 /status로
+    const statusLinks = within(card).getAllByRole('link', { name: /상태 페이지/ })
+    expect(statusLinks.length).toBeGreaterThanOrEqual(2)
+    statusLinks.forEach((l) => expect(l).toHaveAttribute('href', '/status'))
+  })
+
+  it('Maint /maintenance — code emoji + cau variant + 점검 안내', () => {
+    render(
+      <MemoryRouter initialEntries={['/maintenance']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="maintenance" element={<Maint />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    const main = screen.getByRole('main')
+    const card = within(main).getByLabelText('유지보수 안내')
+    // emoji span — aria-label로 SR 노출
+    expect(within(card).getByLabelText('유지보수')).toBeInTheDocument()
+    expect(
+      within(card).getByRole('heading', { level: 1, name: '잠시 점검 중입니다.' }),
+    ).toBeInTheDocument()
+    expect(within(card).getByText(/평균 10~20분 내 복구/)).toBeInTheDocument()
   })
 })
