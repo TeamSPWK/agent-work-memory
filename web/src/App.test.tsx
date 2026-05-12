@@ -10,6 +10,7 @@ import { ExplainBack } from './screens/ExplainBack'
 import { Share } from './screens/Share'
 import { SelfRecall } from './screens/SelfRecall'
 import { Audit } from './screens/Audit'
+import { Risk } from './screens/Risk'
 import { StatusBoard } from './screens/dev/StatusBoard'
 import { NAV_ITEMS } from './lib/seed/navigation'
 
@@ -353,6 +354,77 @@ describe('AppShell + product IA', () => {
     expect(
       screen.getByRole('heading', { name: 'PDF export 미리보기', level: 1 }),
     ).toBeInTheDocument()
+  })
+
+  it('Risk renders 8 risk-tile categories and DB inline rows by default', () => {
+    render(
+      <MemoryRouter initialEntries={['/risk']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="risk" element={<Risk />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Risk Radar', level: 1 })).toBeInTheDocument()
+    const tablist = screen.getByRole('tablist', { name: '위험 카테고리' })
+    for (const cat of [
+      'DB',
+      'Secret/Env',
+      'Deploy/Infra',
+      'Destructive Cmd',
+      'Auth/Permission',
+      'Migration',
+      'Large Diff',
+      'Failed Verification',
+    ]) {
+      expect(tablist).toContainElement(screen.getByRole('tab', { name: new RegExp(cat) }))
+    }
+    expect(screen.getByRole('tab', { name: /DB/, selected: true })).toBeInTheDocument()
+    expect(
+      screen.getByText('prod 환경 인덱스 마이그레이션 실행'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Incident Replay →/ })).toHaveAttribute(
+      'href',
+      '/incidents/INC-26-014',
+    )
+  })
+
+  it('Risk switches signal list when a non-DB category tile is clicked', () => {
+    render(
+      <MemoryRouter initialEntries={['/risk']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="risk" element={<Risk />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('tab', { name: /Secret\/Env/ }))
+    expect(screen.getByText('NOTION_API_KEY .env 추가')).toBeInTheDocument()
+    expect(screen.queryByText('prod 환경 인덱스 마이그레이션 실행')).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: /Secret\/Env · 신호 리스트/ }),
+    ).toBeInTheDocument()
+  })
+
+  it('Risk incident alert cta links to Incident Replay', () => {
+    render(
+      <MemoryRouter initialEntries={['/risk']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="risk" element={<Risk />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    const alert = screen.getByRole('alert', { name: '진행 중 사고 알림' })
+    expect(alert).toHaveTextContent('prod 사고 발생')
+    const cta = screen.getByRole('link', { name: /Incident Replay$/ })
+    expect(cta).toHaveAttribute('href', '/incidents/INC-26-014')
   })
 
   it('StatusBoard renders phases + sprints + screens matrix', () => {

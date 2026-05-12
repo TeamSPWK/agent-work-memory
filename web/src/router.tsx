@@ -9,6 +9,7 @@ import { ExplainBack } from './screens/ExplainBack'
 import { Share } from './screens/Share'
 import { SelfRecall } from './screens/SelfRecall'
 import { Audit } from './screens/Audit'
+import { Risk } from './screens/Risk'
 import { StatusBoard } from './screens/dev/StatusBoard'
 import { ONBOARDING_STEPS } from './lib/seed/navigation'
 
@@ -25,7 +26,7 @@ export const router = createBrowserRouter([
       { path: 'sessions/:id/explain', element: <ExplainBack /> },
       { path: 'sessions/:id/share', element: <Share /> },
       { path: 'audit', element: <Audit /> },
-      { path: 'risk', element: <PlaceholderScreen label="Risk Radar" /> },
+      { path: 'risk', element: <Risk /> },
       { path: 'incidents/:id', element: <PlaceholderScreen label="Incident" /> },
       { path: 'workspace', element: <PlaceholderScreen label="Workspace" /> },
       { path: 'settings', element: <PlaceholderScreen label="Settings" /> },

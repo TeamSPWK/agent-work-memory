@@ -117,11 +117,11 @@ export const SCREENS: ScreenRow[] = [
   { group: 'H2', label: 'PDF export 미리보기', route: '/audit?tab=pdf', status: 'done', sprint: 'S2.6' },
   { group: 'H2', label: 'Plan & Billing', route: '/settings?tab=billing', status: 'pending', sprint: 'S2.10' },
   // H3
-  { group: 'H3', label: 'Risk Radar', route: '/risk', status: 'next', sprint: 'S2.7' },
-  { group: 'H3', label: 'Incident Replay', route: '/incidents/:id?tab=replay', status: 'pending', sprint: 'S2.7' },
-  { group: 'H3', label: 'Event Detail · 3분리', route: '/incidents/:id?tab=event', status: 'pending', sprint: 'S2.7' },
-  { group: 'H3', label: 'Reviewer Brief 연결', route: '/incidents/:id?tab=reviewer', status: 'pending', sprint: 'S2.7' },
-  { group: 'H3', label: 'Incident Note', route: '/incidents/:id?tab=note', status: 'pending', sprint: 'S2.7' },
+  { group: 'H3', label: 'Risk Radar', route: '/risk', status: 'done', sprint: 'S2.7.a' },
+  { group: 'H3', label: 'Incident Replay', route: '/incidents/:id?tab=replay', status: 'next', sprint: 'S2.7.b' },
+  { group: 'H3', label: 'Event Detail · 3분리', route: '/incidents/:id?tab=event', status: 'pending', sprint: 'S2.7.c' },
+  { group: 'H3', label: 'Reviewer Brief 연결', route: '/incidents/:id?tab=reviewer', status: 'pending', sprint: 'S2.7.c' },
+  { group: 'H3', label: 'Incident Note', route: '/incidents/:id?tab=note', status: 'pending', sprint: 'S2.7.b' },
   // H4 (Onboarding)
   { group: 'H4', label: '워크스페이스 생성', route: '/onboarding/ws', status: 'stub', sprint: 'S2.8' },
   { group: 'H4', label: 'AI 도구 connect', route: '/onboarding/connect', status: 'stub', sprint: 'S2.8' },
@@ -198,7 +198,7 @@ export const PROJECT_META = {
   name: 'Agent Work Memory',
   tagline: 'AI Audit Trail SaaS for Korean SMB',
   ownerEmail: 'jay@spacewalk.tech',
-  currentCommit: '84132ba',
+  currentCommit: '261d2c9',
   lastUpdated: '2026-05-11',
 }
 
@@ -211,11 +211,11 @@ export type NextAction = {
 
 /** "지금 해야 할 한 가지." Linear inbox 패러다임. */
 export const NEXT_ACTION: NextAction = {
-  sprint: 'S2.7',
-  title: 'Risk Radar — H3 진입',
+  sprint: 'S2.7.b',
+  title: 'Incident hub + Replay + Note — H3 2/5',
   detail:
-    'v0.1 H3 화면 5종(Risk Radar · Incident Replay · Event Detail · Reviewer Brief · Incident Note)을 /risk + /incidents/:id 탭으로 이식. H2 4/5 완료 — Billing은 S2.10 이연.',
-  primaryRoute: '/risk',
+    '/incidents/:id 4탭 wrapper(replay/event/reviewer/note) 도입 + Replay canvas + Note timeline. Event Detail · Reviewer Brief는 S2.7.c.',
+  primaryRoute: '/incidents/INC-26-014',
 }
 
 /** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */

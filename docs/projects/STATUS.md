@@ -1,8 +1,8 @@
 # Agent Work Memory — 프로젝트 현황판
 
-> **현재 위치**: Phase 1 · m2 · Sprint S2.5.a 완료 → S2.5.b 진입 예정
-> **최신 커밋**: `3e97141` (2026-05-11)
-> **갱신**: 2026-05-11
+> **현재 위치**: Phase 1 · m2 · Sprint S2.7.a 완료 → S2.7.b 진입 예정 (H3 1/5)
+> **최신 커밋**: `261d2c9` (2026-05-11, S2.6 보강), S2.7.a 미커밋
+> **갱신**: 2026-05-12
 
 본 문서는 *프로젝트 전체 진행 상황*을 한 눈에 보기 위함이다. 세션 컨텍스트는
 `NOVA-STATE.md`, 상세 Plan은 `docs/projects/plans/*.md`.
@@ -29,7 +29,7 @@
 |--------|------|------|------|------|------|
 | S1 | 부트스트랩 (Vite+TS+CI) | ✅ DONE | `f6a6784` | localhost 토큰 적용 | — |
 | S1.1 | 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | ⏸ 대기 | — | — | 사용자 외부 계정 단계 |
-| **S2** | **시안 → 정적 화면 28화면 + onboarding 5** | 🚧 진행 중 (S2.5.a/H1 4/6) | — | criteria #1 v0.1 정합 | 아래 매트릭스 |
+| **S2** | **시안 → 정적 화면 28화면 + onboarding 5** | 🚧 진행 중 (11/28+1 · H1 6/6 · H2 4/5 · H3 1/5) | — | criteria #1 v0.1 정합 | 아래 매트릭스 |
 | S3 | Supabase 스키마 + RLS | ⏸ 대기 | — | criteria #2 RLS 격리 | — |
 | S4 | Audit hash chain 트리거 | ⏸ 대기 | — | criteria #3 hash chain | — |
 | S5 | 화면↔Supabase 연결 (TanStack Query) | ⏸ 대기 | — | 28화면 실 데이터 | **Auth 들어옴** |
@@ -51,17 +51,17 @@
 | H1 | Session Detail | `/sessions/:id` | ✅ | S2.4 (`6fd1e01`) |
 | H1 | Explain Back | `/sessions/:id/explain` | ✅ | S2.5.a (`3e97141`) |
 | H1 | 팀 공유 요약 | `/sessions/:id/share` | ✅ | S2.5.b (`74905a1`) |
-| H1 | 셀프 회상 (어제) | `/sessions/yesterday` | ✅ | S2.5.c |
-| H2 결제 트리거 | Audit Trail | `/audit` (탭) | ⏸ | S2.6 |
-| H2 | 7대 원칙 패널 | `/audit?tab=principles` | ⏸ | S2.6 |
-| H2 | 체인 무결성 | `/audit?tab=integrity` | ⏸ | S2.6 |
-| H2 | PDF export 미리보기 | `/audit?tab=pdf` | ⏸ | S2.6 |
-| H2 | Plan & Billing | `/settings?tab=billing` | ⏸ | S2.10 (settings 그룹) |
-| H3 10분 원인 도출 | Risk Radar | `/risk` | ⏸ | S2.7 |
-| H3 | Incident Replay | `/incidents/:id?tab=replay` | ⏸ | S2.7 |
-| H3 | Event Detail · 3분리 | `/incidents/:id?tab=event` | ⏸ | S2.7 |
-| H3 | Reviewer Brief 연결 | `/incidents/:id?tab=reviewer` | ⏸ | S2.7 |
-| H3 | Incident Note | `/incidents/:id?tab=note` | ⏸ | S2.7 |
+| H1 | 셀프 회상 (어제) | `/sessions/yesterday` | ✅ | S2.5.c (`2e6d594`) |
+| H2 결제 트리거 | Audit Trail | `/audit` (탭) | ✅ | S2.6 (`261d2c9`) |
+| H2 | 7대 원칙 패널 | `/audit?tab=principles` | ✅ | S2.6 (`261d2c9`) |
+| H2 | 체인 무결성 | `/audit?tab=integrity` | ✅ | S2.6 (`261d2c9`) |
+| H2 | PDF export 미리보기 | `/audit?tab=pdf` | ✅ | S2.6 (`261d2c9`) |
+| H2 | Plan & Billing | `/settings?tab=billing` | ⏸ | S2.10 (settings 그룹 이연) |
+| H3 10분 원인 도출 | Risk Radar | `/risk` | ✅ | S2.7.a (미커밋) |
+| H3 | Incident Replay | `/incidents/:id?tab=replay` | ⏭ NEXT | S2.7.b |
+| H3 | Event Detail · 3분리 | `/incidents/:id?tab=event` | ⏸ | S2.7.c |
+| H3 | Reviewer Brief 연결 | `/incidents/:id?tab=reviewer` | ⏸ | S2.7.c |
+| H3 | Incident Note | `/incidents/:id?tab=note` | ⏸ | S2.7.b |
 | H4 온보딩 | 워크스페이스 생성 | `/onboarding/ws` | ⏸ stub | S2.8 |
 | H4 | AI 도구 connect | `/onboarding/connect` | ⏸ stub | S2.8 |
 | H4 | 첫 세션 import | `/onboarding/import` | ⏸ stub | S2.8 |
@@ -75,8 +75,8 @@
 | settings | Notifications | `/settings?tab=notif` | ⏸ | S2.10 |
 | settings | Audit Export | `/settings?tab=export` | ⏸ | S2.10 |
 
-**완료 6/28 + 어제 회상 라우트** (H1 회상 사이클 6/6).
-**남은 22화면 + onboarding 5 + Billing**.
+**완료 11/28 + 어제 회상 라우트** (H1 6/6 · H2 4/5 · H3 1/5).
+**남은 17화면 + onboarding 5 + Billing**.
 
 ---
 
@@ -117,12 +117,14 @@ PRD §12에 명시. 14화면 영역. 디자인은 v0.2(lock). 코드 이식은 m
 
 | # | 결정 사항 | 권고 | 결정 시점 |
 |---|----------|------|----------|
-| 1 | `/sessions/:id/share` 라우트 패턴 | nested 형제 `/sessions/:id/share` (ExplainBack과 동일 패턴 확정) | S2.5.b 진입 즉시 |
-| 2 | ~~SelfRecall 라우트~~ | ✅ 적용됨: `/sessions/yesterday` (S2.5.c, `/sessions/:id`보다 specificity 우선) | done |
-| 2b | SelfRecall 진입 경로(발견성) — 사이드바·Today·Sessions 어디서 link? | Today 또는 Sessions에 "어제 회상" link 1개 추가 | S2.6 또는 별도 |
-| 3 | `/incidents/:id` breadcrumb이 Risk 하위 vs Audit 하위 | Risk 하위 (사고는 risk radar에서 점화) | S2.7 진입 |
+| 1 | ~~`/sessions/:id/share` 라우트 패턴~~ | ✅ 적용됨: nested 형제 (S2.5.b) | done |
+| 2 | ~~SelfRecall 라우트~~ | ✅ 적용됨: `/sessions/yesterday` (S2.5.c) | done |
+| 2b | SelfRecall 진입 경로(발견성) — 사이드바·Today·Sessions 어디서 link? | Today 또는 Sessions에 "어제 회상" link 1개 추가 | S2.6 또는 별도 (미해결) |
+| 3 | ~~`/incidents/:id` breadcrumb이 Risk 하위 vs Audit 하위~~ | ✅ 적용됨: Risk Radar 사고 alert cta + DB inline detail link 둘 다 `/incidents/INC-26-014` (Risk 하위) | done (S2.7.a) |
 | 4 | 외부 페이지 진입 — m2 S5 (Auth 들어올 때) | m2 S5에서 *최소 Auth UI*만, *외부 디자인*은 m2.5 | S5 진입 |
 | 5 | 디자인 파트너 시연 시점 — m2 S2 완료 후 vs S5 완료 후 | S5 완료 후 (실 데이터 + Auth) | S2 완료 시 사용자 결정 |
+| 6 | Risk Radar 시그널 표의 session id (s-003/008/009/011/012/013/014/017/018) cross-link 정합 | sessions seed 확장 vs RISK_SIGNALS 일부 session→'—' 대체 | S2.7.b 진입 즉시 |
+| 7 | Risk Radar `?cat=` 쿼리 동기화 (딥링크) | Audit `?tab=`과 동일 패턴 적용 가능 | S2.7.c 또는 별도 |
 
 ---
 
@@ -130,7 +132,9 @@ PRD §12에 명시. 14화면 영역. 디자인은 v0.2(lock). 코드 이식은 m
 
 | Sprint | 목표 | 상태 | 비고 |
 |--------|------|------|------|
-| DT.1 | `/dev/status` 라우트 + StatusBoard 컴포넌트 | ✅ DONE | H1 S2.5 완료 직후 진입·완성. `/dev/status` 북마크 전용(사이드바 NavLink 없음) |
+| DT.1 | `/dev/status` 라우트 + StatusBoard 컴포넌트 | ✅ DONE (`953987a`) | H1 S2.5 완료 직후 진입·완성. `/dev/status` 북마크 전용(사이드바 NavLink 없음) |
+| DT.1.1 | NextAction 카드 + 그룹별 진행률 바 | ✅ DONE (`cb84e08`) | UX 트렌드 비판 후 surgical 보강 |
+| DT.1.2 | 토스 스타일 전면 재설계 | ✅ DONE (`84132ba`) | 큰 숫자 + 그룹 mini bars + Phase 가로 stepper + 매트릭스 details collapse. 한 화면 1 task 원칙 |
 
 **결정 사항**
 - SSOT: TS 데이터 파일 (`src/lib/dev/projectStatus.ts`). 본 STATUS.md는 사람 친화적 표현(수동 동기화).
@@ -145,12 +149,14 @@ PRD §12에 명시. 14화면 영역. 디자인은 v0.2(lock). 코드 이식은 m
 
 ## 다음 진입
 
-**S2.6 — Audit (H2 첫 화면)** — H2 결제 트리거 1/5.
-- v0.1 H2 화면 5개: AuditTrail · 7대 원칙 · 체인 무결성 · PDF export · Plan & Billing
-- 라우트: `/audit` (탭: trail/principles/integrity/pdf, query 또는 nested)
-- Plan & Billing은 `/settings?tab=billing`로 분리 (S2.10)
+**S2.7.b — Incident hub + Replay + Note** — H3 2/5.
+- `/incidents/:id` 4탭 wrapper (replay/event/reviewer/note), Audit `?tab=` 패턴 답습
+- 본 sub-sprint는 *replay + note*만 구현, *event + reviewer*는 PlaceholderScreen
+- 시드 `lib/seed/incident.ts` 신규 (INCIDENT events·rows·buckets·notes)
+- 첫 task: session id cross-link 정합 결정 (D6)
+- Plan: `docs/projects/plans/m2-s2.7-h3.md`
 
-**그 다음**: S2.7 Risk/Incident → S2.8 Onboarding 채움 → S2.9 Workspace → S2.10 Settings → m2 S2 완료 → S3+ backend.
+**그 다음**: S2.7.c Event Detail + Reviewer Brief → S2.8 Onboarding 채움 → S2.9 Workspace → S2.10 Settings (Billing 합류) → m2 S2 완료 → S3+ backend.
 
 ---
 
@@ -160,6 +166,8 @@ PRD §12에 명시. 14화면 영역. 디자인은 v0.2(lock). 코드 이식은 m
 - 세션 컨텍스트: `NOVA-STATE.md`
 - 운영 룰: `.claude/rules/operations-sync.md`, `prd-and-strategy-collaboration.md`
 - m2 Plan: `docs/projects/plans/m2-frontend-from-design.md`
+- m2 S2.6 Plan: `docs/projects/plans/m2-s2.6-audit.md`
+- m2 S2.7 Plan: `docs/projects/plans/m2-s2.7-h3.md` (3 sub-sprint)
 - m2.5 Plan: `docs/projects/plans/m2.5-public-pages-from-design.md`
 - 디자인: `docs/projects/plans/p0-design-v0/` · `p0-design-v0.2/`
 - PRD v2.1: `docs/PRD.md`
