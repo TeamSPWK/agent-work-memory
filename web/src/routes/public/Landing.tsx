@@ -34,7 +34,7 @@ export function Landing() {
             </Link>
           </div>
           <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 14 }}>
-            개인은 무료. 학생 · 인디 사용자도 평가용으로 사용할 수 있습니다.
+            개인은 무료(보존 7일). 학생 · 인디 사용자도 평가용으로 사용할 수 있습니다.
           </div>
         </div>
       </section>
@@ -154,24 +154,25 @@ export function Landing() {
         </div>
       </section>
 
-      {/* 5. 1인 운영 fold */}
+      {/* 5. 운영 정책 fold */}
       <section className="sec tight">
         <div className="pub-inner">
           <div className="solo-fold">
             <div className="who">
-              <div className="pic" aria-hidden="true">J</div>
+              <div className="pic" aria-hidden="true">S</div>
               <div>
                 <b style={{ font: 'var(--t-body1-strong)', color: 'var(--text-strong)' }}>
-                  Spacewalk · jay
+                  Spacewalk
                 </b>
                 <div className="muted" style={{ font: 'var(--t-caption1)' }}>
-                  1인 창업자 · {PUBLIC_BIZ.email}
+                  {PUBLIC_BIZ.email}
                 </div>
               </div>
             </div>
             <p>
-              AWM은 1인 창업자가 만들고 있습니다. 24/7 SLA · 엔터프라이즈 영업은 하지 않습니다.
-              <b> 왜 1인인지, 어떻게 보완하는지</b>는 회사 페이지에 솔직하게 적었습니다.
+              응답은 영업시간 1~2 영업일 · 무음 시간대(밤 9시 ~ 오전 8시)는 자동 응답 안내.
+              <b> 24/7 SLA · 엔터프라이즈 영업은 하지 않습니다.</b>
+              운영 정책과 데이터 보존은 회사 페이지에 적었습니다.
             </p>
             <Link to="/company" className="link">
               회사 페이지 <Icon name="chev" size={12} />
@@ -206,7 +207,7 @@ export function Landing() {
                 </div>
                 <Link
                   to={t.id === 'business' ? '/pricing' : '/signup'}
-                  className="btn primary tcta"
+                  className={'btn tcta' + (t.id === 'team' ? ' primary' : '')}
                 >
                   {t.cta}
                 </Link>

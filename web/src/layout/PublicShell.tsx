@@ -62,7 +62,7 @@ function PublicFooter() {
             <b>Agent Work Memory</b>
           </div>
           <p className="desc">
-            AI가 만든 변경을 사람이 다시 설명할 수 있게. 인공지능기본법 §27 자동 보고서 SaaS · 1인 창업자 운영.
+            AI가 만든 변경을 사람이 다시 설명할 수 있게. 인공지능기본법 §27 자동 보고서 SaaS.
           </p>
         </div>
         <div className="col">
@@ -77,7 +77,7 @@ function PublicFooter() {
         <div className="col">
           <h5>회사</h5>
           <ul>
-            <li><Link to="/company">회사 · 1인 운영</Link></li>
+            <li><Link to="/company">회사</Link></li>
             <li><Link to="/legal/business">사업자 정보</Link></li>
             <li><a href={`mailto:${PUBLIC_BIZ.email}`}>{PUBLIC_BIZ.email}</a></li>
             <li>{PUBLIC_BIZ.channel}</li>

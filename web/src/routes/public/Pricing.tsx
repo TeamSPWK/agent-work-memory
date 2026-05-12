@@ -126,11 +126,11 @@ export function Pricing() {
           <Link to="/legal/refund" className="link">
             환불 정책
           </Link>
-          이 우선합니다. 1인 운영 sustainability는{' '}
+          이 우선합니다. 운영 정책은{' '}
           <Link to="/company" className="link">
             회사 페이지
           </Link>
-          에서 솔직하게 적었습니다.
+          를 참고하세요.
         </div>
         </div>
       </section>
