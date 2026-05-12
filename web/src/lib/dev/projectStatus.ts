@@ -115,7 +115,7 @@ export const SCREENS: ScreenRow[] = [
   { group: 'H2', label: '7대 원칙 패널', route: '/audit?tab=principles', status: 'done', sprint: 'S2.6' },
   { group: 'H2', label: '체인 무결성', route: '/audit?tab=integrity', status: 'done', sprint: 'S2.6' },
   { group: 'H2', label: 'PDF export 미리보기', route: '/audit?tab=pdf', status: 'done', sprint: 'S2.6' },
-  { group: 'H2', label: 'Plan & Billing', route: '/settings?tab=billing', status: 'pending', sprint: 'S2.10' },
+  { group: 'H2', label: 'Plan & Billing', route: '/settings?tab=billing', status: 'done', sprint: 'S2.10.b' },
   // H3
   { group: 'H3', label: 'Risk Radar', route: '/risk', status: 'done', sprint: 'S2.7.a' },
   { group: 'H3', label: 'Incident Replay', route: '/incidents/:id?tab=replay', status: 'done', sprint: 'S2.7.b' },
@@ -129,14 +129,14 @@ export const SCREENS: ScreenRow[] = [
   { group: 'H4', label: 'Reviewer 지정', route: '/onboarding/reviewer', status: 'done', sprint: 'S2.8' },
   { group: 'H4', label: '완료 → Today', route: '/onboarding/done', status: 'done', sprint: 'S2.8' },
   // ws
-  { group: 'ws', label: 'Members', route: '/workspace?tab=members', status: 'pending', sprint: 'S2.9' },
-  { group: 'ws', label: 'Member 초대', route: '/workspace?tab=invite', status: 'pending', sprint: 'S2.9' },
-  { group: 'ws', label: 'Roles & Risk 룰', route: '/workspace?tab=roles', status: 'pending', sprint: 'S2.9' },
+  { group: 'ws', label: 'Members', route: '/workspace?tab=members', status: 'done', sprint: 'S2.9' },
+  { group: 'ws', label: 'Member 초대', route: '/workspace?tab=invite', status: 'done', sprint: 'S2.9' },
+  { group: 'ws', label: 'Roles & Risk 룰', route: '/workspace?tab=roles', status: 'done', sprint: 'S2.9' },
   // settings
-  { group: 'settings', label: 'Profile & Account', route: '/settings?tab=profile', status: 'pending', sprint: 'S2.10' },
-  { group: 'settings', label: 'Integrations', route: '/settings?tab=integrations', status: 'pending', sprint: 'S2.10' },
-  { group: 'settings', label: 'Notifications', route: '/settings?tab=notif', status: 'pending', sprint: 'S2.10' },
-  { group: 'settings', label: 'Audit Export', route: '/settings?tab=export', status: 'pending', sprint: 'S2.10' },
+  { group: 'settings', label: 'Profile & Account', route: '/settings?tab=profile', status: 'done', sprint: 'S2.10.a' },
+  { group: 'settings', label: 'Integrations', route: '/settings?tab=integrations', status: 'done', sprint: 'S2.10.a' },
+  { group: 'settings', label: 'Notifications', route: '/settings?tab=notif', status: 'done', sprint: 'S2.10.a' },
+  { group: 'settings', label: 'Audit Export', route: '/settings?tab=export', status: 'done', sprint: 'S2.10.a' },
 ]
 
 export const PENDING_DECISIONS: PendingDecision[] = [
@@ -194,6 +194,9 @@ export const PROTOTYPE_MARKS: PrototypeMark[] = [
   { id: 11, trace: '페르소나·다크 토글 Zustand 메모리 only', resolveWhen: 'S5+ localStorage 필요 시' },
   { id: 12, trace: 'Risk Radar 시그널의 9 session id(s-003/008/009/011/012/013/014/017/018)가 sessions seed 미포함', resolveWhen: 'S5 실 데이터 자동 해소', note: '클릭 시 SessionDetail fallback 메시지 — D6 결정' },
   { id: 13, trace: 'Onboarding Done KPI "4분 38초" hardcoded 시연용 mock', resolveWhen: 'm2 S9 (H4 온보딩 5분 측정)', note: 'ONBOARDING_TIMING 상수, 디자인 sub: "시연용 mock" 명시' },
+  { id: 14, trace: 'Workspace dead-button — Members "관리 →" / Roles "매트릭스 편집"·"최근 변경 이력 보기" / Invite "발송" (4건)', resolveWhen: 'S5 실 데이터 + RBAC 연결 후', note: '시각만 정합. 클릭 동작 없음' },
+  { id: 15, trace: 'Settings dead-button — Profile 변경·관리·재발급·계정삭제·JSON다운로드 / Integrations 끊기·재연결·repo선택·채널매핑·연결 / AuditExport 지금export / Billing Pro업그레이드·이 플랜으로·선택·변경·가상계좌·카드추가·다운로드 (19건)', resolveWhen: 'S5 실 데이터 + Auth + 결제(S8 토스페이먼츠) 연결 후', note: '시안 그대로. 클릭 동작 없음 — 시각 정합만' },
+  { id: 16, trace: 'Settings Integrations가 ONBOARDING_TOOLS 재사용(상태 4종 그대로) — 실 운영에선 온보딩 시점과 통합 상태가 분리되어야 함', resolveWhen: 'S5 실 데이터 연결 시 SETTINGS_TOOLS 별도 분리 결정', note: '현재 prototype에서는 무해' },
 ]
 
 export const PROJECT_META = {
@@ -213,11 +216,10 @@ export type NextAction = {
 
 /** "지금 해야 할 한 가지." Linear inbox 패러다임. */
 export const NEXT_ACTION: NextAction = {
-  sprint: 'S2.9',
-  title: 'Workspace 3탭(Members · 초대 · Roles)',
+  sprint: 'm2.5',
+  title: 'inside-app 28/28 완료 — 외부 페이지 이식 또는 S5 데이터 연결 결정',
   detail:
-    '/workspace?tab={members,invite,roles} 풀 시드(WS_MEMBERS 6 + KPI + RISK_ROLE_MATRIX 8). H4 5/5 완료 — onboarding cycle 닫힘.',
-  primaryRoute: '/workspace',
+    'inside-app 화면 28/28+1 모두 done. 다음 마일스톤은 (a) m2.5 외부 페이지 14화면 이식 또는 (b) S3~S5 Supabase·hash chain·Auth 연결. 사용자 결정 대기.',
 }
 
 /** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */

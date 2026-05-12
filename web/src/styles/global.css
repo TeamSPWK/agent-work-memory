@@ -594,3 +594,14 @@ a { color: inherit; text-decoration: none; }
 
 /* invisible focus dummy for inputs */
 .focus-stub:focus { outline: 2px solid var(--primary-normal); outline-offset: 2px; }
+
+/* screen-reader-only utility */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

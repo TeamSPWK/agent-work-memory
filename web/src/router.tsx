@@ -11,6 +11,8 @@ import { SelfRecall } from './screens/SelfRecall'
 import { Audit } from './screens/Audit'
 import { Risk } from './screens/Risk'
 import { Incident } from './screens/Incident'
+import { Workspace } from './screens/Workspace'
+import { Settings } from './screens/Settings'
 import { Workspace as OnboardingWorkspace } from './screens/onboarding/Workspace'
 import { Connect } from './screens/onboarding/Connect'
 import { Import as OnboardingImport } from './screens/onboarding/Import'
@@ -34,8 +36,8 @@ export const router = createBrowserRouter([
       { path: 'audit', element: <Audit /> },
       { path: 'risk', element: <Risk /> },
       { path: 'incidents/:id', element: <Incident /> },
-      { path: 'workspace', element: <PlaceholderScreen label="Workspace" /> },
-      { path: 'settings', element: <PlaceholderScreen label="Settings" /> },
+      { path: 'workspace', element: <Workspace /> },
+      { path: 'settings', element: <Settings /> },
       { path: 'dev/status', element: <StatusBoard /> },
       { path: '*', element: <PlaceholderScreen label="찾을 수 없음" note="요청한 경로가 존재하지 않습니다." /> },
     ],

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { AppShell } from './layout/AppShell'
 import { OnboardingLayout } from './layout/OnboardingLayout'
@@ -12,6 +12,8 @@ import { SelfRecall } from './screens/SelfRecall'
 import { Audit } from './screens/Audit'
 import { Risk } from './screens/Risk'
 import { Incident } from './screens/Incident'
+import { Workspace } from './screens/Workspace'
+import { Settings } from './screens/Settings'
 import { Workspace as OnboardingWs } from './screens/onboarding/Workspace'
 import { Connect } from './screens/onboarding/Connect'
 import { Import as OnboardingImportScreen } from './screens/onboarding/Import'
@@ -760,5 +762,386 @@ describe('AppShell + product IA', () => {
     expect(screen.getByText('목표 5분 이하 — 통과')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Today 열기/ })).toHaveAttribute('href', '/today')
     expect(screen.getByText(/시연용 mock/)).toBeInTheDocument()
+  })
+
+  it('Workspace defaults to Members with 4 KPI + 6-row table + audit footer', () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="workspace" element={<Workspace />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Members', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Members', selected: true })).toBeInTheDocument()
+    // KPI 4
+    expect(screen.getByText('활성 멤버')).toBeInTheDocument()
+    expect(screen.getByText('평균 검토 응답')).toBeInTheDocument()
+    // 14분 (avgReviewMin) + KPI 'Reviewer' 라벨 + 'Admin' 라벨 등 중복 텍스트는 KPI .l 클래스로 좁힘
+    expect(screen.getByText('14분')).toBeInTheDocument()
+    const kpiLabels = Array.from(document.querySelectorAll('.kpi .l')).map((el) => el.textContent)
+    expect(kpiLabels).toEqual(['활성 멤버', 'Reviewer', 'Admin', '평균 검토 응답'])
+    // 멤버 6명
+    expect(screen.getByText('멤버 6명')).toBeInTheDocument()
+    expect(screen.getByText('운영 매니저 (4년차)')).toBeInTheDocument()
+    expect(screen.getByText('CFO (외주 회계)')).toBeInTheDocument()
+    // persona tag: Reviewer 2명(u3, u4) + Admin 2명(u5, u6)
+    const personaTags = Array.from(document.querySelectorAll('table.tbl .tag')).map(
+      (el) => el.textContent,
+    )
+    expect(personaTags.filter((t) => t === 'Reviewer').length).toBe(2)
+    expect(personaTags.filter((t) => t === 'Admin').length).toBe(2)
+    // 비활성 멤버(CFO) 1명
+    expect(screen.getByText('비활성')).toBeInTheDocument()
+    // Audit footer
+    expect(
+      screen.getByText(/역할 변경 · 초대 · 삭제는 모두 Audit Trail에 자동 기록/),
+    ).toBeInTheDocument()
+  })
+
+  it('Workspace switches to invite tab via query, renders email chips + role radiogroup', () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace?tab=invite']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="workspace" element={<Workspace />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Member 초대', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Member 초대', selected: true })).toBeInTheDocument()
+    // 이메일 시드 2개 추가됨
+    expect(screen.getByText('2명 추가됨 · 초대 메일은 한국어로 발송됩니다.')).toBeInTheDocument()
+    // 역할 radiogroup
+    expect(screen.getByRole('radiogroup', { name: '사전 지정 역할' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Operator/ })).toBeChecked()
+    // 발송 버튼
+    expect(
+      screen.getByRole('button', { name: /2명에게 초대 메일 발송/ }),
+    ).toBeInTheDocument()
+  })
+
+  it('Workspace invite: typing + Enter adds chip + clears input; Reviewer radio updates preview', () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace?tab=invite']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="workspace" element={<Workspace />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    const input = screen.getByLabelText('초대 이메일') as HTMLInputElement
+    fireEvent.change(input, { target: { value: 'hi@team.test' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(input.value).toBe('')
+    expect(screen.getByText('3명 추가됨 · 초대 메일은 한국어로 발송됩니다.')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('radio', { name: /Reviewer/ }))
+    // 메일 미리보기에 Reviewer 라벨 반영
+    expect(screen.getByText('Reviewer', { selector: 'b' })).toBeInTheDocument()
+  })
+
+  it('Workspace roles tab renders 8-category × 3-role matrix + legend chips', () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace?tab=roles']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="workspace" element={<Workspace />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Roles & Risk 룰', level: 1 })).toBeInTheDocument()
+    expect(screen.getByText('매트릭스 · 8 카테고리 × 3 역할 = 24 셀')).toBeInTheDocument()
+    // 8 카테고리 모두
+    for (const cat of [
+      'DB',
+      'Secret/Env',
+      'Deploy/Infra',
+      'Destructive Cmd',
+      'Auth/Permission',
+      'Migration',
+      'Large Diff',
+      'Failed Verification',
+    ]) {
+      expect(screen.getByText(cat)).toBeInTheDocument()
+    }
+    // role=status 변경 안내 박스
+    expect(screen.getByRole('status', { name: '역할 변경 안내' })).toBeInTheDocument()
+    expect(screen.getByText(/매트릭스 1셀이라도 변경하면 audit log/)).toBeInTheDocument()
+  })
+
+  it('Workspace tab buttons navigate via query param', async () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="workspace" element={<Workspace />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Roles & Risk 룰' }))
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Roles & Risk 룰', level: 1 })).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /← Members/ }))
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Members', level: 1 })).toBeInTheDocument()
+    })
+  })
+
+  it('Workspace falls back to Members when tab query is unknown', () => {
+    render(
+      <MemoryRouter initialEntries={['/workspace?tab=bogus']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="workspace" element={<Workspace />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('tab', { name: 'Members', selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Members', level: 1 })).toBeInTheDocument()
+  })
+
+  it('Settings defaults to Profile tab — 5 tabs in tablist + grid forms + danger zone', () => {
+    render(
+      <MemoryRouter initialEntries={['/settings']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Profile & Account', level: 1 })).toBeInTheDocument()
+    // 5 tabs
+    for (const t of [
+      'Profile & Account',
+      'Integrations',
+      'Notifications',
+      'Audit Export',
+      'Plan & Billing',
+    ]) {
+      expect(screen.getByRole('tab', { name: t })).toBeInTheDocument()
+    }
+    expect(
+      screen.getByRole('tab', { name: 'Profile & Account', selected: true }),
+    ).toBeInTheDocument()
+    // 기본 정보 fields
+    expect(screen.getByLabelText('표시 이름')).toHaveValue('CTO 겸직 대표')
+    expect(screen.getByLabelText('역할 (워크스페이스 기준)')).toBeDisabled()
+    // 알림 채널 3개 (cto@…/@cto/미연결)
+    expect(screen.getByLabelText('이메일 알림 채널')).toBeChecked()
+    expect(screen.getByLabelText('채널톡 알림 채널')).not.toBeChecked()
+    // 위험 액션 region
+    expect(screen.getByRole('region', { name: '위험 액션' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '계정 삭제 진행' })).toBeInTheDocument()
+  })
+
+  it('Settings Integrations: 4 AI tools + 3 external services + 예정 통합', () => {
+    render(
+      <MemoryRouter initialEntries={['/settings?tab=integrations']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Integrations', level: 1 })).toBeInTheDocument()
+    // AI 도구 4종 + 외부 서비스 3 — 각 이름 모두 한 번씩
+    for (const name of ['Claude Code', 'Cursor', 'Codex', 'ChatGPT', 'GitHub', 'Slack', '채널톡']) {
+      expect(screen.getByText(name)).toBeInTheDocument()
+    }
+    // 상태 — Claude Code(connected) / ChatGPT(error) / Cursor·Codex(idle)
+    expect(screen.getAllByText('연결됨').length).toBeGreaterThanOrEqual(3) // claude_code + github + slack
+    expect(screen.getByText('오류')).toBeInTheDocument()
+    // 예정 통합
+    expect(screen.getByText('Jira · 지원 예정')).toBeInTheDocument()
+    expect(screen.getByText('Notion · 지원 예정')).toBeInTheDocument()
+  })
+
+  it('Settings Notifications: 5×4 rule matrix + 무음 시간대 weekend default + Slack mock', () => {
+    render(
+      <MemoryRouter initialEntries={['/settings?tab=notif']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Notifications', level: 1 })).toBeInTheDocument()
+    expect(screen.getByText('5개 이벤트 × 4 채널')).toBeInTheDocument()
+    // 행 5개 — 각 이벤트 텍스트
+    for (const e of [
+      '고위험 신호 (DB · Secret · Destructive)',
+      '미설명 세션 (24h)',
+      '체인 무결성 깨짐',
+      'Reviewer 응답 지연 (30분+)',
+      '비용 한도 임박 (Active Op 80%)',
+    ]) {
+      expect(screen.getByText(e)).toBeInTheDocument()
+    }
+    // 매트릭스: 고위험 × email default checked
+    expect(
+      screen.getByLabelText('고위험 신호 (DB · Secret · Destructive) — 이메일'),
+    ).toBeChecked()
+    // 미설명 × email default unchecked
+    expect(screen.getByLabelText('미설명 세션 (24h) — 이메일')).not.toBeChecked()
+    // 무음 시간대 — 토/일 default checked, 평일 unchecked
+    expect(screen.getByLabelText('토요일 무음')).toBeChecked()
+    expect(screen.getByLabelText('월요일 무음')).not.toBeChecked()
+    // Slack mock 미리보기
+    expect(screen.getByText(/🚨 고위험 신호 — DB · prod/)).toBeInTheDocument()
+  })
+
+  it('Settings Audit Export: 3 forms + 4 retention + 3 schedule radiogroups + 5 recent exports', () => {
+    render(
+      <MemoryRouter initialEntries={['/settings?tab=export']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Audit Export 설정', level: 1 })).toBeInTheDocument()
+    // 3 radiogroups
+    expect(screen.getByRole('radiogroup', { name: 'PDF 양식' })).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: '보존 기간' })).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: '자동 export 일정' })).toBeInTheDocument()
+    // PDF 양식 — 7대 원칙 default checked
+    expect(screen.getByLabelText('인공지능기본법 7대 원칙 양식')).toBeChecked()
+    expect(screen.getByLabelText('분기 감사 양식')).not.toBeChecked()
+    // 보존 — 5년 default
+    expect(screen.getByLabelText('5년 · 법정 권고')).toBeChecked()
+    expect(screen.getByLabelText('영구')).not.toBeChecked()
+    // 자동 export 일정 — 분기 default
+    expect(screen.getByLabelText('분기')).toBeChecked()
+    // 최근 export 5건
+    expect(screen.getByText('최근 export 5건')).toBeInTheDocument()
+    expect(screen.getAllByText('검증 OK').length).toBe(4)
+    expect(screen.getByText('부분 누락')).toBeInTheDocument()
+    // SHA-256 변경 불가
+    expect(screen.getByText('SHA-256')).toBeInTheDocument()
+  })
+
+  it('Settings Billing tab: current plan + usage progressbar + 5 plan cards + 세금계산서 + 결제수단', () => {
+    render(
+      <MemoryRouter initialEntries={['/settings?tab=billing']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Plan & Billing', level: 1 })).toBeInTheDocument()
+    // 현재 플랜 (Starter · 100,000원/월) + 한도 5/5 progressbar
+    expect(screen.getByText(/Starter · 100,000원\/월/)).toBeInTheDocument()
+    expect(screen.getByText('5 / 5명')).toBeInTheDocument()
+    const usageBar = screen.getByRole('progressbar', { name: 'Active Operator 사용량' })
+    expect(usageBar).toHaveAttribute('aria-valuenow', '100')
+    // 5 플랜 비교 group
+    const plans = screen.getByRole('group', { name: '플랜 비교' })
+    for (const n of ['Free', 'Starter', 'Team', 'Pro', 'Enterprise']) {
+      expect(within(plans).getByText(n)).toBeInTheDocument()
+    }
+    // 현재/추천 태그
+    expect(within(plans).getByText('현재')).toBeInTheDocument()
+    expect(within(plans).getByText('추천')).toBeInTheDocument()
+    // 현재 플랜 버튼 disabled (5개 중 Starter만)
+    expect(screen.getByRole('button', { name: '현재 플랜' })).toBeDisabled()
+    // 세금계산서 4 필드 (htmlFor)
+    expect(screen.getByLabelText('사업자등록번호')).toHaveValue('000-00-00000')
+    expect(screen.getByLabelText('발행 이메일')).toHaveValue('finance@workspace-a.com')
+    // 청구서 3건 + 다운로드 a11y
+    expect(screen.getByRole('button', { name: '2026-04 세금계산서 다운로드' })).toBeInTheDocument()
+    // 결제 수단 (신한카드 ****1234)
+    expect(screen.getByText(/신한카드 · \*\*\*\*-\*\*\*\*-\*\*\*\*-1234/)).toBeInTheDocument()
+    // 사용량 알림 — 80%/100% default checked, ±20% default unchecked
+    expect(screen.getByLabelText('Active OP 80% 도달')).toBeChecked()
+    expect(screen.getByLabelText('월 청구액 ±20% 변동')).not.toBeChecked()
+  })
+
+  it('Settings Billing: 연결제 25% toggle switches plan prices to /년 with discount math', () => {
+    render(
+      <MemoryRouter initialEntries={['/settings?tab=billing']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    const plans = screen.getByRole('group', { name: '플랜 비교' })
+    // 월간 default — Starter 100,000원 (헤더 카드의 100,000원과 분리)
+    expect(within(plans).getByText('100,000원')).toBeInTheDocument()
+    // 연결제 toggle
+    fireEvent.click(screen.getByRole('checkbox', { name: '연결제 25% 할인' }))
+    // Starter = round(100000 * 0.75 * 12 / 1000) * 1000 = 900,000원/년
+    expect(within(plans).getByText('900,000원')).toBeInTheDocument()
+    // Enterprise(null) → "협의"
+    expect(within(plans).getByText('협의')).toBeInTheDocument()
+  })
+
+  it('Settings tab navigation: click tab updates query + heading', async () => {
+    render(
+      <MemoryRouter initialEntries={['/settings']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Audit Export' }))
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'Audit Export 설정', level: 1 }),
+      ).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Profile & Account' }))
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Profile & Account', level: 1 })).toBeInTheDocument()
+    })
+  })
+
+  it('Settings falls back to Profile when tab is unknown', () => {
+    render(
+      <MemoryRouter initialEntries={['/settings?tab=bogus']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('tab', { name: 'Profile & Account', selected: true }),
+    ).toBeInTheDocument()
   })
 })
