@@ -1,7 +1,24 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppShell } from './layout/AppShell'
 import { OnboardingLayout } from './layout/OnboardingLayout'
+import { PublicShell } from './layout/PublicShell'
 import { PlaceholderScreen } from './screens/PlaceholderScreen'
+import {
+  Landing,
+  Pricing,
+  Signup,
+  Login,
+  Reset,
+  Terms,
+  Privacy,
+  Refund,
+  Business,
+  Company,
+  Status,
+  Err404,
+  Err500,
+  Maint,
+} from './routes/public/PublicStub'
 import { Today } from './screens/Today'
 import { Sessions } from './screens/Sessions'
 import { SessionDetail } from './screens/SessionDetail'
@@ -52,6 +69,25 @@ export const router = createBrowserRouter([
       { path: 'import', element: <OnboardingImport /> },
       { path: 'reviewer', element: <Reviewer /> },
       { path: 'done', element: <Done /> },
+    ],
+  },
+  {
+    element: <PublicShell />,
+    children: [
+      { path: '/landing', element: <Landing /> },
+      { path: '/pricing', element: <Pricing /> },
+      { path: '/signup', element: <Signup /> },
+      { path: '/login', element: <Login /> },
+      { path: '/reset', element: <Reset /> },
+      { path: '/legal/terms', element: <Terms /> },
+      { path: '/legal/privacy', element: <Privacy /> },
+      { path: '/legal/refund', element: <Refund /> },
+      { path: '/legal/business', element: <Business /> },
+      { path: '/company', element: <Company /> },
+      { path: '/status', element: <Status /> },
+      { path: '/404', element: <Err404 /> },
+      { path: '/500', element: <Err500 /> },
+      { path: '/maintenance', element: <Maint /> },
     ],
   },
 ])

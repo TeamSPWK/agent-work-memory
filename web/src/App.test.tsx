@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { AppShell } from './layout/AppShell'
@@ -14,6 +15,24 @@ import { Risk } from './screens/Risk'
 import { Incident } from './screens/Incident'
 import { Workspace } from './screens/Workspace'
 import { Settings } from './screens/Settings'
+import { PublicShell } from './layout/PublicShell'
+import {
+  Landing,
+  Pricing,
+  Signup,
+  Login,
+  Reset,
+  Terms,
+  Privacy,
+  Refund,
+  Business,
+  Company,
+  Status as PublicStatus,
+  Err404,
+  Err500,
+  Maint,
+} from './routes/public/PublicStub'
+import { PUBLIC_ROUTES } from './lib/seed/public'
 import { Workspace as OnboardingWs } from './screens/onboarding/Workspace'
 import { Connect } from './screens/onboarding/Connect'
 import { Import as OnboardingImportScreen } from './screens/onboarding/Import'
@@ -1143,5 +1162,94 @@ describe('AppShell + product IA', () => {
     expect(
       screen.getByRole('tab', { name: 'Profile & Account', selected: true }),
     ).toBeInTheDocument()
+  })
+
+  it('PublicShell mounts topbar + footer + page-band on /landing with hyp banner', () => {
+    render(
+      <MemoryRouter initialEntries={['/landing']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="landing" element={<Landing />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('banner')).toBeInTheDocument()
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+    // landing 가설 배너(region) — 'Hero scroll-depth · CTA 클릭율' 지표
+    expect(screen.getByRole('region', { name: '가설 검증 배너' })).toBeInTheDocument()
+    // top nav 메뉴 4개 (footer link와 분리)
+    const topMenu = screen.getByRole('navigation', { name: '외부 메뉴' })
+    expect(screen.getByLabelText('AWM 홈')).toBeInTheDocument()
+    for (const label of ['제품', '가격', '회사', '상태']) {
+      expect(within(topMenu).getByRole('link', { name: label })).toBeInTheDocument()
+    }
+    // CTA — 로그인 + 5분 시작
+    expect(screen.getByRole('link', { name: '로그인' })).toHaveAttribute('href', '/login')
+    expect(screen.getByRole('link', { name: '5분 시작' })).toHaveAttribute('href', '/signup')
+    // 사업자 미등록 placeholder
+    expect(screen.getByText('[사업자 등록 후 입력]')).toBeInTheDocument()
+    expect(screen.getByText('[신고 후 입력]')).toBeInTheDocument()
+    // PublicStub heading h2
+    expect(screen.getByRole('heading', { name: '랜딩', level: 2 })).toBeInTheDocument()
+  })
+
+  it('PublicShell shows non-hyp band on routes without PUBLIC_HYPS (e.g. /company)', () => {
+    render(
+      <MemoryRouter initialEntries={['/company']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="company" element={<Company />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('region', { name: '외부 페이지 안내' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('측정 지표 없음')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '회사', level: 2 })).toBeInTheDocument()
+  })
+
+  it('All 14 public routes dispatch to their PublicStub', () => {
+    const elements: Record<string, ReactElement> = {
+      '/landing': <Landing />,
+      '/pricing': <Pricing />,
+      '/signup': <Signup />,
+      '/login': <Login />,
+      '/reset': <Reset />,
+      '/legal/terms': <Terms />,
+      '/legal/privacy': <Privacy />,
+      '/legal/refund': <Refund />,
+      '/legal/business': <Business />,
+      '/company': <Company />,
+      '/status': <PublicStatus />,
+      '/404': <Err404 />,
+      '/500': <Err500 />,
+      '/maintenance': <Maint />,
+    }
+    expect(Object.keys(elements)).toHaveLength(PUBLIC_ROUTES.length)
+
+    for (const route of PUBLIC_ROUTES) {
+      const { unmount } = render(
+        <MemoryRouter initialEntries={[route.path]}>
+          <Routes>
+            <Route element={<PublicShell />}>
+              <Route path={route.path} element={elements[route.path]} />
+            </Route>
+          </Routes>
+        </MemoryRouter>,
+      )
+      expect(
+        screen.getByRole('heading', { name: route.label, level: 2 }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(`path · ${route.path}`)).toBeInTheDocument()
+      expect(
+        screen.getByText(`noindex · ${route.noindex ? 'true' : 'false'}`),
+      ).toBeInTheDocument()
+      unmount()
+    }
   })
 })

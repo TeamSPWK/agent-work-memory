@@ -70,9 +70,9 @@ export const PHASES: Phase[] = [
   {
     id: 'p2',
     label: 'm2.5 Build — 외부 페이지 (소개·로그인·결제·법무)',
-    status: 'pending',
+    status: 'active',
     exit: 'Plan exit criteria 8건 PASS',
-    note: 'm2 S2 완료 후 진입',
+    note: 'm2.5/S1 스캐폴드 완료, S2 시각 이식 진행 예정',
   },
   {
     id: 'p3',
@@ -100,6 +100,17 @@ export const SPRINTS: Sprint[] = [
 
 export const DEV_TRACK_SPRINTS: Sprint[] = [
   { id: 'DT.1', goal: '/dev/status 라우트 + StatusBoard', status: 'done', note: 'H1 S2.5 완료 직후 진입·완성' },
+]
+
+export const M25_SPRINTS: Sprint[] = [
+  { id: 'm2.5/S1', goal: 'Public route 14 스캐폴드 + PublicShell', status: 'done', exit: 'localhost 14 페이지 dispatch', note: 'PublicStub placeholder + PUBLIC_BIZ env-aware' },
+  { id: 'm2.5/S2', goal: 'v0.2 컴포넌트 → 14 TSX 시각 이식', status: 'next', exit: 'criteria #1 시안 픽셀 정합' },
+  { id: 'm2.5/S3', goal: '라우트 가드 + 가입→H4 핸드오프 (/app/* prefix)', status: 'pending', exit: 'criteria #2·#3', note: 'D7 결정' },
+  { id: 'm2.5/S4', goal: 'SEO + sitemap + OG', status: 'pending', exit: 'criteria #4' },
+  { id: 'm2.5/S5', goal: '사업자 정보 single source (env wiring)', status: 'pending', exit: 'criteria #5' },
+  { id: 'm2.5/S6', goal: 'Active Operator 정의 single source', status: 'pending', exit: 'criteria #6' },
+  { id: 'm2.5/S7', goal: '법무 4종 문구 합류 + check-legal-sync', status: 'pending', exit: 'criteria #7' },
+  { id: 'm2.5/S8', goal: '라이트/다크 footer 가독성 검증', status: 'pending', exit: 'criteria #8' },
 ]
 
 export const SCREENS: ScreenRow[] = [
@@ -137,6 +148,21 @@ export const SCREENS: ScreenRow[] = [
   { group: 'settings', label: 'Integrations', route: '/settings?tab=integrations', status: 'done', sprint: 'S2.10.a' },
   { group: 'settings', label: 'Notifications', route: '/settings?tab=notif', status: 'done', sprint: 'S2.10.a' },
   { group: 'settings', label: 'Audit Export', route: '/settings?tab=export', status: 'done', sprint: 'S2.10.a' },
+  // public (m2.5)
+  { group: 'public', label: '랜딩',              route: '/landing',         status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '가격',              route: '/pricing',         status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '회원가입',          route: '/signup',          status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '로그인',            route: '/login',           status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '비밀번호 재설정',   route: '/reset',           status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '이용약관',          route: '/legal/terms',     status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '개인정보처리방침',  route: '/legal/privacy',   status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '환불 정책',          route: '/legal/refund',    status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '사업자 정보',        route: '/legal/business',  status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '회사',               route: '/company',         status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '상태 페이지',        route: '/status',          status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '404 — 페이지 없음',  route: '/404',             status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '500 — 서버 오류',    route: '/500',             status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '유지보수',           route: '/maintenance',     status: 'stub', sprint: 'm2.5/S1' },
 ]
 
 export const PENDING_DECISIONS: PendingDecision[] = [
@@ -173,6 +199,12 @@ export const PENDING_DECISIONS: PendingDecision[] = [
     resolveBy: 'S5',
   },
   {
+    id: 'D7',
+    topic: '인사이드앱 경로 prefix(/app/*) vs 현재 / · /today',
+    recommendation: 'm2.5 S3 RequireAuth + 가입→H4 핸드오프 sprint에서 prefix 이동. S1은 충돌 없는 /landing alias로 시작.',
+    resolveBy: 'm2.5/S3',
+  },
+  {
     id: 'D5',
     topic: '디자인 파트너 시연 시점',
     recommendation: 'S5 완료 후 (실 데이터 + Auth)',
@@ -197,6 +229,8 @@ export const PROTOTYPE_MARKS: PrototypeMark[] = [
   { id: 14, trace: 'Workspace dead-button — Members "관리 →" / Roles "매트릭스 편집"·"최근 변경 이력 보기" / Invite "발송" (4건)', resolveWhen: 'S5 실 데이터 + RBAC 연결 후', note: '시각만 정합. 클릭 동작 없음' },
   { id: 15, trace: 'Settings dead-button — Profile 변경·관리·재발급·계정삭제·JSON다운로드 / Integrations 끊기·재연결·repo선택·채널매핑·연결 / AuditExport 지금export / Billing Pro업그레이드·이 플랜으로·선택·변경·가상계좌·카드추가·다운로드 (19건)', resolveWhen: 'S5 실 데이터 + Auth + 결제(S8 토스페이먼츠) 연결 후', note: '시안 그대로. 클릭 동작 없음 — 시각 정합만' },
   { id: 16, trace: 'Settings Integrations가 ONBOARDING_TOOLS 재사용(상태 4종 그대로) — 실 운영에선 온보딩 시점과 통합 상태가 분리되어야 함', resolveWhen: 'S5 실 데이터 연결 시 SETTINGS_TOOLS 별도 분리 결정', note: '현재 prototype에서는 무해' },
+  { id: 17, trace: 'PublicShell 14 페이지가 PublicStub placeholder — 시각·콘텐츠 미이식', resolveWhen: 'm2.5/S2 시각 이식', note: 'router dispatch 검증용 골격. .pub-* CSS 미추가' },
+  { id: 18, trace: '랜딩이 / 가 아닌 /landing — 인사이드앱 /·/today 충돌 회피용 임시', resolveWhen: 'm2.5/S3 RequireAuth + /app/* prefix 이동 시', note: 'D7 결정' },
 ]
 
 export const PROJECT_META = {
@@ -216,10 +250,11 @@ export type NextAction = {
 
 /** "지금 해야 할 한 가지." Linear inbox 패러다임. */
 export const NEXT_ACTION: NextAction = {
-  sprint: 'm2.5',
-  title: 'inside-app 28/28 완료 — 외부 페이지 이식 또는 S5 데이터 연결 결정',
+  sprint: 'm2.5/S2',
+  title: '외부 14페이지 시각 이식 (v0.2 → TSX)',
   detail:
-    'inside-app 화면 28/28+1 모두 done. 다음 마일스톤은 (a) m2.5 외부 페이지 14화면 이식 또는 (b) S3~S5 Supabase·hash chain·Auth 연결. 사용자 결정 대기.',
+    'm2.5/S1 스캐폴드 + PublicShell + 14 PublicStub PASS. 다음은 public-landing/pricing/auth/legal/company/error/status 7 JSX → 14 TSX 시각 이식 + .pub-* CSS 추가.',
+  primaryRoute: '/landing',
 }
 
 /** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */

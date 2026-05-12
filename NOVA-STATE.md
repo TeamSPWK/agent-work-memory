@@ -1,8 +1,8 @@
 # Nova State
 
-- **Goal**: S2.10.b Plan & Billing 완료 — **H2 5/5 사이클 닫힘** · inside-app 화면 28/28+1 모두 done. 다음은 m2.5(외부 페이지 이식) 또는 S3~S5(Supabase·Auth) 결정.
-- **Phase**: frontend ingest 완료 — m2 S1+S2.1~S2.10 + DT.1 done. H1 6/6 + H2 5/5 + H3 5/5 + H4 5/5 + ws 3/3 + settings 5/5. 화면 28/28+1.
-- **Blocker**: 없음. 후속 결정·프로토타입 흔적은 `docs/projects/STATUS.md` + `/dev/status` 대시보드 참조.
+- **Goal**: m2.5/S1 Public route 14 스캐폴드 + PublicShell 완료. 다음은 m2.5/S2 14 TSX 시각 이식.
+- **Phase**: m2 inside-app 28/28+1 done · m2.5 진입(p2 active) — S1 done, S2 next. 화면 28(app) + 14(public stub) = 42 트랙.
+- **Blocker**: 없음. /landing은 인사이드앱 / 충돌 회피용 임시(D7). 후속 결정·프로토타입 흔적은 `docs/projects/STATUS.md` + `/dev/status` 대시보드 참조.
 
 ## Tasks
 | Task | Status | Verdict | Note |
@@ -22,8 +22,9 @@
 | m2 S2.8 Onboarding 5화면 (H4 5/5) | done | PASS(qa) — Workspace 폼(radiogroup 2 + select 2) + Connect 4 tool + OAuth dialog + Import timeline 4 + Reviewer multi-select + Done KPI 시연 mock + Today 점프 | screens/onboarding/* + seed/onboarding.ts |
 | m2 S2.9 Workspace 3탭 (ws 3/3) | done | PASS(qa + Evaluator) — useSearchParams 3탭(members/invite/roles), Members(KPI 4 + 6행 + persona tag/RBAC), Invite(이메일 chip + radiogroup 역할 + 메일 미리보기 동기화), Roles(8 카테고리 × 3 역할 + role=status 변경 안내) | screens/Workspace.tsx + workspace/{Members,Invite,Roles}.tsx + seed/workspace.ts |
 | m2 S2.10.a Settings 4탭 (settings 4/5) | done | PASS(qa + Evaluator) — 5탭 wrapper(profile/integrations/notif/export/billing) + Profile(grid 4필드 + 알림 채널 3 + 보안 3 + 위험 액션 region) + Integrations(AI 4 + 외부 3 + 예정 2) + Notifications(5×4 매트릭스 + 무음 시간대 + Slack mock) + AuditExport(3 radiogroup + 5건 export) + Billing 인라인 placeholder | screens/Settings.tsx + settings/{Profile,Integrations,Notifications,AuditExport}.tsx + seed/settings.ts |
-| m2 S2.10.b Plan & Billing (**H2 5/5 닫힘**) | done | PASS(qa + Evaluator) — 현재 플랜 카드 + 사용량 progressbar(5/5 100%) + 디자인 파트너 D1 카드 + 5플랜 비교(group/Free·Starter·Team·Pro·Enterprise) + 연결제 25% toggle 산식 + 세금계산서 4필드 + 청구서 3건 + 토스페이먼츠 결제수단 + 사용량 알림 3 group | screens/settings/Billing.tsx + seed/billing.ts (PLAN_USAGE/BILLING_PLANS/INVOICES/PAYMENT_METHOD/USAGE_ALERTS/BIZ_INFO/PARTNER_DISCOUNT/formatPlanPrice) |
-| **다음: m2.5 외부 페이지 또는 S3~S5 데이터 연결** | ⏭ DECISION | — | inside-app 28/28+1 완료. (a) m2.5 외부 14화면 이식 vs (b) S3 Supabase 스키마+RLS 시작 — 사용자 결정 |
+| m2 S2.10.b Plan & Billing (**H2 5/5 닫힘**) | done | PASS(qa + Evaluator) — 현재 플랜 카드 + 사용량 progressbar(5/5 100%) + 디자인 파트너 D1 카드 + 5플랜 비교 + 연결제 25% toggle + 세금계산서 4필드 + 청구서 3건 + 토스페이먼츠 결제수단 + 사용량 알림 | screens/settings/Billing.tsx + seed/billing.ts |
+| m2.5/S1 Public route 14 스캐폴드 + PublicShell | done | PASS(qa + Evaluator) — PublicShell(banner/contentinfo/region·외부 메뉴 nav) + 14 PublicStub(landing/pricing/signup/login/reset/legal 4종/company/status/404/500/maintenance) + PUBLIC_BIZ env-aware(VITE_BIZ_NO/ECOMM_NO/ADDR) + 사업자 미등록 placeholder | layout/PublicShell.tsx + routes/public/PublicStub.tsx + seed/public.ts |
+| **m2.5/S2 14 TSX 시각 이식** | ⏭ NEXT | — | v0.2 public-landing/pricing/auth/legal/company/error 7 JSX → 14 TSX + .pub-* CSS. criteria #1 시안 픽셀 정합 |
 | m2 S1.1 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | pending | — | 사용자 외부 계정 단계 |
 | 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S2 완료 후 |
 | 법무 4종 실제 문구 자문 | pending | — | legal-pages.md 단계 1~5 |
@@ -49,9 +50,10 @@
 | — | — | — |
 
 ## Last Activity
-- m2 S2.10.b Plan & Billing (qa + Evaluator) → PASS — **H2 5/5 사이클 닫힘 · inside-app 28/28+1**. 현재 플랜 카드(Starter 100,000원/월 + 다음 갱신일) + Active Operator 사용량 role=progressbar aria-valuenow=100(5/5) + 디자인 파트너 D1 카드(6개월 50%) + 5플랜 group(Free 0/Starter 100k/Team 250k 추천/Pro 500k/Enterprise 협의) + 연결제 25% toggle 산식(formatPlanPrice: round(p*0.75*12/1000)*1000 → Starter 900k, Team 2.25M, Pro 4.5M, Enterprise '협의') + 세금계산서 4 fieldset htmlFor(bizno/company/rep/invoiceEmail) + 청구서 3건 다운로드 a11y aria-label + 토스페이먼츠 신한카드 ****1234 + 사용량 알림 3 group(80%/100% default on, ±20% off). Evaluator surgical fix 2건 반영(PROTOTYPE_MARKS #15 Billing 8 dead-button 확장 19건 + global.css .sr-only utility 추가 + Billing.tsx inline style 제거). Fix 3(currentCommit) 커밋 후 보류. test 47/47 | 2026-05-12
-- m2 S2.10.a Settings 4탭 (qa + Evaluator) → PASS — 5탭 wrapper(profile/integrations/notif/export/billing placeholder) + Profile(htmlFor 4 + 알림 채널 3 + 보안 3 + 위험 액션 region) + Integrations(ONBOARDING_TOOLS 4 + 외부 3 + 예정 2) + Notifications(5×4 매트릭스 + 무음 + Slack mock) + AuditExport(3 radiogroup + 5건). Evaluator fix 2건 반영(#15·#16). test 46/46 | 2026-05-12
-- m2 S2.9 Workspace 3탭 (qa + Evaluator) → PASS — useSearchParams 3탭(members/invite/roles), Members(KPI 4 + 6명 테이블 + persona tag + RBAC + Audit footer), Invite(이메일 chip + Enter/쉼표 + radiogroup 역할 + 미리보기 동기화), Roles(8 × 3 매트릭스 + role=status 안내). Evaluator surgical fix 3건 반영(Roles aria-label + Invite 취소 제거 + PROTOTYPE_MARKS #14). test 39/39 | 2026-05-12
+- m2.5/S1 Public route 14 스캐폴드 + PublicShell (qa + Evaluator) → PASS — PublicShell layout(role=banner header + role=contentinfo footer + nav aria-label="외부 메뉴" 4 메뉴 + brand aria-label="AWM 홈" + role=region 분기 aria-label "가설 검증 배너"/"외부 페이지 안내") + PageBand(PUBLIC_HYPS landing/pricing/signup 3 가설) + 14 PublicStub(landing/pricing/signup/login/reset/legal 4종/company/status/404/500/maintenance) — PlaceholderStub 공통 + 14 named exports + path/noindex meta 노출. PUBLIC_BIZ env-aware(VITE_BIZ_NO/VITE_ECOMM_NO/VITE_BIZ_ADDR) + bizNoOrPlaceholder/ecommNoOrPlaceholder helpers — 미등록 시 '[사업자 등록 후 입력]'/'[신고 후 입력]' 회색 placeholder. SCREENS 14 public stub sprint=m2.5/S1, NEXT_ACTION→m2.5/S2, PENDING_DECISIONS D7(/ vs /landing 충돌 회피), PROTOTYPE_MARKS #17(.pub-* CSS 미추가)·#18(/landing 임시 alias). Evaluator surgical fix 2건 반영(PHASES.p2 pending→active + M25_SPRINTS 별도 배열 S1~S8 추가). test 50/50 | 2026-05-12
+- m2 S2.10.b Plan & Billing (qa + Evaluator) → PASS — **H2 5/5 사이클 닫힘 · inside-app 28/28+1**. 현재 플랜 + Active Operator progressbar(5/5 100%) + 5플랜 + 연결제 25% toggle 산식(round(p*0.75*12/1000)*1000) + 세금계산서 4필드 + 청구서 3건 + 토스페이먼츠 + 사용량 알림 3. Evaluator fix 2건(PROTOTYPE_MARKS #15·#16 + .sr-only utility). test 47/47 | 2026-05-12
+- m2 S2.10.a Settings 4탭 (qa + Evaluator) → PASS — 5탭 wrapper + Profile + Integrations + Notifications + AuditExport + Billing placeholder. fix #15·#16. test 46/46 | 2026-05-12
+- m2 S2.9 Workspace 3탭 (qa + Evaluator) → PASS — 3탭 wrapper + Members + Invite + Roles 매트릭스. fix #14. test 39/39 | 2026-05-12
 - m2 S2.8 Onboarding 5화면 (qa) → PASS — OnboardingProgress(role=progressbar) 공통 + Workspace(radiogroup 2 + select 2) + Connect(4 tool + OAuth dialog + Escape) + Import(timeline 4) + Reviewer(multi-toggle §1 동적) + Done(KPI 시연 mock + Today 점프). PROTOTYPE_MARKS #13 추가. **H4 5/5 사이클 닫힘**. test 33/33 | 2026-05-12
 - m2 S2.7.c Event Detail + Reviewer Brief (qa) → PASS — EventDetail(핵심 fact 8행 + 3분리 grid-3 + 근거 자료 5건 + 분류 radiogroup 4 likely/verified/unknown/irrelevant + 사유 textarea + 의도/결과 미리보기 cta + cross-link), ReviewerBrief(split 좌우: explain back 5 + AI 추출 + 질문 후보 3 / SESSION_DETAIL 변경 파일·명령 재사용 + DB 영향 + match-line ok/ok/extra 3 + 승인/차단/추가 확인). Incident 래퍼 PendingTab 제거, 4탭 모두 활성. **H3 5/5 사이클 닫힘**. test 29/29 | 2026-05-12
 - m2 S2.7.b Incident hub + Replay + Note (qa) → PASS — useSearchParams ?tab= 4탭(replay/event/reviewer/note), Incident 래퍼 + 인라인 PlaceholderScreen 2탭, Replay incident-canvas 2D timeline (xPct + sevSize map + ic-mark clickable + ic-axis T0), 3 bucket(likely/verified/unknown), KPI 4, 우측 detail (selected event), system 감지 mock 배지(role=status), Note timeline + 메모 composer(자동 timestamp + draft preview) + Postmortem 양식. mock incident(INC-99-999) fallback 배지. PROTOTYPE_MARKS 12 추가(D6 결정). test 28/28 | 2026-05-12
