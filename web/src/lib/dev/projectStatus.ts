@@ -119,8 +119,8 @@ export const SCREENS: ScreenRow[] = [
   // H3
   { group: 'H3', label: 'Risk Radar', route: '/risk', status: 'done', sprint: 'S2.7.a' },
   { group: 'H3', label: 'Incident Replay', route: '/incidents/:id?tab=replay', status: 'done', sprint: 'S2.7.b' },
-  { group: 'H3', label: 'Event Detail · 3분리', route: '/incidents/:id?tab=event', status: 'next', sprint: 'S2.7.c' },
-  { group: 'H3', label: 'Reviewer Brief 연결', route: '/incidents/:id?tab=reviewer', status: 'pending', sprint: 'S2.7.c' },
+  { group: 'H3', label: 'Event Detail · 3분리', route: '/incidents/:id?tab=event', status: 'done', sprint: 'S2.7.c' },
+  { group: 'H3', label: 'Reviewer Brief 연결', route: '/incidents/:id?tab=reviewer', status: 'done', sprint: 'S2.7.c' },
   { group: 'H3', label: 'Incident Note', route: '/incidents/:id?tab=note', status: 'done', sprint: 'S2.7.b' },
   // H4 (Onboarding)
   { group: 'H4', label: '워크스페이스 생성', route: '/onboarding/ws', status: 'stub', sprint: 'S2.8' },
@@ -199,7 +199,7 @@ export const PROJECT_META = {
   name: 'Agent Work Memory',
   tagline: 'AI Audit Trail SaaS for Korean SMB',
   ownerEmail: 'jay@spacewalk.tech',
-  currentCommit: 'b4d93fb',
+  currentCommit: '7203869',
   lastUpdated: '2026-05-11',
 }
 
@@ -212,11 +212,11 @@ export type NextAction = {
 
 /** "지금 해야 할 한 가지." Linear inbox 패러다임. */
 export const NEXT_ACTION: NextAction = {
-  sprint: 'S2.7.c',
-  title: 'Event Detail + Reviewer Brief — H3 5/5 마무리',
+  sprint: 'S2.8',
+  title: 'Onboarding 5화면 채움 (H4)',
   detail:
-    '/incidents/:id 4탭 wrapper의 event/reviewer 탭 채움. Event 핵심 fact + 3분리 + 분류 라디오, ReviewerBrief split(의도/결과) + match-line 3건. 완료 시 H3 사이클 닫힘.',
-  primaryRoute: '/incidents/INC-26-014?tab=event',
+    '현재 stub 상태인 /onboarding/{ws,connect,import,reviewer,done}를 v0.1 시안으로 채움. 5분 가설(criteria #7) 측정 가능 수준까지. H3 5/5 완성, H2 4/5 Billing은 S2.10 합류.',
+  primaryRoute: '/onboarding/ws',
 }
 
 /** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */

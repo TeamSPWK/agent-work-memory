@@ -1,7 +1,7 @@
 # Agent Work Memory — 프로젝트 현황판
 
-> **현재 위치**: Phase 1 · m2 · Sprint S2.7.b 완료 → S2.7.c 진입 예정 (H3 3/5)
-> **최신 커밋**: `b4d93fb` (2026-05-12, S2.7.a + STATUS 일괄 보강), S2.7.b 미커밋
+> **현재 위치**: Phase 1 · m2 · Sprint S2.7.c 완료 → **H3 5/5 사이클 닫힘**. S2.8 Onboarding 진입 예정
+> **최신 커밋**: `7203869` (2026-05-12, S2.7.b), S2.7.c 미커밋
 > **갱신**: 2026-05-12
 
 본 문서는 *프로젝트 전체 진행 상황*을 한 눈에 보기 위함이다. 세션 컨텍스트는
@@ -29,7 +29,7 @@
 |--------|------|------|------|------|------|
 | S1 | 부트스트랩 (Vite+TS+CI) | ✅ DONE | `f6a6784` | localhost 토큰 적용 | — |
 | S1.1 | 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | ⏸ 대기 | — | — | 사용자 외부 계정 단계 |
-| **S2** | **시안 → 정적 화면 28화면 + onboarding 5** | 🚧 진행 중 (13/28+1 · H1 6/6 · H2 4/5 · H3 3/5) | — | criteria #1 v0.1 정합 | 아래 매트릭스 |
+| **S2** | **시안 → 정적 화면 28화면 + onboarding 5** | 🚧 진행 중 (15/28+1 · H1 6/6 · H2 4/5 · H3 5/5) | — | criteria #1 v0.1 정합 | 아래 매트릭스 |
 | S3 | Supabase 스키마 + RLS | ⏸ 대기 | — | criteria #2 RLS 격리 | — |
 | S4 | Audit hash chain 트리거 | ⏸ 대기 | — | criteria #3 hash chain | — |
 | S5 | 화면↔Supabase 연결 (TanStack Query) | ⏸ 대기 | — | 28화면 실 데이터 | **Auth 들어옴** |
@@ -58,10 +58,10 @@
 | H2 | PDF export 미리보기 | `/audit?tab=pdf` | ✅ | S2.6 (`261d2c9`) |
 | H2 | Plan & Billing | `/settings?tab=billing` | ⏸ | S2.10 (settings 그룹 이연) |
 | H3 10분 원인 도출 | Risk Radar | `/risk` | ✅ | S2.7.a (`b4d93fb`) |
-| H3 | Incident Replay | `/incidents/:id?tab=replay` | ✅ | S2.7.b (미커밋) |
-| H3 | Event Detail · 3분리 | `/incidents/:id?tab=event` | ⏭ NEXT | S2.7.c |
-| H3 | Reviewer Brief 연결 | `/incidents/:id?tab=reviewer` | ⏸ | S2.7.c |
-| H3 | Incident Note | `/incidents/:id?tab=note` | ✅ | S2.7.b (미커밋) |
+| H3 | Incident Replay | `/incidents/:id?tab=replay` | ✅ | S2.7.b (`7203869`) |
+| H3 | Event Detail · 3분리 | `/incidents/:id?tab=event` | ✅ | S2.7.c (미커밋) |
+| H3 | Reviewer Brief 연결 | `/incidents/:id?tab=reviewer` | ✅ | S2.7.c (미커밋) |
+| H3 | Incident Note | `/incidents/:id?tab=note` | ✅ | S2.7.b (`7203869`) |
 | H4 온보딩 | 워크스페이스 생성 | `/onboarding/ws` | ⏸ stub | S2.8 |
 | H4 | AI 도구 connect | `/onboarding/connect` | ⏸ stub | S2.8 |
 | H4 | 첫 세션 import | `/onboarding/import` | ⏸ stub | S2.8 |
@@ -75,8 +75,8 @@
 | settings | Notifications | `/settings?tab=notif` | ⏸ | S2.10 |
 | settings | Audit Export | `/settings?tab=export` | ⏸ | S2.10 |
 
-**완료 13/28 + 어제 회상 라우트** (H1 6/6 · H2 4/5 · H3 3/5).
-**남은 15화면 + onboarding 5 + Billing**.
+**완료 15/28 + 어제 회상 라우트** (H1 6/6 · H2 4/5 · H3 5/5).
+**남은 13화면 + onboarding 5 + Billing**.
 
 ---
 
@@ -149,13 +149,12 @@ PRD §12에 명시. 14화면 영역. 디자인은 v0.2(lock). 코드 이식은 m
 
 ## 다음 진입
 
-**S2.7.c — Event Detail + Reviewer Brief** — H3 5/5 마무리.
-- `/incidents/:id?tab=event` + `?tab=reviewer` 두 탭 채움 (현재는 인라인 PlaceholderScreen)
-- EventDetail: 이벤트 핵심 fact 표 + 3분리 + 근거 자료 + 분류 라디오 + 사유 textarea
-- ReviewerBrief: split 좌우(의도 vs 결과) + match-line 3건 + 승인/차단 액션
-- Plan: `docs/projects/plans/m2-s2.7-h3.md`
+**S2.8 — Onboarding 5화면 채움** — H4 사이클.
+- 현재 stub 상태인 `/onboarding/{ws,connect,import,reviewer,done}` 5화면을 v0.1 시안으로 채움
+- 5분 가설(Plan §8 criteria #7) 측정 가능 수준 — *처음 사용자가 워크스페이스 생성 → 첫 세션 import → Today 표시*
+- 데이터: `seed/onboarding.ts` 신규 (ONBOARDING_TOOLS 4, IMPORT_STEPS, FIRST_SESSION)
 
-**그 다음**: S2.8 Onboarding 채움 → S2.9 Workspace → S2.10 Settings (Billing 합류) → m2 S2 완료 → S3+ backend.
+**그 다음**: S2.9 Workspace → S2.10 Settings (Billing 합류) → m2 S2 완료 → S3+ backend.
 
 ---
 

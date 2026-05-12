@@ -1,9 +1,11 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { INCIDENT_TABS } from '../lib/seed/navigation'
 import { INCIDENT } from '../lib/seed/incident'
 import { Icon } from '../components/Icon'
 import { Replay } from './incident/Replay'
 import { Note } from './incident/Note'
+import { EventDetail } from './incident/EventDetail'
+import { ReviewerBrief } from './incident/ReviewerBrief'
 
 const TAB_IDS = INCIDENT_TABS.map((t) => t.id)
 
@@ -30,20 +32,6 @@ const HEADERS: Record<TabId, { eyebrow: string; title: string; sub: string }> = 
     title: 'Incident Note',
     sub: '조사 진행을 누적 작성. 각 메모는 자동 timestamp + 변조 불가 audit row가 됩니다.',
   },
-}
-
-function PendingTab({ label, sprint }: { label: string; sprint: string }) {
-  return (
-    <div className="card" style={{ padding: 24 }}>
-      <div className="eyebrow">곧 채워질 화면 · {sprint}</div>
-      <h2 style={{ font: 'var(--t-title3)', color: 'var(--text-strong)', margin: '6px 0 8px' }}>
-        {label} — 미구현
-      </h2>
-      <p style={{ font: 'var(--t-body2)', color: 'var(--text-assistive)' }}>
-        이 탭은 m2 {sprint} sub-sprint에서 채웁니다. 현재는 Replay / Note 두 탭만 활성.
-      </p>
-    </div>
-  )
 }
 
 export function Incident() {
@@ -94,10 +82,20 @@ export function Incident() {
               </button>
             </>
           )}
-          {(tab === 'event' || tab === 'reviewer') && (
-            <Link className="btn" to={`/incidents/${id}`}>
-              ← Replay
-            </Link>
+          {tab === 'event' && (
+            <>
+              <button className="btn" type="button" onClick={() => setTab('replay')}>
+                ← Replay
+              </button>
+              <button className="btn primary" type="button" onClick={() => setTab('reviewer')}>
+                의도/결과 비교 →
+              </button>
+            </>
+          )}
+          {tab === 'reviewer' && (
+            <button className="btn" type="button" onClick={() => setTab('event')}>
+              ← Event detail
+            </button>
           )}
         </div>
       </div>
@@ -136,8 +134,8 @@ export function Incident() {
 
       {tab === 'replay' && <Replay />}
       {tab === 'note' && <Note />}
-      {tab === 'event' && <PendingTab label="Event Detail · 3분리" sprint="S2.7.c" />}
-      {tab === 'reviewer' && <PendingTab label="Reviewer Brief" sprint="S2.7.c" />}
+      {tab === 'event' && <EventDetail />}
+      {tab === 'reviewer' && <ReviewerBrief />}
     </>
   )
 }

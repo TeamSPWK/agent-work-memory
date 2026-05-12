@@ -504,7 +504,7 @@ describe('AppShell + product IA', () => {
     expect(screen.getByText(/lock 해소 확인. 응답시간 회복/)).toBeInTheDocument()
   })
 
-  it('Incident event tab renders S2.7.c placeholder', () => {
+  it('Incident event tab renders fact + buckets + classification radiogroup', () => {
     render(
       <MemoryRouter initialEntries={['/incidents/INC-26-014?tab=event']}>
         <Routes>
@@ -515,11 +515,33 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText(/Event Detail · 3분리 — 미구현/)).toBeInTheDocument()
-    expect(screen.getByText(/S2\.7\.c sub-sprint에서 채웁니다/)).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: '이 이벤트가 사고 원인일 가능성', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '이벤트 핵심 fact' })).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: '3분리 분류' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /원인 후보/, checked: true })).toBeInTheDocument()
+    expect(screen.getByLabelText(/분류 사유/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '저장 · 3분리 갱신' })).toBeInTheDocument()
   })
 
-  it('Incident reviewer tab renders S2.7.c placeholder', () => {
+  it('Incident event tab radio group switches buckets on click', () => {
+    render(
+      <MemoryRouter initialEntries={['/incidents/INC-26-014?tab=event']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="incidents/:id" element={<Incident />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('radio', { name: /확실한 증거/ }))
+    expect(screen.getByRole('radio', { name: /확실한 증거/, checked: true })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /원인 후보/, checked: false })).toBeInTheDocument()
+  })
+
+  it('Incident reviewer tab renders split intent/result + 3 match-line', () => {
     render(
       <MemoryRouter initialEntries={['/incidents/INC-26-014?tab=reviewer']}>
         <Routes>
@@ -530,7 +552,24 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText(/Reviewer Brief — 미구현/)).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Reviewer Brief — s-024', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('의도 — Operator Explain Back + AI 자동 추출')).toBeInTheDocument()
+    expect(screen.getByText('결과 — 실제 변경 · 명령 · DB 영향')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: '의도 ↔ 결과 매칭' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/created_at DESC 단일 컬럼 인덱스 추가 \(의도 = 결과\)/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/dev → prod 적용 순서 \(의도 = 결과\)/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/scripts\/run-prod-migration\.sh 1줄 수정/),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /승인 \+ 기록/ })).toBeInTheDocument()
   })
 
   it('Incident falls back to replay when tab is unknown + mock incident notice for unknown id', () => {
