@@ -158,14 +158,27 @@ export function Connect() {
               ← 이전
             </Link>
             {connectedCount === 0 ? (
-              <button
-                className="btn primary lg"
-                type="button"
-                disabled
-                style={{ opacity: 0.5 }}
+              <div
+                className="row tight"
+                style={{ alignItems: 'center', gap: 10, flexDirection: 'column', alignContent: 'flex-end' }}
               >
-                다음 — 첫 세션 import <Icon name="arrow" size={14} />
-              </button>
+                <button
+                  className="btn primary lg"
+                  type="button"
+                  disabled
+                  style={{ opacity: 0.5 }}
+                  aria-describedby="connect-disabled-hint"
+                >
+                  다음 — 첫 세션 import <Icon name="arrow" size={14} />
+                </button>
+                <span
+                  id="connect-disabled-hint"
+                  className="muted"
+                  style={{ font: 'var(--t-caption1)' }}
+                >
+                  최소 1개 AI 도구를 연결한 뒤 다음 단계로 이동할 수 있습니다.
+                </span>
+              </div>
             ) : (
               <Link className="btn primary lg" to="/onboarding/import">
                 다음 — 첫 세션 import <Icon name="arrow" size={14} />

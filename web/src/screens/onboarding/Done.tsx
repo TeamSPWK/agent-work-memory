@@ -117,36 +117,6 @@ export function Done() {
         </div>
       </div>
 
-      <div
-        className="card tight"
-        style={{
-          marginTop: 16,
-          background: 'var(--accent-light)',
-          borderColor: 'transparent',
-        }}
-      >
-        <div className="row between">
-          <div>
-            <div style={{ font: 'var(--t-label1-strong)', color: 'var(--accent-strong)' }}>
-              가설 H4 검증 — first value time
-            </div>
-            <div
-              className="muted"
-              style={{
-                font: 'var(--t-caption1)',
-                color: 'var(--accent-strong)',
-                marginTop: 4,
-              }}
-            >
-              디자인 파트너 5명 평균이 5분 이하면 결제 트리거 funnel(트라이얼 → Pro) 다음 단계로.
-            </div>
-          </div>
-          <div className="row tight">
-            <span className="tag green">통과</span>
-            <span className="tag neutral">N=1 (시연)</span>
-          </div>
-        </div>
-      </div>
     </>
   )
 }

@@ -10,13 +10,29 @@ export type RiskCategoryKey =
   | 'diff'
   | 'verify'
 
+export type RiskCategoryGroup = 'infra' | 'code'
+
 export type RiskCategory = {
   key: RiskCategoryKey
   name: string
   icon: string
   count: number
   sev: { high: number; med: number; low: number }
+  group: RiskCategoryGroup
 }
+
+export const RISK_GROUPS: { id: RiskCategoryGroup; label: string; sub: string }[] = [
+  {
+    id: 'infra',
+    label: '인프라 · 환경 위험',
+    sub: 'DB · Secret · 배포 · 마이그레이션',
+  },
+  {
+    id: 'code',
+    label: '코드 · 동작 위험',
+    sub: '파괴 명령 · 권한 · 큰 변경 · 검증 실패',
+  },
+]
 
 export type RiskSignal = {
   at: string
@@ -40,14 +56,14 @@ export type RiskDbInlineRow = {
 }
 
 export const RISK_CATEGORIES: RiskCategory[] = [
-  { key: 'DB', name: 'DB', icon: 'db', count: 4, sev: { high: 2, med: 1, low: 1 } },
-  { key: 'secret', name: 'Secret/Env', icon: 'key', count: 3, sev: { high: 0, med: 2, low: 1 } },
-  { key: 'deploy', name: 'Deploy/Infra', icon: 'deploy', count: 6, sev: { high: 0, med: 1, low: 5 } },
-  { key: 'destruct', name: 'Destructive Cmd', icon: 'flame', count: 1, sev: { high: 1, med: 0, low: 0 } },
-  { key: 'auth', name: 'Auth/Permission', icon: 'lock', count: 2, sev: { high: 0, med: 2, low: 0 } },
-  { key: 'migration', name: 'Migration', icon: 'git', count: 2, sev: { high: 1, med: 1, low: 0 } },
-  { key: 'diff', name: 'Large Diff', icon: 'file', count: 3, sev: { high: 0, med: 0, low: 3 } },
-  { key: 'verify', name: 'Failed Verification', icon: 'warn', count: 1, sev: { high: 0, med: 1, low: 0 } },
+  { key: 'DB',        name: 'DB',                  icon: 'db',     count: 4, sev: { high: 2, med: 1, low: 1 }, group: 'infra' },
+  { key: 'secret',    name: 'Secret/Env',          icon: 'key',    count: 3, sev: { high: 0, med: 2, low: 1 }, group: 'infra' },
+  { key: 'deploy',    name: 'Deploy/Infra',        icon: 'deploy', count: 6, sev: { high: 0, med: 1, low: 5 }, group: 'infra' },
+  { key: 'migration', name: 'Migration',           icon: 'git',    count: 2, sev: { high: 1, med: 1, low: 0 }, group: 'infra' },
+  { key: 'destruct',  name: 'Destructive Cmd',     icon: 'flame',  count: 1, sev: { high: 1, med: 0, low: 0 }, group: 'code' },
+  { key: 'auth',      name: 'Auth/Permission',     icon: 'lock',   count: 2, sev: { high: 0, med: 2, low: 0 }, group: 'code' },
+  { key: 'diff',      name: 'Large Diff',          icon: 'file',   count: 3, sev: { high: 0, med: 0, low: 3 }, group: 'code' },
+  { key: 'verify',    name: 'Failed Verification', icon: 'warn',   count: 1, sev: { high: 0, med: 1, low: 0 }, group: 'code' },
 ]
 
 /** DB 카테고리는 디자인 lock에서 inline 4행 (Risk Radar 화면 안에 직접 표기). */

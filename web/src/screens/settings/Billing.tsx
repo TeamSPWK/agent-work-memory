@@ -11,7 +11,10 @@ import {
   formatPlanPrice,
 } from '../../lib/seed/billing'
 
-const usagePct = Math.min(100, Math.round((PLAN_USAGE.activeOps / PLAN_USAGE.limit) * 100))
+const limitIsNumber = typeof PLAN_USAGE.limit === 'number'
+const usagePct = limitIsNumber
+  ? Math.min(100, Math.round((PLAN_USAGE.activeOps / (PLAN_USAGE.limit as number)) * 100))
+  : null
 
 export function Billing() {
   const [yearly, setYearly] = useState(false)
@@ -37,7 +40,7 @@ export function Billing() {
               </div>
             </div>
             <button className="btn primary lg" type="button">
-              Pro로 업그레이드
+              Business로 업그레이드
             </button>
           </div>
           <div className="hr" />
@@ -51,19 +54,27 @@ export function Billing() {
                   {PLAN_USAGE.activeOps} / {PLAN_USAGE.limit}명
                 </div>
               </div>
-              <div
-                className="bar"
-                role="progressbar"
-                aria-label="Active Operator 사용량"
-                aria-valuenow={usagePct}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <i style={{ width: usagePct + '%', background: 'var(--accent-normal)' }} />
-              </div>
-              <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 6 }}>
-                한도 도달 — 추가 작업자 1명 활성 시 자동으로 Team 제안
-              </div>
+              {usagePct !== null ? (
+                <>
+                  <div
+                    className="bar"
+                    role="progressbar"
+                    aria-label="Active Operator 사용량"
+                    aria-valuenow={usagePct}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <i style={{ width: usagePct + '%', background: 'var(--accent-normal)' }} />
+                  </div>
+                  <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 6 }}>
+                    한도 도달 — 추가 작업자 1명 활성 시 자동으로 Business 제안
+                  </div>
+                </>
+              ) : (
+                <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 6 }}>
+                  무제한 플랜 — Active Operator는 청구 단위로만 카운트됩니다 (Reviewer·Admin 무료)
+                </div>
+              )}
             </div>
           </div>
         </div>

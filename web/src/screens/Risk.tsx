@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   RISK_CATEGORIES,
   RISK_DB_INLINE,
+  RISK_GROUPS,
   RISK_INCIDENT_ALERT,
   RISK_SIGNALS,
   type RiskCategoryKey,
 } from '../lib/seed/risk'
 import { Icon } from '../components/Icon'
 import { RiskChip } from '../components/RiskChip'
+import { tabKeyHandler } from '../lib/useTabKeyboard'
 
 const SEV_CHIP: Record<'high' | 'med' | 'low', { tone: string; label: string }> = {
   high: { tone: 'red', label: '고위험' },
@@ -16,10 +18,17 @@ const SEV_CHIP: Record<'high' | 'med' | 'low', { tone: string; label: string }> 
   low: { tone: 'neutral', label: '낮음' },
 }
 
+/* 8 카테고리 ids — 그룹 경계 무관하게 ArrowKey 순환 */
+const RISK_KEY_IDS = RISK_CATEGORIES.map((c) => c.key)
+
 export function Risk() {
   const [selected, setSelected] = useState<RiskCategoryKey>('DB')
-  const selectedCat = RISK_CATEGORIES.find((c) => c.key === selected) ?? RISK_CATEGORIES[0]
-  const signals = RISK_SIGNALS[selected] ?? []
+  const selectedCat = useMemo(
+    () => RISK_CATEGORIES.find((c) => c.key === selected) ?? RISK_CATEGORIES[0],
+    [selected],
+  )
+  const signals = useMemo(() => RISK_SIGNALS[selected] ?? [], [selected])
+  const onTabKey = tabKeyHandler(RISK_KEY_IDS, selected, setSelected)
 
   return (
     <>
@@ -41,62 +50,77 @@ export function Risk() {
         </div>
       </div>
 
-      <div className="grid-4" role="tablist" aria-label="위험 카테고리" style={{ gap: 12 }}>
-        {RISK_CATEGORIES.map((c) => {
-          const total = c.count
-          const high = c.sev.high
-          const med = c.sev.med
-          const low = c.sev.low
-          const w = (n: number) => (total ? (n / total) * 100 : 0)
-          const active = selected === c.key
+      <div role="tablist" aria-label="위험 카테고리">
+        {RISK_GROUPS.map((g) => {
+          const groupCats = RISK_CATEGORIES.filter((c) => c.group === g.id)
           return (
-            <button
-              key={c.key}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => setSelected(c.key)}
-              className="risk-tile"
-              style={{
-                cursor: 'pointer',
-                textAlign: 'left',
-                outline: active ? '2px solid var(--primary-normal)' : '0',
-                outlineOffset: -1,
-              }}
-            >
-              <div className="head">
-                <div className="row tight" style={{ alignItems: 'center' }}>
-                  <Icon name={c.icon} size={16} />
-                  <div className="name">{c.name}</div>
-                </div>
-                <div className="count tnum">{total}</div>
+            <div key={g.id} className="risk-group">
+              <div className="risk-group-h">
+                <h3>{g.label}</h3>
+                <span className="muted">{g.sub}</span>
               </div>
-              <div className="sev">
-                <span>
-                  <span className="dot r" /> {high}
-                </span>
-                <div
-                  style={{
-                    position: 'relative',
-                    height: 6,
-                    borderRadius: 999,
-                    background: 'var(--bg-subtle)',
-                    overflow: 'hidden',
-                    display: 'flex',
-                  }}
-                >
-                  <span style={{ width: w(high) + '%', background: 'var(--status-negative)' }} />
-                  <span style={{ width: w(med) + '%', background: 'var(--status-cautionary)' }} />
-                  <span style={{ width: w(low) + '%', background: 'var(--text-disable)' }} />
-                </div>
-                <span className="muted" style={{ font: 'var(--t-caption1)' }}>
-                  최근 N건
-                </span>
+              <div className="grid-4" style={{ gap: 12 }}>
+                {groupCats.map((c) => {
+                  const total = c.count
+                  const high = c.sev.high
+                  const med = c.sev.med
+                  const low = c.sev.low
+                  const w = (n: number) => (total ? (n / total) * 100 : 0)
+                  const active = selected === c.key
+                  return (
+                    <button
+                      key={c.key}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      tabIndex={active ? 0 : -1}
+                      onClick={() => setSelected(c.key)}
+                      onKeyDown={onTabKey}
+                      className="risk-tile"
+                      style={{
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        outline: active ? '2px solid var(--primary-normal)' : '0',
+                        outlineOffset: -1,
+                      }}
+                    >
+                      <div className="head">
+                        <div className="row tight" style={{ alignItems: 'center' }}>
+                          <Icon name={c.icon} size={16} />
+                          <div className="name">{c.name}</div>
+                        </div>
+                        <div className="count tnum">{total}</div>
+                      </div>
+                      <div className="sev">
+                        <span>
+                          <span className="dot r" /> {high}
+                        </span>
+                        <div
+                          style={{
+                            position: 'relative',
+                            height: 6,
+                            borderRadius: 999,
+                            background: 'var(--bg-subtle)',
+                            overflow: 'hidden',
+                            display: 'flex',
+                          }}
+                        >
+                          <span style={{ width: w(high) + '%', background: 'var(--status-negative)' }} />
+                          <span style={{ width: w(med) + '%', background: 'var(--status-cautionary)' }} />
+                          <span style={{ width: w(low) + '%', background: 'var(--text-disable)' }} />
+                        </div>
+                        <span className="muted" style={{ font: 'var(--t-caption1)' }}>
+                          최근 {total}건
+                        </span>
+                      </div>
+                      <div className="muted" style={{ font: 'var(--t-caption1)' }}>
+                        {high}고위험 · {med}주의 · {low}낮음
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
-              <div className="muted" style={{ font: 'var(--t-caption1)' }}>
-                {high}고위험 · {med}주의 · {low}낮음
-              </div>
-            </button>
+            </div>
           )
         })}
       </div>

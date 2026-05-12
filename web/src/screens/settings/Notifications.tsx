@@ -51,7 +51,7 @@ export function Notifications() {
         <div className="card">
           <div className="card-h">
             <h3>무음 시간대</h3>
-            <span className="sub">고위험 신호도 무음 · 다음 영업일에 일괄 통지</span>
+            <span className="sub">기본: 일반 신호만 묶음 통지. 고위험은 즉시 알림.</span>
           </div>
           <div className="grid-2">
             <div className="fieldset">
@@ -90,8 +90,33 @@ export function Notifications() {
             })}
           </div>
           <div className="hr" />
+          <label
+            className="row tight"
+            style={{ alignItems: 'flex-start', gap: 10, marginTop: 4 }}
+          >
+            <input
+              id="quiet-highrisk-exempt"
+              type="checkbox"
+              defaultChecked
+              aria-describedby="quiet-highrisk-hint"
+              style={{ marginTop: 3 }}
+            />
+            <span style={{ font: 'var(--t-label1)' }}>
+              <b>고위험 신호는 즉시 알림</b> (권장)
+              <div
+                id="quiet-highrisk-hint"
+                className="muted"
+                style={{ font: 'var(--t-caption1)', marginTop: 2 }}
+              >
+                Risk Radar에서 high로 분류된 신호(DB drop, 인증 정책 변경, prod
+                배포 등)는 무음 시간대에도 즉시 통지됩니다. 해제 시 모든 신호가
+                다음 영업일에 묶음 통지됩니다.
+              </div>
+            </span>
+          </label>
+          <div className="hr" />
           <div className="muted" style={{ font: 'var(--t-caption1)' }}>
-            <Icon name="warn" size={12} /> 1인 운영 sustainability — 무음 시간대 동안은 신규 신호가 누적된 뒤 09:00에 묶음으로 통지됩니다.
+            <Icon name="warn" size={12} /> 일반 신호는 무음 시간대 동안 누적된 뒤 다음 영업일 09:00에 묶음으로 통지됩니다.
           </div>
         </div>
 

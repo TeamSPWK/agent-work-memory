@@ -12,7 +12,8 @@ const ROLES: { id: Role; sub: string }[] = [
 export function Invite() {
   const [emails, setEmails] = useState<string[]>(['ops@…', 'design@…'])
   const [draft, setDraft] = useState('')
-  const [role, setRole] = useState<Role>('Operator')
+  /* 무료 역할(Reviewer)이 기본값 — 사용자가 명시적으로 Operator 선택해야만 비용 발생 (DSA Art.25 사용자에게 유리한 기본값) */
+  const [role, setRole] = useState<Role>('Reviewer')
 
   const addEmail = () => {
     const v = draft.trim().replace(/,$/, '')

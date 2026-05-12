@@ -45,6 +45,52 @@ export function Today() {
         </div>
       </div>
 
+      {/* Hero — 오늘 가장 시급한 단일 action */}
+      <section
+        className="today-hero"
+        aria-label="오늘 우선 작업"
+        style={{ marginBottom: 16 }}
+      >
+        {unexplained.length > 0 && firstUnexplainedId ? (
+          <>
+            <div>
+              <div className="eyebrow">지금 채워야 할 것</div>
+              <h2 className="today-hero-h">
+                오늘 작업 {recent.length}건 중{' '}
+                <span style={{ color: 'var(--accent-strong)' }}>
+                  {unexplained.length}건
+                </span>
+                이 아직 설명되지 않았어요.
+              </h2>
+              <p className="today-hero-sub">
+                Explain Back을 채우면 팀이 검토 가능한 5문장 요약으로 자동 변환됩니다.
+              </p>
+            </div>
+            <Link
+              className="btn primary lg"
+              to={`/sessions/${firstUnexplainedId}/explain`}
+            >
+              <Icon name="pencil" size={14} /> 첫 세션부터 채우기
+            </Link>
+          </>
+        ) : (
+          <>
+            <div>
+              <div className="eyebrow">완료</div>
+              <h2 className="today-hero-h">
+                오늘 작업 {recent.length}건 모두 검토되었습니다.
+              </h2>
+              <p className="today-hero-sub">
+                위험 신호 {TODAY_COUNT.risk}건은 Risk Radar에서 추적 중입니다.
+              </p>
+            </div>
+            <Link className="btn lg" to="/risk">
+              <Icon name="radar" size={14} /> 위험 신호 보기
+            </Link>
+          </>
+        )}
+      </section>
+
       <div className="grid-4" style={{ marginBottom: 16 }}>
         <Kpi label="변경 파일" value={TODAY_COUNT.changed} delta="+8 어제 대비" deltaTone="pos" />
         <Kpi
