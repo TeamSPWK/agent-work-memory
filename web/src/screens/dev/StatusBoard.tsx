@@ -374,6 +374,13 @@ function SprintList({ activeSprintId }: { activeSprintId: string }) {
   )
 }
 
+/** :id placeholder를 실제 시드 샘플로 치환해 점검 가능한 URL을 만든다. */
+function resolveDemoHref(route: string): string {
+  return route
+    .replace('/sessions/:id', '/sessions/s-024')
+    .replace('/incidents/:id', '/incidents/INC-26-014')
+}
+
 function ScreenMatrix({ groups }: { groups: string[] }) {
   return (
     <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -396,22 +403,45 @@ function ScreenMatrix({ groups }: { groups: string[] }) {
                 <th>상태</th>
                 <th>Sprint</th>
                 <th>커밋</th>
+                <th aria-label="열기" />
               </tr>
             </thead>
             <tbody>
-              {SCREENS.filter((s) => s.group === g).map((s) => (
-                <tr key={s.route}>
-                  <td>{s.label}</td>
-                  <td>
-                    <code className="mono">{s.route}</code>
-                  </td>
-                  <td>
-                    <span className={`tag ${SCREEN_TONE[s.status]}`}>{SCREEN_LABEL[s.status]}</span>
-                  </td>
-                  <td className="muted tnum">{s.sprint}</td>
-                  <td className="muted tnum mono">{s.commit ?? '—'}</td>
-                </tr>
-              ))}
+              {SCREENS.filter((s) => s.group === g).map((s) => {
+                const href = resolveDemoHref(s.route)
+                return (
+                  <tr key={s.route}>
+                    <td>{s.label}</td>
+                    <td>
+                      <Link
+                        to={href}
+                        className="link mono"
+                        title={
+                          href === s.route
+                            ? `${s.label} 열기`
+                            : `${s.label} 열기 — :id를 시드 샘플로 치환`
+                        }
+                      >
+                        {s.route}
+                      </Link>
+                    </td>
+                    <td>
+                      <span className={`tag ${SCREEN_TONE[s.status]}`}>{SCREEN_LABEL[s.status]}</span>
+                    </td>
+                    <td className="muted tnum">{s.sprint}</td>
+                    <td className="muted tnum mono">{s.commit ?? '—'}</td>
+                    <td>
+                      <Link
+                        to={href}
+                        className="btn sm"
+                        aria-label={`${s.label} 열기`}
+                      >
+                        열기 →
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
