@@ -12,7 +12,8 @@
 - 현재 상태 / Phase / Blocker: `NOVA-STATE.md`
 - 제품 정의 (v2): `docs/PRD.md`. v1 보존: `docs/archive/PRD-v1-tech-validation.md`
 - 디자인 prompt (Claude Artifact): `docs/projects/plans/p0-claude-design-prompts.md`
-- UX·디자인: `docs/UX_FLOWS.md`, `docs/DESIGN_SYSTEM.md`
+- **UX·디자인 lock (모든 UI 작업 전 필독)**: `docs/DESIGN_SYSTEM.md` §1.0 일관성 / §3.4 두 트랙 분리 / §12 외부 페이지 토스 패턴. 라우팅은 `.claude/rules/ui-consistency-tracks.md`
+- UX flows: `docs/UX_FLOWS.md`
 - 시장·경쟁: `docs/COMPETITIVE_LANDSCAPE.md`, `docs/OPEN_SOURCE_LEVERAGE.md`
 - 데이터·캡처 (참고): `docs/DATA_CONTRACT.md`, `docs/TERMINAL_CAPTURE.md`
 
@@ -58,6 +59,15 @@ v1에서 *Vite 8 + React 18 + TS 5.7 SPA + Node ESM CLI + 로컬 `.awm/`*를 사
 ## PRD·전략 문서 작업
 PRD/페르소나/GTM/Roadmap 작성·수정 시 반드시 `.claude/rules/prd-and-strategy-collaboration.md` 5개 원칙을 적용한다.
 요약: (1) 시장 신호 직접 조사, (2) 가상 회사·인물명 금지, (3) 사용자 직군 편견 금지, (4) 임의 기간 milestone 금지, (5) 1인 프로젝트 제약 반영.
+
+## UI/UX 작업 (web/src/** 모든 변경)
+UI/UX 코드(`web/src/**` · CSS · 화면·컴포넌트·라우트) 변경 시 반드시 다음을 적용한다.
+- **일관성 우선** (`docs/DESIGN_SYSTEM.md` §1.0 Consistency first): 같은 트랙 안에서 동일 패턴 유지, 트랙이 다르면 의도적 분리, 시안과 production 어긋날 때 *원칙*을 우선.
+- **두 트랙 분리** (§3.4 Inside-app vs Public): Inside-app은 데이터 밀도 풀폭 콘솔, Public은 토스 패턴 마케팅(`.pub-inner` max-width 1120 + 1컬럼 hero + vertical spacing 96 + 큰 typo).
+- **외부 노출 금지 6항** (§12.3): 내부 가설 라벨(H1~H4)·mock vmetric 숫자·내부 버전(v0.1·v0.2)·PRD 섹션 번호·자기 워크스페이스 데이터 가정·dev 메타(PageBand)는 외부 페이지에 *0*.
+- **audience 원칙** (§12.4): 외부 페이지 카피는 PRD §4.2 한 줄 정의를 일관되게 변형. 모든 audience(AI 경험자·전문가·초심자·학생)가 30초 안에 이해 가능.
+- **dev 메타 분리** (§12.5): 가설 추적·SCREENS 매트릭스·sprint 진행률은 `/dev/status`에만. 외부 페이지 노출 X.
+상세 룰: `.claude/rules/ui-consistency-tracks.md`
 
 ## 운영 동기화 (1인 창업자 sustainability)
 운영 결정·고객 데이터·비용·규제 변경 시 반드시 `.claude/rules/operations-sync.md`를 따른다.
