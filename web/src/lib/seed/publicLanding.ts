@@ -199,6 +199,51 @@ export const PUBLIC_FAQ_LANDING: FaqItem[] = [
   },
 ]
 
+export type CompareRow = {
+  row: string
+  free: string
+  team: string
+  biz: string
+}
+
+export const PUBLIC_COMPARE: CompareRow[] = [
+  { row: 'H1 · Operator 회상 사이클',          free: '✓',         team: '✓',                       biz: '✓' },
+  { row: 'H2 · 감사·결제 트리거',               free: '—',         team: '✓',                       biz: '✓' },
+  { row: 'H3 · 10분 1차 원인 도출',             free: '—',         team: '✓',                       biz: '✓' },
+  { row: 'H4 · 5분 온보딩',                      free: '✓',         team: '✓',                       biz: '✓' },
+  { row: 'Workspace 멤버 (Reviewer 무료)',     free: '1명',       team: '무제한',                   biz: '무제한' },
+  { row: 'Audit 보존 기간',                      free: '7일',       team: '90일',                     biz: '5년' },
+  { row: 'PDF export (인공지능기본법 §27)',     free: '—',         team: '무제한',                   biz: '양식 커스터마이즈' },
+  { row: 'Reviewer 응답 보장',                   free: '—',         team: '1~2 영업일',               biz: '1 영업일' },
+  { row: 'Support 시간대',                       free: '—',         team: '영업시간',                 biz: '영업시간 + 무음 시간대 통보' },
+  { row: '결제 + 세금계산서',                     free: '—',         team: '토스페이먼츠 · PopBill',   biz: '토스페이먼츠 · PopBill' },
+  { row: '환불 정책',                            free: '해당 없음', team: '전자상거래법 · §7.5',     biz: '전자상거래법 · §7.5' },
+  { row: 'Data 거주국',                          free: 'Tokyo',     team: 'Tokyo',                    biz: 'Tokyo' },
+]
+
+export const PUBLIC_FAQ_PRICING: FaqItem[] = [
+  {
+    q: '미사용 시 환불되나요?',
+    a: '전자상거래법 청약철회 기간 7일 내 미사용 시 전액 환불. 7일 경과 후에는 환불 정책 페이지의 디자인 파트너·트라이얼·정가 결제 3-column 표를 따릅니다.',
+  },
+  {
+    q: 'Operator 외 멤버는 무료인가요?',
+    a: 'Reviewer·Admin은 활동 무관 항상 무료입니다. *Active Operator* 만 카운트되며, 지난 30일 1회 이상 AI 작업이 기록된 사용자가 그 대상입니다.',
+  },
+  {
+    q: '인공지능기본법 자동 보고서가 정말 PDF로 나오나요?',
+    a: '예. Settings → Audit Export에서 기간을 선택하면 §27 권고 양식의 PDF가 생성됩니다. SHA-256 hash chain 무결성 검증 결과도 함께 포함됩니다.',
+  },
+  {
+    q: '1인 운영이라는데 다운타임 보장은?',
+    a: 'SLA는 제공하지 않습니다. 상태 페이지에 30일 uptime을 공개하며, 무음 시간대 사고도 즉시 갱신합니다. Notifications 페이지에서 무음 시간대를 조정할 수 있습니다.',
+  },
+  {
+    q: '데이터는 어디에 저장되나요?',
+    a: 'Supabase Tokyo 리전. 인공지능기본법 §27 권고에 따라 5년 보존(Business 티어). Team 티어는 90일 보존이며, Free 티어는 7일입니다.',
+  },
+]
+
 export type HeroPreview = {
   kind: 'v' | 'o' | 'g'
   title: string

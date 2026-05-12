@@ -22,7 +22,6 @@ export function PublicStub({ id }: { id: PublicPageId }) {
   )
 }
 
-export const Pricing  = () => <PublicStub id="pricing" />
 export const Signup   = () => <PublicStub id="signup" />
 export const Login    = () => <PublicStub id="login" />
 export const Reset    = () => <PublicStub id="reset" />

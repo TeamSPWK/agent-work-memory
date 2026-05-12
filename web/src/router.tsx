@@ -4,8 +4,8 @@ import { OnboardingLayout } from './layout/OnboardingLayout'
 import { PublicShell } from './layout/PublicShell'
 import { PlaceholderScreen } from './screens/PlaceholderScreen'
 import { Landing } from './routes/public/Landing'
+import { Pricing } from './routes/public/Pricing'
 import {
-  Pricing,
   Signup,
   Login,
   Reset,

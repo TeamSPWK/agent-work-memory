@@ -17,8 +17,8 @@ import { Workspace } from './screens/Workspace'
 import { Settings } from './screens/Settings'
 import { PublicShell } from './layout/PublicShell'
 import { Landing } from './routes/public/Landing'
+import { Pricing } from './routes/public/Pricing'
 import {
-  Pricing,
   Signup,
   Login,
   Reset,
@@ -1215,9 +1215,8 @@ describe('AppShell + product IA', () => {
     expect(screen.getByRole('heading', { name: '회사', level: 2 })).toBeInTheDocument()
   })
 
-  it('13 PublicStub routes dispatch — landing은 m2.5/S2.a Landing으로 별도', () => {
+  it('12 PublicStub routes dispatch — landing(S2.a) / pricing(S2.b) 별도', () => {
     const elements: Record<string, ReactElement> = {
-      '/pricing': <Pricing />,
       '/signup': <Signup />,
       '/login': <Login />,
       '/reset': <Reset />,
@@ -1231,8 +1230,10 @@ describe('AppShell + product IA', () => {
       '/500': <Err500 />,
       '/maintenance': <Maint />,
     }
-    const stubRoutes = PUBLIC_ROUTES.filter((r) => r.id !== 'landing')
-    expect(stubRoutes).toHaveLength(13)
+    const stubRoutes = PUBLIC_ROUTES.filter(
+      (r) => r.id !== 'landing' && r.id !== 'pricing',
+    )
+    expect(stubRoutes).toHaveLength(12)
     expect(Object.keys(elements)).toHaveLength(stubRoutes.length)
 
     for (const route of stubRoutes) {
@@ -1298,9 +1299,9 @@ describe('AppShell + product IA', () => {
     expect(allOk.length).toBeGreaterThanOrEqual(5)
     expect(screen.getAllByText('권고').length).toBe(2)
 
-    // 3 tiers + 디자인 파트너 chip
+    // 3 tiers + 디자인 파트너 chip (Pricing과 동일 role=group 패턴)
     expect(screen.getByText('디자인 파트너 5팀 한정 50%')).toBeInTheDocument()
-    const tierList = screen.getByRole('list', { name: '플랜 미리보기' })
+    const tierList = screen.getByRole('group', { name: '플랜 미리보기' })
     for (const n of ['Free', 'Team', 'Business']) {
       expect(within(tierList).getByText(n)).toBeInTheDocument()
     }
@@ -1319,5 +1320,76 @@ describe('AppShell + product IA', () => {
 
     // 9. dark footer CTA strip
     expect(screen.getByText('5분이면 첫 세션이 Today에 뜹니다.')).toBeInTheDocument()
+  })
+
+  it('Pricing /pricing — 3 tier full(items 전체) + dp-chip + AOP 정의 + 비교표 12행 + FAQ 5 + dark CTA', () => {
+    render(
+      <MemoryRouter initialEntries={['/pricing']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="pricing" element={<Pricing />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    // Hero h2
+    expect(
+      screen.getByRole('heading', { level: 2, name: '일하는 사람만 카운트합니다.' }),
+    ).toBeInTheDocument()
+    // dp-chip-row role=region (정적 프로모션 배너)
+    expect(
+      screen.getByRole('region', { name: '디자인 파트너 안내' }),
+    ).toBeInTheDocument()
+    // 3 tier group(role=group — Landing tier와 동일 패턴)
+    const tiers = screen.getByRole('group', { name: '플랜 비교' })
+    for (const n of ['Free', 'Team', 'Business']) {
+      expect(within(tiers).getByText(n)).toBeInTheDocument()
+    }
+    // 디자인 파트너 chip Team tier
+    expect(within(tiers).getByText('디자인 파트너 5팀 한정 50%')).toBeInTheDocument()
+    // tier items 풀(랜딩은 slice(0,4)지만 가격은 전체) — 'Audit 보존 5년' Business item
+    expect(within(tiers).getByText(/Audit 보존 5년/)).toBeInTheDocument()
+    // Business CTA → /company (디자인 파트너 신청)
+    const bizCTA = within(tiers).getByRole('link', { name: '디자인 파트너 신청' })
+    expect(bizCTA).toHaveAttribute('href', '/company')
+
+    // Active Operator 정의 note
+    expect(
+      screen.getByRole('note', { name: 'Active Operator 정의' }),
+    ).toBeInTheDocument()
+
+    // 비교표 — 12행 × 3 컬럼
+    const compareTable = screen.getByRole('table', { name: '플랜 비교표' })
+    const bodyRows = within(compareTable).getAllByRole('row').slice(1) // header 제외
+    expect(bodyRows).toHaveLength(12)
+    // 'Audit 보존 기간' 행 — Free 7일 / Team 90일 / Business 5년
+    expect(within(compareTable).getByText('7일')).toBeInTheDocument()
+    expect(within(compareTable).getByText('90일')).toBeInTheDocument()
+    expect(within(compareTable).getByText('5년')).toBeInTheDocument()
+
+    // FAQ 5건
+    for (const q of [
+      '미사용 시 환불되나요?',
+      'Operator 외 멤버는 무료인가요?',
+      '인공지능기본법 자동 보고서가 정말 PDF로 나오나요?',
+      '1인 운영이라는데 다운타임 보장은?',
+      '데이터는 어디에 저장되나요?',
+    ]) {
+      expect(screen.getByText(q)).toBeInTheDocument()
+    }
+    // 환불 정책 + 회사 페이지 link — footer에도 같은 라벨 존재하므로 main scope로
+    const main = screen.getByRole('main')
+    expect(within(main).getByRole('link', { name: '환불 정책' })).toHaveAttribute(
+      'href',
+      '/legal/refund',
+    )
+    expect(within(main).getByRole('link', { name: '회사 페이지' })).toHaveAttribute(
+      'href',
+      '/company',
+    )
+
+    // dark CTA
+    expect(screen.getByText('가격을 보셨으면 다음은 5분.')).toBeInTheDocument()
   })
 })

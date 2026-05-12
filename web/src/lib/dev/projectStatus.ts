@@ -104,7 +104,7 @@ export const DEV_TRACK_SPRINTS: Sprint[] = [
 
 export const M25_SPRINTS: Sprint[] = [
   { id: 'm2.5/S1', goal: 'Public route 14 스캐폴드 + PublicShell', status: 'done', exit: 'localhost 14 페이지 dispatch', note: 'PublicStub placeholder + PUBLIC_BIZ env-aware' },
-  { id: 'm2.5/S2', goal: 'v0.2 컴포넌트 → 14 TSX 시각 이식', status: 'next', exit: 'criteria #1 시안 픽셀 정합', note: 'S2.a 랜딩+.pub-* CSS done. S2.b 가격 next' },
+  { id: 'm2.5/S2', goal: 'v0.2 컴포넌트 → 14 TSX 시각 이식', status: 'next', exit: 'criteria #1 시안 픽셀 정합', note: 'S2.a 랜딩·S2.b 가격 done. S2.c 가입/로그인/재설정 next' },
   { id: 'm2.5/S3', goal: '라우트 가드 + 가입→H4 핸드오프 (/app/* prefix)', status: 'pending', exit: 'criteria #2·#3', note: 'D7 결정' },
   { id: 'm2.5/S4', goal: 'SEO + sitemap + OG', status: 'pending', exit: 'criteria #4' },
   { id: 'm2.5/S5', goal: '사업자 정보 single source (env wiring)', status: 'pending', exit: 'criteria #5' },
@@ -150,7 +150,7 @@ export const SCREENS: ScreenRow[] = [
   { group: 'settings', label: 'Audit Export', route: '/settings?tab=export', status: 'done', sprint: 'S2.10.a' },
   // public (m2.5)
   { group: 'public', label: '랜딩',              route: '/landing',         status: 'done', sprint: 'm2.5/S2.a' },
-  { group: 'public', label: '가격',              route: '/pricing',         status: 'stub', sprint: 'm2.5/S1' },
+  { group: 'public', label: '가격',              route: '/pricing',         status: 'done', sprint: 'm2.5/S2.b' },
   { group: 'public', label: '회원가입',          route: '/signup',          status: 'stub', sprint: 'm2.5/S1' },
   { group: 'public', label: '로그인',            route: '/login',           status: 'stub', sprint: 'm2.5/S1' },
   { group: 'public', label: '비밀번호 재설정',   route: '/reset',           status: 'stub', sprint: 'm2.5/S1' },
@@ -229,7 +229,7 @@ export const PROTOTYPE_MARKS: PrototypeMark[] = [
   { id: 14, trace: 'Workspace dead-button — Members "관리 →" / Roles "매트릭스 편집"·"최근 변경 이력 보기" / Invite "발송" (4건)', resolveWhen: 'S5 실 데이터 + RBAC 연결 후', note: '시각만 정합. 클릭 동작 없음' },
   { id: 15, trace: 'Settings dead-button — Profile 변경·관리·재발급·계정삭제·JSON다운로드 / Integrations 끊기·재연결·repo선택·채널매핑·연결 / AuditExport 지금export / Billing Pro업그레이드·이 플랜으로·선택·변경·가상계좌·카드추가·다운로드 (19건)', resolveWhen: 'S5 실 데이터 + Auth + 결제(S8 토스페이먼츠) 연결 후', note: '시안 그대로. 클릭 동작 없음 — 시각 정합만' },
   { id: 16, trace: 'Settings Integrations가 ONBOARDING_TOOLS 재사용(상태 4종 그대로) — 실 운영에선 온보딩 시점과 통합 상태가 분리되어야 함', resolveWhen: 'S5 실 데이터 연결 시 SETTINGS_TOOLS 별도 분리 결정', note: '현재 prototype에서는 무해' },
-  { id: 17, trace: 'PublicShell 13 페이지(landing 제외)는 PublicStub placeholder — 시각·콘텐츠 미이식', resolveWhen: 'm2.5/S2.b~f 시각 이식', note: 'S2.a 랜딩만 완료. .pub-* CSS는 추가됨' },
+  { id: 17, trace: 'PublicShell 12 페이지(landing·pricing 제외)는 PublicStub placeholder — 시각·콘텐츠 미이식', resolveWhen: 'm2.5/S2.c~f 시각 이식', note: 'S2.a 랜딩·S2.b 가격 완료. .pub-*/.compare/.aop-def/.dp-chip-row CSS 추가됨' },
   { id: 18, trace: '랜딩이 / 가 아닌 /landing — 인사이드앱 /·/today 충돌 회피용 임시', resolveWhen: 'm2.5/S3 RequireAuth + /app/* prefix 이동 시', note: 'D7 결정' },
 ]
 
@@ -250,11 +250,11 @@ export type NextAction = {
 
 /** "지금 해야 할 한 가지." Linear inbox 패러다임. */
 export const NEXT_ACTION: NextAction = {
-  sprint: 'm2.5/S2.b',
-  title: '가격 페이지 시각 이식 + PUBLIC_COMPARE + FAQ 5',
+  sprint: 'm2.5/S2.c',
+  title: '가입/로그인/재설정 3 페이지 (.auth-wrap)',
   detail:
-    'S2.a 랜딩 9 섹션 + .pub-* CSS 완료. 다음은 public-pricing.jsx → /pricing TSX. 풀 비교표(PUBLIC_COMPARE 12행) + FAQ 5 + 디자인 파트너 chip.',
-  primaryRoute: '/pricing',
+    'S2.b 가격 + 비교표 12행 + AOP 정의 + FAQ 5 done. 다음 public-auth.jsx → Signup/Login/Reset 3 TSX + .auth-wrap·.auth-form·.solo-note·.h4-mini CSS.',
+  primaryRoute: '/signup',
 }
 
 /** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */

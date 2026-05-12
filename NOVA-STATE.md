@@ -1,7 +1,7 @@
 # Nova State
 
-- **Goal**: m2.5/S2.a 랜딩 페이지 시각 이식 + .pub-* CSS 토큰 완료. 다음은 m2.5/S2.b 가격 페이지.
-- **Phase**: m2 inside-app 28/28+1 done · m2.5 S2.a done(landing 시각 이식 + 9 섹션) — S2.b 가격 next. 화면 28(app) + 1(landing done) + 13(public stub).
+- **Goal**: m2.5/S2.b 가격 페이지 + 비교표 12행 + AOP 정의 + FAQ 5 완료. 다음은 m2.5/S2.c 가입/로그인/재설정 3 페이지.
+- **Phase**: m2 inside-app 28/28+1 done · m2.5 S2.a·S2.b done — S2.c 가입/로그인/재설정 next. 화면 28(app) + 2(landing·pricing done) + 12(public stub).
 - **Blocker**: 없음. /landing은 인사이드앱 / 충돌 회피용 임시(D7). 후속 결정·프로토타입 흔적은 `docs/projects/STATUS.md` + `/dev/status` 대시보드 참조.
 
 ## Tasks
@@ -24,8 +24,9 @@
 | m2 S2.10.a Settings 4탭 (settings 4/5) | done | PASS(qa + Evaluator) — 5탭 wrapper(profile/integrations/notif/export/billing) + Profile(grid 4필드 + 알림 채널 3 + 보안 3 + 위험 액션 region) + Integrations(AI 4 + 외부 3 + 예정 2) + Notifications(5×4 매트릭스 + 무음 시간대 + Slack mock) + AuditExport(3 radiogroup + 5건 export) + Billing 인라인 placeholder | screens/Settings.tsx + settings/{Profile,Integrations,Notifications,AuditExport}.tsx + seed/settings.ts |
 | m2 S2.10.b Plan & Billing (**H2 5/5 닫힘**) | done | PASS(qa + Evaluator) — 현재 플랜 카드 + 사용량 progressbar(5/5 100%) + 디자인 파트너 D1 카드 + 5플랜 비교 + 연결제 25% toggle + 세금계산서 4필드 + 청구서 3건 + 토스페이먼츠 결제수단 + 사용량 알림 | screens/settings/Billing.tsx + seed/billing.ts |
 | m2.5/S1 Public route 14 스캐폴드 + PublicShell | done | PASS(qa + Evaluator) — PublicShell(banner/contentinfo/region·외부 메뉴 nav) + 14 PublicStub + PUBLIC_BIZ env-aware + 사업자 미등록 placeholder | layout/PublicShell.tsx + routes/public/PublicStub.tsx + seed/public.ts |
-| m2.5/S2.a 랜딩 + .pub-* CSS | done | PASS(qa + Evaluator) — 9 섹션(Hero h1 + law-chip + Operator preview / 3 가치 H1·H2·H3 / 4 news / 4 flow / 7 원칙 5ok+2warn / 1인 운영 fold / 3 tier dp50 / 5 FAQ / dark CTA strip) + .pub-* / .hero / .sec / .val-grid / .news-grid / .flow-grid / .law-card / .solo-fold / .faq / .tier-grid CSS 추가 | routes/public/Landing.tsx + seed/publicLanding.ts + global.css PUBLIC 섹션 |
-| **m2.5/S2.b 가격 + 비교표** | ⏭ NEXT | — | /pricing TSX + PUBLIC_COMPARE 12행 + FAQ 5 + 디자인 파트너 chip + .compare CSS |
+| m2.5/S2.a 랜딩 + .pub-* CSS | done | PASS(qa + Evaluator) — 9 섹션 + .pub-* / .hero / .sec / .val-grid / .news-grid / .flow-grid / .law-card / .solo-fold / .faq / .tier-grid CSS | routes/public/Landing.tsx + seed/publicLanding.ts + global.css PUBLIC 섹션 |
+| m2.5/S2.b 가격 + 비교표 | done | PASS(qa + Evaluator) — 4 섹션(center h2 + dp-chip role=region + 3 tier full items + aop-def role=note / 비교표 12행 × 3 + .ok/.no 분류 / FAQ 5 + 환불정책 회사페이지 inline link / dark CTA) + .aop-def / .compare / .dp-chip-row / .s-th CSS 추가 + Landing tier-grid role=group 일관성 정렬 | routes/public/Pricing.tsx + seed/publicLanding.ts(PUBLIC_COMPARE 12 + PUBLIC_FAQ_PRICING 5) + global.css |
+| **m2.5/S2.c 가입/로그인/재설정 3 페이지** | ⏭ NEXT | — | public-auth.jsx → Signup/Login/Reset 3 TSX + .auth-wrap·.auth-form·.solo-note·.h4-mini CSS |
 | m2 S1.1 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | pending | — | 사용자 외부 계정 단계 |
 | 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S2 완료 후 |
 | 법무 4종 실제 문구 자문 | pending | — | legal-pages.md 단계 1~5 |
@@ -51,8 +52,10 @@
 | — | — | — |
 
 ## Last Activity
-- m2.5/S2.a 랜딩 + .pub-* CSS (qa + Evaluator) → PASS — 9 섹션 시각 이식: Hero(h1 + law-chip + signup·pricing CTA + aside Operator preview 3) + 3 value card(vmetric from→to + mini-screen 3 bar) + 4 news + 4 flow step + law-card(KPI 5/7·2/7 + 7 law-row ok 5·warn 2) + solo-fold(jay@spacewalk.tech + company link) + 3 tier(dp50 Team featured + 6 items slice 4) + 5 FAQ details(첫 번째 open) + dark CTA strip. global.css PUBLIC 섹션 약 300 라인 추가(.pub-banner/.pub-shell/.pub-topbar/.pub-footer/.hero/.sec/.val-grid/.val-card/.news-grid/.news-card/.flow-grid/.flow-step/.law-card/.law-row/.solo-fold/.faq/.tier-grid/.tier). 시드 seed/publicLanding.ts(PUBLIC_VALUE 3 + PUBLIC_NEWS 4 + PUBLIC_FLOW 4 + PUBLIC_PRINCIPLES 7 + PUBLIC_TIERS 3 + PUBLIC_FAQ_LANDING 5 + PUBLIC_HERO_PREVIEW 3). SCREENS landing done sprint=m2.5/S2.a, NEXT_ACTION→m2.5/S2.b. Evaluator surgical fix 1건 반영(.law-card .lbody UL list-style:none + margin:0 리셋 추가). test 51/51 | 2026-05-12
+- m2.5/S2.b 가격 + 비교표 (qa + Evaluator) → PASS — 4 섹션: (1) 가운데 정렬 h2 '일하는 사람만 카운트합니다.' + dp-chip-row role=region aria-label='디자인 파트너 안내' + 3 tier full items(랜딩 slice 4 → 가격 전체 6) + business→/company, free/team→/signup + aop-def role=note 'Active Operator 정의' (2) 전체 비교표 role=table aria-label='플랜 비교표' 12행 × 4컬럼 + compareCellClass(— → no, ✓ → ok) (3) FAQ PUBLIC_FAQ_PRICING 5 details 첫 번째 open + 본문 환불정책/회사페이지 inline Link (4) dark CTA 5분 signup. global.css에 .aop-def / .compare / .dp-chip-row / .s-th 추가(시안 styles.css 885-893, 895-913, 1081-1089, 1091-1092 1:1). 시드 publicLanding.ts에 PUBLIC_COMPARE 12 + PUBLIC_FAQ_PRICING 5 추가. SCREENS pricing done sprint=m2.5/S2.b, NEXT_ACTION→m2.5/S2.c. Evaluator surgical fix 2건 반영(dp-chip-row role=status→region + Landing tier-grid role=list→group 일관성). test 52/52 | 2026-05-12
+- m2.5/S2.a 랜딩 + .pub-* CSS (qa + Evaluator) → PASS — 9 섹션 시각 이식: Hero h1·law-chip + 3 value card + 4 news + 4 flow + law-card KPI 5/7·2/7 + solo-fold + 3 tier dp50 + 5 FAQ + dark CTA + .pub-*/.hero/.sec/.val-*/.news-*/.flow-*/.law-*/.solo-fold/.faq/.tier-* CSS 약 300 라인 추가. PUBLIC_VALUE 3·NEWS 4·FLOW 4·PRINCIPLES 7·TIERS 3·FAQ_LANDING 5·HERO_PREVIEW 3 시드. fix(.law-card .lbody UL 리셋). test 51/51 | 2026-05-12
 - m2.5/S1 Public route 14 스캐폴드 + PublicShell (qa + Evaluator) → PASS — PublicShell(banner/contentinfo/region·외부 메뉴 nav + 14 PublicStub + PUBLIC_BIZ env-aware). fix #17·#18 + PHASES.p2 active + M25_SPRINTS. test 50/50 | 2026-05-12
+- m2 S2.10.b Plan & Billing → PASS — H2 5/5 닫힘 · inside-app 28/28+1. test 47/47 | 2026-05-12
 - m2 S2.10.b Plan & Billing (qa + Evaluator) → PASS — **H2 5/5 사이클 닫힘 · inside-app 28/28+1**. 현재 플랜 + Active Operator progressbar(5/5 100%) + 5플랜 + 연결제 25% toggle 산식(round(p*0.75*12/1000)*1000) + 세금계산서 4필드 + 청구서 3건 + 토스페이먼츠 + 사용량 알림 3. Evaluator fix 2건(PROTOTYPE_MARKS #15·#16 + .sr-only utility). test 47/47 | 2026-05-12
 - m2 S2.10.a Settings 4탭 (qa + Evaluator) → PASS — 5탭 wrapper + Profile + Integrations + Notifications + AuditExport + Billing placeholder. fix #15·#16. test 46/46 | 2026-05-12
 - m2 S2.9 Workspace 3탭 (qa + Evaluator) → PASS — 3탭 wrapper + Members + Invite + Roles 매트릭스. fix #14. test 39/39 | 2026-05-12

@@ -256,11 +256,10 @@ export function Landing() {
         <p className="lead">
           결제 단위는 Active Operator (지난 30일 1회 이상 AI 작업이 기록된 사용자). Reviewer·Admin은 활동 무관 무료.
         </p>
-        <div className="tier-grid" role="list" aria-label="플랜 미리보기">
+        <div className="tier-grid" role="group" aria-label="플랜 미리보기">
           {PUBLIC_TIERS.map((t) => (
             <article
               key={t.id}
-              role="listitem"
               className={'tier' + (t.id === 'team' ? ' feat' : '')}
             >
               {t.dp50 && <div className="dp50">디자인 파트너 5팀 한정 50%</div>}
