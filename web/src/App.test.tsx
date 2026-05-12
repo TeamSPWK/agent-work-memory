@@ -12,6 +12,11 @@ import { SelfRecall } from './screens/SelfRecall'
 import { Audit } from './screens/Audit'
 import { Risk } from './screens/Risk'
 import { Incident } from './screens/Incident'
+import { Workspace as OnboardingWs } from './screens/onboarding/Workspace'
+import { Connect } from './screens/onboarding/Connect'
+import { Import as OnboardingImportScreen } from './screens/onboarding/Import'
+import { Reviewer } from './screens/onboarding/Reviewer'
+import { Done } from './screens/onboarding/Done'
 import { StatusBoard } from './screens/dev/StatusBoard'
 import { NAV_ITEMS } from './lib/seed/navigation'
 
@@ -613,21 +618,147 @@ describe('AppShell + product IA', () => {
     expect(screen.getByText('S2.5.c')).toBeInTheDocument()
   })
 
-  it('onboarding renders wizard without sidebar', () => {
+  it('Onboarding Workspace step renders form + progressbar + next link', () => {
     render(
       <MemoryRouter initialEntries={['/onboarding/ws']}>
         <Routes>
           <Route path="/onboarding" element={<OnboardingLayout />}>
-            <Route path="ws" element={<PlaceholderScreen label="워크스페이스 생성" note="온보딩" />} />
+            <Route path="ws" element={<OnboardingWs />} />
           </Route>
         </Routes>
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: '워크스페이스 생성', level: 1 })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: '워크스페이스를 만듭니다', level: 1 }),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: '온보딩 단계' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('progressbar', { name: '온보딩 진행' }),
+    ).toHaveAttribute('aria-valuenow', '1')
+    expect(screen.getByRole('radiogroup', { name: '세그먼트' })).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: '팀 규모' })).toBeInTheDocument()
+    expect(screen.getByLabelText('워크스페이스 이름')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /다음 — 도구 연결/ })).toHaveAttribute(
+      'href',
+      '/onboarding/connect',
+    )
     for (const item of NAV_ITEMS) {
-      expect(screen.queryByRole('link', { name: new RegExp(`^${item.label}$`) })).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('link', { name: new RegExp(`^${item.label}$`) }),
+      ).not.toBeInTheDocument()
     }
+  })
+
+  it('Onboarding Connect Next is disabled until OAuth permits a tool', () => {
+    render(
+      <MemoryRouter initialEntries={['/onboarding/connect']}>
+        <Routes>
+          <Route path="/onboarding" element={<OnboardingLayout />}>
+            <Route path="connect" element={<Connect />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    // claude_code 1개가 시드에서 connected — Next는 Link로 enabled
+    const enabledNext = screen.getByRole('link', { name: /다음 — 첫 세션 import/ })
+    expect(enabledNext).toHaveAttribute('href', '/onboarding/import')
+
+    // claude_code 해제 → connectedCount 0 → button disabled
+    fireEvent.click(screen.getByRole('button', { name: '연결 해제' }))
+    expect(
+      screen.getByRole('button', { name: /다음 — 첫 세션 import/ }),
+    ).toBeDisabled()
+
+    // cursor 연결 → OAuth modal → 허용 → connectedCount 1 → 다시 Link
+    fireEvent.click(screen.getAllByRole('button', { name: /연결$/ })[0])
+    expect(screen.getByRole('dialog', { name: /OAuth 권한 확인/ })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /허용/ }))
+    expect(
+      screen.queryByRole('dialog', { name: /OAuth 권한 확인/ }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /다음 — 첫 세션 import/ })).toBeInTheDocument()
+  })
+
+  it('Onboarding Import renders 4-step timeline + first session card', () => {
+    render(
+      <MemoryRouter initialEntries={['/onboarding/import']}>
+        <Routes>
+          <Route path="/onboarding" element={<OnboardingLayout />}>
+            <Route path="import" element={<OnboardingImportScreen />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { name: /Cursor에서 가장 최근 세션을 import 중/, level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('권한 확인')).toBeInTheDocument()
+    expect(screen.getByText('세션 메타 fetch')).toBeInTheDocument()
+    expect(screen.getByText('파일 변경 매칭')).toBeInTheDocument()
+    expect(screen.getByText('위험 분석')).toBeInTheDocument()
+    expect(screen.getByText('지원서 폼 validation 에러 메시지 한국어로 교체')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^Reviewer 지정/ })).toHaveAttribute(
+      'href',
+      '/onboarding/reviewer',
+    )
+  })
+
+  it('Onboarding Reviewer toggles members and reflects §1 governance state', () => {
+    render(
+      <MemoryRouter initialEntries={['/onboarding/reviewer']}>
+        <Routes>
+          <Route path="/onboarding" element={<OnboardingLayout />}>
+            <Route path="reviewer" element={<Reviewer />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { name: /AI 변경 검토자.*지정하세요/, level: 1 }),
+    ).toBeInTheDocument()
+    // 시드 default 'u5' 선택
+    expect(
+      screen.getByRole('checkbox', { name: 'CTO 겸직 대표 선택', checked: true }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Reviewer 1명 지정 완료 — 활성')).toBeInTheDocument()
+
+    // 해제 → pending 상태
+    fireEvent.click(screen.getByRole('checkbox', { name: 'CTO 겸직 대표 선택' }))
+    expect(screen.getByText('Reviewer 미지정 — 지금 지정하면 즉시 활성')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /완료/ }),
+    ).toBeDisabled()
+
+    // 다른 멤버 선택 → 다시 활성 + 완료 Link
+    fireEvent.click(screen.getByRole('checkbox', { name: '개발 리드 (8년차) 선택' }))
+    expect(screen.getByText('Reviewer 1명 지정 완료 — 활성')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^완료/ })).toHaveAttribute(
+      'href',
+      '/onboarding/done',
+    )
+  })
+
+  it('Onboarding Done renders 5분 mock KPI + Today jump link', () => {
+    render(
+      <MemoryRouter initialEntries={['/onboarding/done']}>
+        <Routes>
+          <Route path="/onboarding" element={<OnboardingLayout />}>
+            <Route path="done" element={<Done />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByText('온보딩 완료 — 첫 세션이 Today에 도착했습니다'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('4분 38초')).toBeInTheDocument()
+    expect(screen.getByText('목표 5분 이하 — 통과')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Today 열기/ })).toHaveAttribute('href', '/today')
+    expect(screen.getByText(/시연용 mock/)).toBeInTheDocument()
   })
 })

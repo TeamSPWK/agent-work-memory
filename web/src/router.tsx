@@ -11,6 +11,11 @@ import { SelfRecall } from './screens/SelfRecall'
 import { Audit } from './screens/Audit'
 import { Risk } from './screens/Risk'
 import { Incident } from './screens/Incident'
+import { Workspace as OnboardingWorkspace } from './screens/onboarding/Workspace'
+import { Connect } from './screens/onboarding/Connect'
+import { Import as OnboardingImport } from './screens/onboarding/Import'
+import { Reviewer } from './screens/onboarding/Reviewer'
+import { Done } from './screens/onboarding/Done'
 import { StatusBoard } from './screens/dev/StatusBoard'
 import { ONBOARDING_STEPS } from './lib/seed/navigation'
 
@@ -40,10 +45,11 @@ export const router = createBrowserRouter([
     element: <OnboardingLayout />,
     children: [
       { index: true, element: <Navigate to={`/onboarding/${ONBOARDING_STEPS[0].id}`} replace /> },
-      ...ONBOARDING_STEPS.map((s) => ({
-        path: s.id,
-        element: <PlaceholderScreen label={s.label} note="온보딩 단계 stub" />,
-      })),
+      { path: 'ws', element: <OnboardingWorkspace /> },
+      { path: 'connect', element: <Connect /> },
+      { path: 'import', element: <OnboardingImport /> },
+      { path: 'reviewer', element: <Reviewer /> },
+      { path: 'done', element: <Done /> },
     ],
   },
 ])

@@ -123,11 +123,11 @@ export const SCREENS: ScreenRow[] = [
   { group: 'H3', label: 'Reviewer Brief 연결', route: '/incidents/:id?tab=reviewer', status: 'done', sprint: 'S2.7.c' },
   { group: 'H3', label: 'Incident Note', route: '/incidents/:id?tab=note', status: 'done', sprint: 'S2.7.b' },
   // H4 (Onboarding)
-  { group: 'H4', label: '워크스페이스 생성', route: '/onboarding/ws', status: 'stub', sprint: 'S2.8' },
-  { group: 'H4', label: 'AI 도구 connect', route: '/onboarding/connect', status: 'stub', sprint: 'S2.8' },
-  { group: 'H4', label: '첫 세션 import', route: '/onboarding/import', status: 'stub', sprint: 'S2.8' },
-  { group: 'H4', label: 'Reviewer 지정', route: '/onboarding/reviewer', status: 'stub', sprint: 'S2.8' },
-  { group: 'H4', label: '완료 → Today', route: '/onboarding/done', status: 'stub', sprint: 'S2.8' },
+  { group: 'H4', label: '워크스페이스 생성', route: '/onboarding/ws', status: 'done', sprint: 'S2.8' },
+  { group: 'H4', label: 'AI 도구 connect', route: '/onboarding/connect', status: 'done', sprint: 'S2.8' },
+  { group: 'H4', label: '첫 세션 import', route: '/onboarding/import', status: 'done', sprint: 'S2.8' },
+  { group: 'H4', label: 'Reviewer 지정', route: '/onboarding/reviewer', status: 'done', sprint: 'S2.8' },
+  { group: 'H4', label: '완료 → Today', route: '/onboarding/done', status: 'done', sprint: 'S2.8' },
   // ws
   { group: 'ws', label: 'Members', route: '/workspace?tab=members', status: 'pending', sprint: 'S2.9' },
   { group: 'ws', label: 'Member 초대', route: '/workspace?tab=invite', status: 'pending', sprint: 'S2.9' },
@@ -193,13 +193,14 @@ export const PROTOTYPE_MARKS: PrototypeMark[] = [
   { id: 10, trace: 'Workspace 셀렉터 mock 이름', resolveWhen: 'S5 실 워크스페이스 연결' },
   { id: 11, trace: '페르소나·다크 토글 Zustand 메모리 only', resolveWhen: 'S5+ localStorage 필요 시' },
   { id: 12, trace: 'Risk Radar 시그널의 9 session id(s-003/008/009/011/012/013/014/017/018)가 sessions seed 미포함', resolveWhen: 'S5 실 데이터 자동 해소', note: '클릭 시 SessionDetail fallback 메시지 — D6 결정' },
+  { id: 13, trace: 'Onboarding Done KPI "4분 38초" hardcoded 시연용 mock', resolveWhen: 'm2 S9 (H4 온보딩 5분 측정)', note: 'ONBOARDING_TIMING 상수, 디자인 sub: "시연용 mock" 명시' },
 ]
 
 export const PROJECT_META = {
   name: 'Agent Work Memory',
   tagline: 'AI Audit Trail SaaS for Korean SMB',
   ownerEmail: 'jay@spacewalk.tech',
-  currentCommit: '7203869',
+  currentCommit: '8b1d679',
   lastUpdated: '2026-05-11',
 }
 
@@ -212,11 +213,11 @@ export type NextAction = {
 
 /** "지금 해야 할 한 가지." Linear inbox 패러다임. */
 export const NEXT_ACTION: NextAction = {
-  sprint: 'S2.8',
-  title: 'Onboarding 5화면 채움 (H4)',
+  sprint: 'S2.9',
+  title: 'Workspace 3탭(Members · 초대 · Roles)',
   detail:
-    '현재 stub 상태인 /onboarding/{ws,connect,import,reviewer,done}를 v0.1 시안으로 채움. 5분 가설(criteria #7) 측정 가능 수준까지. H3 5/5 완성, H2 4/5 Billing은 S2.10 합류.',
-  primaryRoute: '/onboarding/ws',
+    '/workspace?tab={members,invite,roles} 풀 시드(WS_MEMBERS 6 + KPI + RISK_ROLE_MATRIX 8). H4 5/5 완료 — onboarding cycle 닫힘.',
+  primaryRoute: '/workspace',
 }
 
 /** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */

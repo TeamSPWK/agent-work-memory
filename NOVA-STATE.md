@@ -1,7 +1,7 @@
 # Nova State
 
-- **Goal**: S2.7.c Event Detail + Reviewer Brief 완료 → **H3 5/5 사이클 닫힘**. S2.8 Onboarding 진입 대기.
-- **Phase**: frontend ingest — m2 S1+S2.1~S2.7 + DT.1 done. H1 6/6 + H2 4/5(Billing 이연) + H3 5/5. 화면 15/28+1.
+- **Goal**: S2.8 Onboarding 5화면 완료 → **H4 5/5 사이클 닫힘**. S2.9 Workspace 진입 대기.
+- **Phase**: frontend ingest — m2 S1+S2.1~S2.8 + DT.1 done. H1 6/6 + H2 4/5(Billing 이연) + H3 5/5 + H4 5/5. 화면 20/28+1.
 - **Blocker**: 없음. 후속 결정·프로토타입 흔적은 `docs/projects/STATUS.md` + `/dev/status` 대시보드 참조.
 
 ## Tasks
@@ -19,8 +19,9 @@
 | m2 S2.7.a Risk Radar (H3 1/5) | done | PASS(qa) — 8 risk-tile + DB inline 4행 + 7 카테고리 신호 리스트 + 사고 alert cta → /incidents/INC-26-014 | screens/Risk.tsx + seed/risk.ts |
 | m2 S2.7.b Incident hub + Replay + Note (H3 3/5) | done | PASS(qa) — Incident 4탭 wrapper(replay/note 채움, event/reviewer는 S2.7.c placeholder) + incident-canvas 2D timeline + 3 bucket + Note composer + system 감지 mock 배지 | screens/Incident.tsx + incident/{Replay,Note}.tsx + seed/incident.ts |
 | m2 S2.7.c Event Detail + Reviewer Brief (H3 5/5) | done | PASS(qa) — EventDetail 핵심 fact 표 + 3분리 + 근거 5건 + 분류 radiogroup 4 + 사유 textarea, ReviewerBrief split 의도/결과 + match-line ok/ok/extra 3 + 승인/차단 actions, Incident 4탭 모두 활성 | incident/{EventDetail,ReviewerBrief}.tsx |
-| **m2 S2.8 Onboarding (H4) 5화면 채움** | ⏭ NEXT | — | /onboarding/{ws,connect,import,reviewer,done} stub → 실 화면. 5분 가설 측정 가능 |
-| m2 S2.9+ Workspace/Settings | pending | — | S2.8 완료 후 |
+| m2 S2.8 Onboarding 5화면 (H4 5/5) | done | PASS(qa) — Workspace 폼(radiogroup 2 + select 2) + Connect 4 tool + OAuth dialog + Import timeline 4 + Reviewer multi-select + Done KPI 시연 mock + Today 점프 | screens/onboarding/* + seed/onboarding.ts |
+| **m2 S2.9 Workspace 3탭** | ⏭ NEXT | — | /workspace?tab={members,invite,roles} 풀 시드 |
+| m2 S2.10 Settings + Billing | pending | — | S2.9 완료 후. Billing은 H2 5번째 합류 |
 | m2 S1.1 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | pending | — | 사용자 외부 계정 단계 |
 | 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S2 완료 후 |
 | 법무 4종 실제 문구 자문 | pending | — | legal-pages.md 단계 1~5 |
@@ -46,6 +47,7 @@
 | — | — | — |
 
 ## Last Activity
+- m2 S2.8 Onboarding 5화면 (qa) → PASS — OnboardingProgress(role=progressbar) 공통 + Workspace(radiogroup 2 fieldset/legend + select 2 + 우측 3 카드) + Connect(4 tool card + state chip + role=dialog OAuth + Escape 키 닫기 + connectedCount 0 시 Next disabled button) + Import(timeline 4 + 첫 세션 카드) + Reviewer(멤버 5 multi-toggle 동적 §1 활성/pending + 초대 input) + Done(완료 카드 + KPI 2 시연 mock + Today 점프 Link to=/today + H4 통과 카드). PROTOTYPE_MARKS #13 추가(Done KPI 4분 38초 hardcoded). **H4 5/5 사이클 닫힘**. test 33/33 | 2026-05-12
 - m2 S2.7.c Event Detail + Reviewer Brief (qa) → PASS — EventDetail(핵심 fact 8행 + 3분리 grid-3 + 근거 자료 5건 + 분류 radiogroup 4 likely/verified/unknown/irrelevant + 사유 textarea + 의도/결과 미리보기 cta + cross-link), ReviewerBrief(split 좌우: explain back 5 + AI 추출 + 질문 후보 3 / SESSION_DETAIL 변경 파일·명령 재사용 + DB 영향 + match-line ok/ok/extra 3 + 승인/차단/추가 확인). Incident 래퍼 PendingTab 제거, 4탭 모두 활성. **H3 5/5 사이클 닫힘**. test 29/29 | 2026-05-12
 - m2 S2.7.b Incident hub + Replay + Note (qa) → PASS — useSearchParams ?tab= 4탭(replay/event/reviewer/note), Incident 래퍼 + 인라인 PlaceholderScreen 2탭, Replay incident-canvas 2D timeline (xPct + sevSize map + ic-mark clickable + ic-axis T0), 3 bucket(likely/verified/unknown), KPI 4, 우측 detail (selected event), system 감지 mock 배지(role=status), Note timeline + 메모 composer(자동 timestamp + draft preview) + Postmortem 양식. mock incident(INC-99-999) fallback 배지. PROTOTYPE_MARKS 12 추가(D6 결정). test 28/28 | 2026-05-12
 - m2 S2.7.a Risk Radar (qa) → PASS — 8 risk-tile(role=tablist), DB inline 4행 + RISK_SIGNALS 7 카테고리 전환, 사고 alert cta(role=alert) → /incidents/INC-26-014, test 22/22 | 2026-05-12
@@ -61,6 +63,7 @@
 ## Refs
 - m2 S2.6 Plan: `docs/projects/plans/m2-s2.6-audit.md`
 - m2 S2.7 Plan: `docs/projects/plans/m2-s2.7-h3.md` (3 sub-sprint 분할)
+- m2 S2.8 Plan: `docs/projects/plans/m2-s2.8-onboarding.md`
 - **프로젝트 현황판: `docs/projects/STATUS.md`** (페이즈·sprint·화면 매트릭스·보류 결정·프로토타입 흔적)
 - 디자인 lock: p0-design-v0/(inside-app 23화면) + p0-design-v0.2/(외부 14화면)
 - Prompts: p0-...md(1차) / p0.1-...round2.md(2차) / p0.2-...round3.md(3차)
