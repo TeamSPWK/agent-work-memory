@@ -3,8 +3,8 @@ import { AppShell } from './layout/AppShell'
 import { OnboardingLayout } from './layout/OnboardingLayout'
 import { PublicShell } from './layout/PublicShell'
 import { PlaceholderScreen } from './screens/PlaceholderScreen'
+import { Landing } from './routes/public/Landing'
 import {
-  Landing,
   Pricing,
   Signup,
   Login,

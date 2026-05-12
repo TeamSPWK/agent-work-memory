@@ -16,8 +16,8 @@ import { Incident } from './screens/Incident'
 import { Workspace } from './screens/Workspace'
 import { Settings } from './screens/Settings'
 import { PublicShell } from './layout/PublicShell'
+import { Landing } from './routes/public/Landing'
 import {
-  Landing,
   Pricing,
   Signup,
   Login,
@@ -1191,8 +1191,10 @@ describe('AppShell + product IA', () => {
     // 사업자 미등록 placeholder
     expect(screen.getByText('[사업자 등록 후 입력]')).toBeInTheDocument()
     expect(screen.getByText('[신고 후 입력]')).toBeInTheDocument()
-    // PublicStub heading h2
-    expect(screen.getByRole('heading', { name: '랜딩', level: 2 })).toBeInTheDocument()
+    // Landing h1 (이전 PublicStub h2 → 새 Landing h1)
+    expect(
+      screen.getByRole('heading', { level: 1, name: /AI가 만든 변경을/ }),
+    ).toBeInTheDocument()
   })
 
   it('PublicShell shows non-hyp band on routes without PUBLIC_HYPS (e.g. /company)', () => {
@@ -1213,9 +1215,8 @@ describe('AppShell + product IA', () => {
     expect(screen.getByRole('heading', { name: '회사', level: 2 })).toBeInTheDocument()
   })
 
-  it('All 14 public routes dispatch to their PublicStub', () => {
+  it('13 PublicStub routes dispatch — landing은 m2.5/S2.a Landing으로 별도', () => {
     const elements: Record<string, ReactElement> = {
-      '/landing': <Landing />,
       '/pricing': <Pricing />,
       '/signup': <Signup />,
       '/login': <Login />,
@@ -1230,9 +1231,11 @@ describe('AppShell + product IA', () => {
       '/500': <Err500 />,
       '/maintenance': <Maint />,
     }
-    expect(Object.keys(elements)).toHaveLength(PUBLIC_ROUTES.length)
+    const stubRoutes = PUBLIC_ROUTES.filter((r) => r.id !== 'landing')
+    expect(stubRoutes).toHaveLength(13)
+    expect(Object.keys(elements)).toHaveLength(stubRoutes.length)
 
-    for (const route of PUBLIC_ROUTES) {
+    for (const route of stubRoutes) {
       const { unmount } = render(
         <MemoryRouter initialEntries={[route.path]}>
           <Routes>
@@ -1251,5 +1254,70 @@ describe('AppShell + product IA', () => {
       ).toBeInTheDocument()
       unmount()
     }
+  })
+
+  it('Landing /landing — Hero h1 + 9 섹션 + 3 value cards + 4 news + 4 flow + 7 principles + 3 tiers + 5 FAQ', () => {
+    render(
+      <MemoryRouter initialEntries={['/landing']}>
+        <Routes>
+          <Route element={<PublicShell />}>
+            <Route path="landing" element={<Landing />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    // Hero
+    expect(
+      screen.getByRole('heading', { level: 1, name: /AI가 만든 변경을.*다시 설명할 수 있게/ }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/인공지능기본법 §27 · 2026-01-22 시행됨/)).toBeInTheDocument()
+    // CTA 2 (Hero 영역, 같은 /signup link가 footer/dark에도 있어 getAllByRole)
+    const signupCTAs = screen.getAllByRole('link', { name: /5분 안에 워크스페이스 만들기/ })
+    expect(signupCTAs.length).toBeGreaterThanOrEqual(2)
+    expect(signupCTAs[0]).toHaveAttribute('href', '/signup')
+
+    // 3 가치 카드
+    expect(screen.getByRole('heading', { level: 3, name: '회상' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: '감사' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: '1차 원인' })).toBeInTheDocument()
+    expect(screen.getAllByText('미설명 세션 비율').length).toBeGreaterThanOrEqual(1)
+
+    // 4 news (외부 보도)
+    expect(screen.getByText(/Newsweek · 2025-07/)).toBeInTheDocument()
+    expect(screen.getByText(/PocketOS · 9초 전체 삭제/)).toBeInTheDocument()
+    expect(screen.getByText(/METR · 체감 vs 실측 괴리/)).toBeInTheDocument()
+
+    // 4 flow steps
+    for (const s of ['01', '02', '03', '04']) {
+      expect(screen.getByText(s)).toBeInTheDocument()
+    }
+
+    // 7 principles — '권고' 2개, 'ok' 5개 (.ls 셀)
+    const allOk = screen.getAllByText('ok')
+    expect(allOk.length).toBeGreaterThanOrEqual(5)
+    expect(screen.getAllByText('권고').length).toBe(2)
+
+    // 3 tiers + 디자인 파트너 chip
+    expect(screen.getByText('디자인 파트너 5팀 한정 50%')).toBeInTheDocument()
+    const tierList = screen.getByRole('list', { name: '플랜 미리보기' })
+    for (const n of ['Free', 'Team', 'Business']) {
+      expect(within(tierList).getByText(n)).toBeInTheDocument()
+    }
+
+    // FAQ 5개 + 첫 번째 open
+    const faqQuestions = [
+      '인공지능기본법 §27이 정말 시행됐나요?',
+      '원문 대화 transcript가 저장되나요?',
+      '1인 창업자가 만든다는데, 24/7 응답 보장은?',
+      'Reviewer / Admin도 결제 대상인가요?',
+      '디자인 파트너 50% 할인은 언제까지?',
+    ]
+    for (const q of faqQuestions) {
+      expect(screen.getByText(q)).toBeInTheDocument()
+    }
+
+    // 9. dark footer CTA strip
+    expect(screen.getByText('5분이면 첫 세션이 Today에 뜹니다.')).toBeInTheDocument()
   })
 })

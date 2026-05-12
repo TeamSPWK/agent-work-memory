@@ -1,7 +1,7 @@
 # Nova State
 
-- **Goal**: m2.5/S1 Public route 14 스캐폴드 + PublicShell 완료. 다음은 m2.5/S2 14 TSX 시각 이식.
-- **Phase**: m2 inside-app 28/28+1 done · m2.5 진입(p2 active) — S1 done, S2 next. 화면 28(app) + 14(public stub) = 42 트랙.
+- **Goal**: m2.5/S2.a 랜딩 페이지 시각 이식 + .pub-* CSS 토큰 완료. 다음은 m2.5/S2.b 가격 페이지.
+- **Phase**: m2 inside-app 28/28+1 done · m2.5 S2.a done(landing 시각 이식 + 9 섹션) — S2.b 가격 next. 화면 28(app) + 1(landing done) + 13(public stub).
 - **Blocker**: 없음. /landing은 인사이드앱 / 충돌 회피용 임시(D7). 후속 결정·프로토타입 흔적은 `docs/projects/STATUS.md` + `/dev/status` 대시보드 참조.
 
 ## Tasks
@@ -23,8 +23,9 @@
 | m2 S2.9 Workspace 3탭 (ws 3/3) | done | PASS(qa + Evaluator) — useSearchParams 3탭(members/invite/roles), Members(KPI 4 + 6행 + persona tag/RBAC), Invite(이메일 chip + radiogroup 역할 + 메일 미리보기 동기화), Roles(8 카테고리 × 3 역할 + role=status 변경 안내) | screens/Workspace.tsx + workspace/{Members,Invite,Roles}.tsx + seed/workspace.ts |
 | m2 S2.10.a Settings 4탭 (settings 4/5) | done | PASS(qa + Evaluator) — 5탭 wrapper(profile/integrations/notif/export/billing) + Profile(grid 4필드 + 알림 채널 3 + 보안 3 + 위험 액션 region) + Integrations(AI 4 + 외부 3 + 예정 2) + Notifications(5×4 매트릭스 + 무음 시간대 + Slack mock) + AuditExport(3 radiogroup + 5건 export) + Billing 인라인 placeholder | screens/Settings.tsx + settings/{Profile,Integrations,Notifications,AuditExport}.tsx + seed/settings.ts |
 | m2 S2.10.b Plan & Billing (**H2 5/5 닫힘**) | done | PASS(qa + Evaluator) — 현재 플랜 카드 + 사용량 progressbar(5/5 100%) + 디자인 파트너 D1 카드 + 5플랜 비교 + 연결제 25% toggle + 세금계산서 4필드 + 청구서 3건 + 토스페이먼츠 결제수단 + 사용량 알림 | screens/settings/Billing.tsx + seed/billing.ts |
-| m2.5/S1 Public route 14 스캐폴드 + PublicShell | done | PASS(qa + Evaluator) — PublicShell(banner/contentinfo/region·외부 메뉴 nav) + 14 PublicStub(landing/pricing/signup/login/reset/legal 4종/company/status/404/500/maintenance) + PUBLIC_BIZ env-aware(VITE_BIZ_NO/ECOMM_NO/ADDR) + 사업자 미등록 placeholder | layout/PublicShell.tsx + routes/public/PublicStub.tsx + seed/public.ts |
-| **m2.5/S2 14 TSX 시각 이식** | ⏭ NEXT | — | v0.2 public-landing/pricing/auth/legal/company/error 7 JSX → 14 TSX + .pub-* CSS. criteria #1 시안 픽셀 정합 |
+| m2.5/S1 Public route 14 스캐폴드 + PublicShell | done | PASS(qa + Evaluator) — PublicShell(banner/contentinfo/region·외부 메뉴 nav) + 14 PublicStub + PUBLIC_BIZ env-aware + 사업자 미등록 placeholder | layout/PublicShell.tsx + routes/public/PublicStub.tsx + seed/public.ts |
+| m2.5/S2.a 랜딩 + .pub-* CSS | done | PASS(qa + Evaluator) — 9 섹션(Hero h1 + law-chip + Operator preview / 3 가치 H1·H2·H3 / 4 news / 4 flow / 7 원칙 5ok+2warn / 1인 운영 fold / 3 tier dp50 / 5 FAQ / dark CTA strip) + .pub-* / .hero / .sec / .val-grid / .news-grid / .flow-grid / .law-card / .solo-fold / .faq / .tier-grid CSS 추가 | routes/public/Landing.tsx + seed/publicLanding.ts + global.css PUBLIC 섹션 |
+| **m2.5/S2.b 가격 + 비교표** | ⏭ NEXT | — | /pricing TSX + PUBLIC_COMPARE 12행 + FAQ 5 + 디자인 파트너 chip + .compare CSS |
 | m2 S1.1 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | pending | — | 사용자 외부 계정 단계 |
 | 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S2 완료 후 |
 | 법무 4종 실제 문구 자문 | pending | — | legal-pages.md 단계 1~5 |
@@ -50,7 +51,8 @@
 | — | — | — |
 
 ## Last Activity
-- m2.5/S1 Public route 14 스캐폴드 + PublicShell (qa + Evaluator) → PASS — PublicShell layout(role=banner header + role=contentinfo footer + nav aria-label="외부 메뉴" 4 메뉴 + brand aria-label="AWM 홈" + role=region 분기 aria-label "가설 검증 배너"/"외부 페이지 안내") + PageBand(PUBLIC_HYPS landing/pricing/signup 3 가설) + 14 PublicStub(landing/pricing/signup/login/reset/legal 4종/company/status/404/500/maintenance) — PlaceholderStub 공통 + 14 named exports + path/noindex meta 노출. PUBLIC_BIZ env-aware(VITE_BIZ_NO/VITE_ECOMM_NO/VITE_BIZ_ADDR) + bizNoOrPlaceholder/ecommNoOrPlaceholder helpers — 미등록 시 '[사업자 등록 후 입력]'/'[신고 후 입력]' 회색 placeholder. SCREENS 14 public stub sprint=m2.5/S1, NEXT_ACTION→m2.5/S2, PENDING_DECISIONS D7(/ vs /landing 충돌 회피), PROTOTYPE_MARKS #17(.pub-* CSS 미추가)·#18(/landing 임시 alias). Evaluator surgical fix 2건 반영(PHASES.p2 pending→active + M25_SPRINTS 별도 배열 S1~S8 추가). test 50/50 | 2026-05-12
+- m2.5/S2.a 랜딩 + .pub-* CSS (qa + Evaluator) → PASS — 9 섹션 시각 이식: Hero(h1 + law-chip + signup·pricing CTA + aside Operator preview 3) + 3 value card(vmetric from→to + mini-screen 3 bar) + 4 news + 4 flow step + law-card(KPI 5/7·2/7 + 7 law-row ok 5·warn 2) + solo-fold(jay@spacewalk.tech + company link) + 3 tier(dp50 Team featured + 6 items slice 4) + 5 FAQ details(첫 번째 open) + dark CTA strip. global.css PUBLIC 섹션 약 300 라인 추가(.pub-banner/.pub-shell/.pub-topbar/.pub-footer/.hero/.sec/.val-grid/.val-card/.news-grid/.news-card/.flow-grid/.flow-step/.law-card/.law-row/.solo-fold/.faq/.tier-grid/.tier). 시드 seed/publicLanding.ts(PUBLIC_VALUE 3 + PUBLIC_NEWS 4 + PUBLIC_FLOW 4 + PUBLIC_PRINCIPLES 7 + PUBLIC_TIERS 3 + PUBLIC_FAQ_LANDING 5 + PUBLIC_HERO_PREVIEW 3). SCREENS landing done sprint=m2.5/S2.a, NEXT_ACTION→m2.5/S2.b. Evaluator surgical fix 1건 반영(.law-card .lbody UL list-style:none + margin:0 리셋 추가). test 51/51 | 2026-05-12
+- m2.5/S1 Public route 14 스캐폴드 + PublicShell (qa + Evaluator) → PASS — PublicShell(banner/contentinfo/region·외부 메뉴 nav + 14 PublicStub + PUBLIC_BIZ env-aware). fix #17·#18 + PHASES.p2 active + M25_SPRINTS. test 50/50 | 2026-05-12
 - m2 S2.10.b Plan & Billing (qa + Evaluator) → PASS — **H2 5/5 사이클 닫힘 · inside-app 28/28+1**. 현재 플랜 + Active Operator progressbar(5/5 100%) + 5플랜 + 연결제 25% toggle 산식(round(p*0.75*12/1000)*1000) + 세금계산서 4필드 + 청구서 3건 + 토스페이먼츠 + 사용량 알림 3. Evaluator fix 2건(PROTOTYPE_MARKS #15·#16 + .sr-only utility). test 47/47 | 2026-05-12
 - m2 S2.10.a Settings 4탭 (qa + Evaluator) → PASS — 5탭 wrapper + Profile + Integrations + Notifications + AuditExport + Billing placeholder. fix #15·#16. test 46/46 | 2026-05-12
 - m2 S2.9 Workspace 3탭 (qa + Evaluator) → PASS — 3탭 wrapper + Members + Invite + Roles 매트릭스. fix #14. test 39/39 | 2026-05-12
