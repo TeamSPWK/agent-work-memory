@@ -1,8 +1,8 @@
 # Nova State
 
-- **Goal**: m2.5/S2.b 가격 페이지 + 비교표 12행 + AOP 정의 + FAQ 5 완료. 다음은 m2.5/S2.c 가입/로그인/재설정 3 페이지.
-- **Phase**: m2 inside-app 28/28+1 done · m2.5 S2.a·S2.b done — S2.c 가입/로그인/재설정 next. 화면 28(app) + 2(landing·pricing done) + 12(public stub).
-- **Blocker**: 없음. /landing은 인사이드앱 / 충돌 회피용 임시(D7). 후속 결정·프로토타입 흔적은 `docs/projects/STATUS.md` + `/dev/status` 대시보드 참조.
+- **Goal**: 외부 페이지 UX = 토스 패턴(중앙 정렬 max-width 1120 + 1컬럼 Hero + dev 가설 메타 분리)으로 재정렬 완료. 다음은 m2.5/S2.c 가입/로그인/재설정 3 페이지.
+- **Phase**: m2 inside-app 28/28+1(데이터 밀도 우선) + m2.5 외부 페이지(토스 마케팅 패턴) 분리. S2.a·S2.b done — S2.c next. 화면 28(app) + 2(landing·pricing done) + 12(public stub).
+- **Blocker**: 없음. /landing은 인사이드앱 / 충돌 회피용 임시(D7). PageBand 가설 메타는 /dev/status로 이동(P19). 후속 결정·프로토타입 흔적은 `docs/projects/STATUS.md` + `/dev/status` 대시보드 참조.
 
 ## Tasks
 | Task | Status | Verdict | Note |
@@ -52,6 +52,7 @@
 | — | — | — |
 
 ## Last Activity
+- m2.5 외부 UX 토스 패턴 재정렬 + PageBand → /dev/status (qa) → PASS — 시안 의도(인사이드앱 envelope 내 데모)와 production 외부 페이지 분리. (1) .pub-shell envelope 제거(border/radius 제거), .pub-inner max-width:1120 + padding 24, .pub-topbar sticky top, .pub-banner 색 약화·border-radius 제거 (2) Hero 좌우 grid 해체 → 1컬럼 중앙 정렬 + h1 64px·max-width 880·typo letter-spacing -0.025em (3) Operator preview 카드를 hero 아래 별도 .sec.tight로 분리 + .preview-card max-width:720 중앙 (4) .sec padding 64px→96px, .sec.center 클래스 추가, h2 32→36px (5) PageBand 컴포넌트 + PUBLIC_HYPS import PublicShell에서 제거 — production 외부에 dev 메타 노출 X. /dev/status에 외부 페이지 가설 섹션 신설(PublicHypsList: 3 hyp + route Link). Pricing/Landing 4·9 섹션 모두 .pub-inner wrap. PROTOTYPE_MARKS #19 추가. test 53/53 + 신규 1(StatusBoard 가설 섹션) | 2026-05-12
 - m2.5/S2.b 가격 + 비교표 (qa + Evaluator) → PASS — 4 섹션: (1) 가운데 정렬 h2 '일하는 사람만 카운트합니다.' + dp-chip-row role=region aria-label='디자인 파트너 안내' + 3 tier full items(랜딩 slice 4 → 가격 전체 6) + business→/company, free/team→/signup + aop-def role=note 'Active Operator 정의' (2) 전체 비교표 role=table aria-label='플랜 비교표' 12행 × 4컬럼 + compareCellClass(— → no, ✓ → ok) (3) FAQ PUBLIC_FAQ_PRICING 5 details 첫 번째 open + 본문 환불정책/회사페이지 inline Link (4) dark CTA 5분 signup. global.css에 .aop-def / .compare / .dp-chip-row / .s-th 추가(시안 styles.css 885-893, 895-913, 1081-1089, 1091-1092 1:1). 시드 publicLanding.ts에 PUBLIC_COMPARE 12 + PUBLIC_FAQ_PRICING 5 추가. SCREENS pricing done sprint=m2.5/S2.b, NEXT_ACTION→m2.5/S2.c. Evaluator surgical fix 2건 반영(dp-chip-row role=status→region + Landing tier-grid role=list→group 일관성). test 52/52 | 2026-05-12
 - m2.5/S2.a 랜딩 + .pub-* CSS (qa + Evaluator) → PASS — 9 섹션 시각 이식: Hero h1·law-chip + 3 value card + 4 news + 4 flow + law-card KPI 5/7·2/7 + solo-fold + 3 tier dp50 + 5 FAQ + dark CTA + .pub-*/.hero/.sec/.val-*/.news-*/.flow-*/.law-*/.solo-fold/.faq/.tier-* CSS 약 300 라인 추가. PUBLIC_VALUE 3·NEWS 4·FLOW 4·PRINCIPLES 7·TIERS 3·FAQ_LANDING 5·HERO_PREVIEW 3 시드. fix(.law-card .lbody UL 리셋). test 51/51 | 2026-05-12
 - m2.5/S1 Public route 14 스캐폴드 + PublicShell (qa + Evaluator) → PASS — PublicShell(banner/contentinfo/region·외부 메뉴 nav + 14 PublicStub + PUBLIC_BIZ env-aware). fix #17·#18 + PHASES.p2 active + M25_SPRINTS. test 50/50 | 2026-05-12

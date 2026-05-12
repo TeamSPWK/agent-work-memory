@@ -231,6 +231,7 @@ export const PROTOTYPE_MARKS: PrototypeMark[] = [
   { id: 16, trace: 'Settings Integrations가 ONBOARDING_TOOLS 재사용(상태 4종 그대로) — 실 운영에선 온보딩 시점과 통합 상태가 분리되어야 함', resolveWhen: 'S5 실 데이터 연결 시 SETTINGS_TOOLS 별도 분리 결정', note: '현재 prototype에서는 무해' },
   { id: 17, trace: 'PublicShell 12 페이지(landing·pricing 제외)는 PublicStub placeholder — 시각·콘텐츠 미이식', resolveWhen: 'm2.5/S2.c~f 시각 이식', note: 'S2.a 랜딩·S2.b 가격 완료. .pub-*/.compare/.aop-def/.dp-chip-row CSS 추가됨' },
   { id: 18, trace: '랜딩이 / 가 아닌 /landing — 인사이드앱 /·/today 충돌 회피용 임시', resolveWhen: 'm2.5/S3 RequireAuth + /app/* prefix 이동 시', note: 'D7 결정' },
+  { id: 19, trace: '외부 페이지 PageBand(가설 검증 dev 띠) 제거 — 시안 의도를 토스 패턴 마케팅 페이지로 대체. 가설 메타는 /dev/status로 이동', resolveWhen: '결정 완료', note: '디자이너 시안의 dev/디자인 메타가 production 외부에 노출되는 잘못된 가정 정정' },
 ]
 
 export const PROJECT_META = {

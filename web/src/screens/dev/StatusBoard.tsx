@@ -11,6 +11,7 @@ import {
   groupProgress,
 } from '../../lib/dev/projectStatus'
 import type { ScreenStatus, SprintStatus } from '../../lib/dev/projectStatus'
+import { PUBLIC_HYPS, PUBLIC_ROUTES, type PublicPageId } from '../../lib/seed/public'
 
 const SPRINT_MARK: Record<SprintStatus, string> = {
   done: '✓',
@@ -67,6 +68,13 @@ export function StatusBoard() {
           보류 결정 ({PENDING_DECISIONS.filter((d) => !d.resolved).length})
         </summary>
         <PendingDecisions />
+      </details>
+
+      <details style={detailsStyle}>
+        <summary style={summaryStyle}>
+          외부 페이지 가설 ({Object.keys(PUBLIC_HYPS).length})
+        </summary>
+        <PublicHypsList />
       </details>
 
       <details style={detailsStyle}>
@@ -487,6 +495,68 @@ function PendingDecisions() {
           </div>
         </li>
       ))}
+    </ul>
+  )
+}
+
+function PublicHypsList() {
+  const entries = Object.entries(PUBLIC_HYPS) as [PublicPageId, (typeof PUBLIC_HYPS)[PublicPageId]][]
+  return (
+    <ul
+      style={{
+        marginTop: 12,
+        padding: 0,
+        listStyle: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+      }}
+    >
+      {entries.map(([id, hyp]) => {
+        if (!hyp) return null
+        const route = PUBLIC_ROUTES.find((r) => r.id === id)
+        return (
+          <li
+            key={id}
+            style={{
+              padding: '12px 14px',
+              borderRadius: 8,
+              border: '1px solid var(--line-soft)',
+              background: 'var(--bg-base)',
+              display: 'grid',
+              gridTemplateColumns: '1fr auto',
+              gap: 12,
+              alignItems: 'start',
+            }}
+          >
+            <div>
+              <div className="row tight" style={{ alignItems: 'center', marginBottom: 4 }}>
+                <span className="tag violet">{id}</span>
+                {route && (
+                  <Link to={route.path} className="link mono" style={{ font: 'var(--t-caption1)' }}>
+                    {route.path}
+                  </Link>
+                )}
+              </div>
+              <div style={{ font: 'var(--t-label1)', color: 'var(--text-strong)', marginBottom: 4 }}>
+                {hyp.statement}
+              </div>
+              <div className="muted" style={{ font: 'var(--t-caption1)' }}>
+                지표 · {hyp.metric}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+              <span className="muted tnum" style={{ font: 'var(--t-caption1)' }}>
+                {hyp.metricFrom}
+              </span>{' '}
+              <span aria-hidden="true">→</span>{' '}
+              <b className="tnum" style={{ font: 'var(--t-label1-strong)', color: 'var(--c-violet-45)' }}>
+                {hyp.metricTo}
+              </b>
+            </div>
+          </li>
+        )
+      })}
     </ul>
   )
 }

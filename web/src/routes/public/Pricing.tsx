@@ -17,6 +17,7 @@ export function Pricing() {
     <>
       {/* 1. Tier 3 + Active Operator 정의 */}
       <section className="sec" style={{ paddingBottom: 32 }} aria-labelledby="sec-tiers">
+        <div className="pub-inner">
         <div style={{ textAlign: 'center', maxWidth: 760, margin: '0 auto 28px' }}>
           <div className="eyebrow-pub">가격 · 결제 단위는 Active Operator</div>
           <h2 id="sec-tiers">일하는 사람만 카운트합니다.</h2>
@@ -71,10 +72,12 @@ export function Pricing() {
             카운트는 매일 자정 (KST) 갱신되며, 워크스페이스 → Members 화면에서 실시간 확인할 수 있습니다.
           </div>
         </div>
+        </div>
       </section>
 
       {/* 2. 비교 표 */}
-      <section className="sec alt" aria-labelledby="sec-compare">
+      <section className="sec alt center" aria-labelledby="sec-compare">
+        <div className="pub-inner">
         <div className="eyebrow-pub">전체 비교</div>
         <h2 id="sec-compare">티어 별 {PUBLIC_COMPARE.length} 항목.</h2>
         <p className="lead">
@@ -102,13 +105,15 @@ export function Pricing() {
             </tbody>
           </table>
         </div>
+        </div>
       </section>
 
       {/* 3. FAQ */}
-      <section className="sec" aria-labelledby="sec-faq">
+      <section className="sec center" aria-labelledby="sec-faq">
+        <div className="pub-inner">
         <div className="eyebrow-pub">FAQ</div>
         <h2 id="sec-faq">결제 전 자주 묻는 5 가지.</h2>
-        <div className="faq" style={{ maxWidth: 820 }}>
+        <div className="faq" style={{ maxWidth: 820, margin: '0 auto' }}>
           {PUBLIC_FAQ_PRICING.map((f, i) => (
             <details key={f.q} open={i === 0}>
               <summary>{f.q}</summary>
@@ -127,10 +132,12 @@ export function Pricing() {
           </Link>
           에서 솔직하게 적었습니다.
         </div>
+        </div>
       </section>
 
       {/* 4. 다크 CTA */}
       <section className="sec dark">
+        <div className="pub-inner">
         <div
           style={{
             display: 'flex',
@@ -149,6 +156,7 @@ export function Pricing() {
           <Link to="/signup" className="btn primary lg">
             5분 안에 워크스페이스 만들기 <Icon name="arrow" size={14} />
           </Link>
+        </div>
         </div>
       </section>
     </>

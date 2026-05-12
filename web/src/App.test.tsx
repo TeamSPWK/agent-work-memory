@@ -1164,7 +1164,7 @@ describe('AppShell + product IA', () => {
     ).toBeInTheDocument()
   })
 
-  it('PublicShell mounts topbar + footer + page-band on /landing with hyp banner', () => {
+  it('PublicShell mounts topbar + footer + no dev hyp banner on /landing', () => {
     render(
       <MemoryRouter initialEntries={['/landing']}>
         <Routes>
@@ -1177,8 +1177,13 @@ describe('AppShell + product IA', () => {
 
     expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
-    // landing 가설 배너(region) — 'Hero scroll-depth · CTA 클릭율' 지표
-    expect(screen.getByRole('region', { name: '가설 검증 배너' })).toBeInTheDocument()
+    // 외부 페이지에서 dev 가설 배너는 표시되지 않음 — /dev/status로 분리됨
+    expect(
+      screen.queryByRole('region', { name: '가설 검증 배너' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('region', { name: '외부 페이지 안내' }),
+    ).not.toBeInTheDocument()
     // top nav 메뉴 4개 (footer link와 분리)
     const topMenu = screen.getByRole('navigation', { name: '외부 메뉴' })
     expect(screen.getByLabelText('AWM 홈')).toBeInTheDocument()
@@ -1191,13 +1196,13 @@ describe('AppShell + product IA', () => {
     // 사업자 미등록 placeholder
     expect(screen.getByText('[사업자 등록 후 입력]')).toBeInTheDocument()
     expect(screen.getByText('[신고 후 입력]')).toBeInTheDocument()
-    // Landing h1 (이전 PublicStub h2 → 새 Landing h1)
+    // Landing h1
     expect(
       screen.getByRole('heading', { level: 1, name: /AI가 만든 변경을/ }),
     ).toBeInTheDocument()
   })
 
-  it('PublicShell shows non-hyp band on routes without PUBLIC_HYPS (e.g. /company)', () => {
+  it('PublicShell — /company도 dev 안내 배너 없이 깔끔', () => {
     render(
       <MemoryRouter initialEntries={['/company']}>
         <Routes>
@@ -1209,10 +1214,36 @@ describe('AppShell + product IA', () => {
     )
 
     expect(
-      screen.getByRole('region', { name: '외부 페이지 안내' }),
-    ).toBeInTheDocument()
-    expect(screen.getByText('측정 지표 없음')).toBeInTheDocument()
+      screen.queryByRole('region', { name: '외부 페이지 안내' }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText('측정 지표 없음')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '회사', level: 2 })).toBeInTheDocument()
+  })
+
+  it('StatusBoard — 외부 페이지 가설 섹션이 PUBLIC_HYPS를 표시한다', () => {
+    render(
+      <MemoryRouter initialEntries={['/dev/status']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="dev/status" element={<StatusBoard />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    const sectionSummary = screen.getByText(/외부 페이지 가설/)
+    // 가설 영역 토글 펼치기
+    fireEvent.click(sectionSummary)
+    // landing/pricing/signup 가설 statement 모두 표시
+    expect(
+      screen.getByText(/30초 안에 핵심 가치 \+ CTA 클릭이 발생하면/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/티어 \+ Active Operator 정의 \+ 디자인 파트너 50%/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/이메일 \+ Google OAuth \+ 한국어 카피로/),
+    ).toBeInTheDocument()
   })
 
   it('12 PublicStub routes dispatch — landing(S2.a) / pricing(S2.b) 별도', () => {

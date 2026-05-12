@@ -14,9 +14,9 @@ import {
 export function Landing() {
   return (
     <>
-      {/* 1. Hero */}
+      {/* 1. Hero — Toss style: 1-column centered */}
       <section className="hero" aria-label="Hero">
-        <div>
+        <div className="pub-inner">
           <div className="eyebrow-row">
             <span className="law-chip">
               <Icon name="audit" size={14} /> 인공지능기본법 §27 · 2026-01-22 시행됨
@@ -43,53 +43,54 @@ export function Landing() {
             선착순 5팀 · 격주 인터뷰 1회 조건 · 50% 할인
           </div>
         </div>
+      </section>
 
-        <aside className="right" aria-label="오늘의 미설명 세션 미리보기">
-          <div
-            style={{
-              font: 'var(--t-caption1-strong)',
-              color: 'var(--text-assistive)',
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
-              padding: '4px 4px 6px',
-            }}
-          >
+      {/* 1b. Operator preview — separate section under hero */}
+      <section className="sec tight" aria-labelledby="sec-preview">
+        <div className="pub-inner">
+          <div className="eyebrow-pub" style={{ textAlign: 'center' }}>
             오늘의 미설명 세션 · v0.1 미리보기
           </div>
-          {PUBLIC_HERO_PREVIEW.map((p) => (
-            <div key={p.title} className="pp">
-              <div className={'icn ' + p.kind} aria-hidden="true">
-                <Icon name={p.iconName} size={16} />
+          <h2 id="sec-preview" className="sr-only">
+            오늘의 미설명 세션 미리보기
+          </h2>
+          <aside className="preview-card" aria-label="오늘의 미설명 세션 미리보기">
+            {PUBLIC_HERO_PREVIEW.map((p) => (
+              <div key={p.title} className="pp">
+                <div className={'icn ' + p.kind} aria-hidden="true">
+                  <Icon name={p.iconName} size={16} />
+                </div>
+                <div>
+                  <div className="ttl">{p.title}</div>
+                  <p className="sub">{p.sub}</p>
+                </div>
+                <Icon name="chev" size={14} />
               </div>
-              <div>
-                <div className="ttl">{p.title}</div>
-                <p className="sub">{p.sub}</p>
-              </div>
-              <Icon name="chev" size={14} />
+            ))}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '6px 4px 0',
+                font: 'var(--t-caption1)',
+                color: 'var(--text-assistive)',
+              }}
+            >
+              <span>미설명 세션 비율</span>
+              <span>
+                <b style={{ color: 'var(--text-strong)' }}>
+                  62% <Icon name="arrow" size={10} /> 14%
+                </b>{' '}
+                · 4주 운영 mock
+              </span>
             </div>
-          ))}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              padding: '6px 4px 0',
-              font: 'var(--t-caption1)',
-              color: 'var(--text-assistive)',
-            }}
-          >
-            <span>미설명 세션 비율</span>
-            <span>
-              <b style={{ color: 'var(--text-strong)' }}>
-                62% <Icon name="arrow" size={10} /> 14%
-              </b>{' '}
-              · 4주 운영 mock
-            </span>
-          </div>
-        </aside>
+          </aside>
+        </div>
       </section>
 
       {/* 2. 가치 3블록 */}
-      <section className="sec" aria-labelledby="sec-value">
+      <section className="sec center" aria-labelledby="sec-value">
+        <div className="pub-inner">
         <div className="eyebrow-pub">3 가지 가설 · v0.1에서 검증 시작</div>
         <h2 id="sec-value">회상 · 감사 · 1차 원인 — 사이클 한 바퀴.</h2>
         <p className="lead">
@@ -131,10 +132,12 @@ export function Landing() {
             </article>
           ))}
         </div>
+        </div>
       </section>
 
       {/* 3. 사회적 증거 */}
-      <section className="sec alt" aria-labelledby="sec-news">
+      <section className="sec alt center" aria-labelledby="sec-news">
+        <div className="pub-inner">
         <div className="eyebrow-pub">왜 지금인가 · 외부 보도 사례</div>
         <h2 id="sec-news">AI가 만든 결과, 사람이 더 이상 설명할 수 없다.</h2>
         <p className="lead">
@@ -154,10 +157,12 @@ export function Landing() {
             </article>
           ))}
         </div>
+        </div>
       </section>
 
       {/* 4. 어떻게 작동하는가 */}
-      <section className="sec" aria-labelledby="sec-flow">
+      <section className="sec center" aria-labelledby="sec-flow">
+        <div className="pub-inner">
         <div className="eyebrow-pub">어떻게 작동하는가</div>
         <h2 id="sec-flow">한 사이클에 4 단계.</h2>
         <p className="lead">
@@ -172,10 +177,12 @@ export function Landing() {
             </div>
           ))}
         </div>
+        </div>
       </section>
 
       {/* 5. 인공지능기본법 카드 */}
-      <section className="sec alt" aria-labelledby="sec-law">
+      <section className="sec alt center" aria-labelledby="sec-law">
+        <div className="pub-inner">
         <div className="eyebrow-pub">인공지능기본법 §27 · 7대 원칙 자동 보고서</div>
         <h2 id="sec-law">5개 항목 ok · 2개 보강 권고 — PDF로 한 번에.</h2>
         <p className="lead">
@@ -223,10 +230,12 @@ export function Landing() {
             ))}
           </ul>
         </div>
+        </div>
       </section>
 
       {/* 6. 1인 운영 fold-below */}
       <section className="sec tight">
+        <div className="pub-inner">
         <div className="solo-fold">
           <div className="who">
             <div className="pic" aria-hidden="true">J</div>
@@ -247,10 +256,12 @@ export function Landing() {
             회사 페이지 <Icon name="chev" size={12} />
           </Link>
         </div>
+        </div>
       </section>
 
       {/* 7. 가격 미리보기 */}
-      <section className="sec alt" aria-labelledby="sec-tiers">
+      <section className="sec alt center" aria-labelledby="sec-tiers">
+        <div className="pub-inner">
         <div className="eyebrow-pub">가격 미리보기</div>
         <h2 id="sec-tiers">3 티어 · 디자인 파트너 5팀 한정 50%.</h2>
         <p className="lead">
@@ -293,13 +304,15 @@ export function Landing() {
             전체 비교 표 · FAQ 5개 보기 <Icon name="chev" size={12} />
           </Link>
         </div>
+        </div>
       </section>
 
       {/* 8. FAQ */}
-      <section className="sec" aria-labelledby="sec-faq">
+      <section className="sec center" aria-labelledby="sec-faq">
+        <div className="pub-inner">
         <div className="eyebrow-pub">FAQ</div>
         <h2 id="sec-faq">자주 묻는 5 가지.</h2>
-        <div className="faq" style={{ maxWidth: 820 }}>
+        <div className="faq" style={{ maxWidth: 820, margin: '0 auto' }}>
           {PUBLIC_FAQ_LANDING.map((f, i) => (
             <details key={f.q} open={i === 0}>
               <summary>{f.q}</summary>
@@ -307,10 +320,12 @@ export function Landing() {
             </details>
           ))}
         </div>
+        </div>
       </section>
 
       {/* 9. Footer CTA strip */}
       <section className="sec dark">
+        <div className="pub-inner">
         <div
           style={{
             display: 'flex',
@@ -363,6 +378,7 @@ export function Landing() {
               가격 보기
             </Link>
           </div>
+        </div>
         </div>
       </section>
     </>

@@ -1,12 +1,10 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   PUBLIC_BIZ,
-  PUBLIC_HYPS,
   PUBLIC_ROUTES,
   PUBLIC_TOP_NAV,
   bizNoOrPlaceholder,
   ecommNoOrPlaceholder,
-  type PublicHyp,
   type PublicPageId,
 } from '../lib/seed/public'
 
@@ -15,40 +13,10 @@ function pageIdFromPath(pathname: string): PublicPageId | null {
   return match?.id ?? null
 }
 
-function PageBand({ hyp }: { hyp: PublicHyp | undefined }) {
-  if (!hyp) {
-    return (
-      <div className="pub-banner none" role="region" aria-label="외부 페이지 안내">
-        <div>
-          <div className="ttl">Public · 외부 페이지</div>
-          <div className="stm">가설 검증 대상 아님 · 미가입자 도달용 페이지</div>
-        </div>
-        <div className="meta">측정 지표 없음</div>
-        <div className="muted tnum">flat top-bar + footer</div>
-      </div>
-    )
-  }
-  return (
-    <div className="pub-banner" role="region" aria-label="가설 검증 배너">
-      <div>
-        <div className="ttl">{hyp.metric}</div>
-        <div className="stm">{hyp.statement}</div>
-      </div>
-      <div className="meta">
-        <span>검증 지표</span>
-        <b>{hyp.metric}</b>
-        <span className="muted tnum">{hyp.metricFrom}</span>
-        <span aria-hidden="true">→</span>
-        <b className="tnum">{hyp.metricTo}</b>
-      </div>
-      <div className="muted tnum">v0.2 · 외부</div>
-    </div>
-  )
-}
-
 function PublicTopbar({ active }: { active: PublicPageId | null }) {
   return (
     <header className="pub-topbar" role="banner">
+      <div className="pub-inner pub-topbar-inner">
       <div className="left">
         <Link to="/landing" className="brand" aria-label="AWM 홈">
           <span className="mark" aria-hidden="true">A</span>
@@ -78,6 +46,7 @@ function PublicTopbar({ active }: { active: PublicPageId | null }) {
           5분 시작
         </Link>
       </div>
+      </div>
     </header>
   )
 }
@@ -85,6 +54,7 @@ function PublicTopbar({ active }: { active: PublicPageId | null }) {
 function PublicFooter() {
   return (
     <footer className="pub-footer" role="contentinfo">
+      <div className="pub-inner pub-footer-inner">
       <div className="top">
         <div className="brand-col">
           <div className="brand-row">
@@ -140,6 +110,7 @@ function PublicFooter() {
           마지막 개정 {PUBLIC_BIZ.updated}
         </div>
       </div>
+      </div>
     </footer>
   )
 }
@@ -147,11 +118,9 @@ function PublicFooter() {
 export function PublicShell() {
   const { pathname } = useLocation()
   const active = pageIdFromPath(pathname)
-  const hyp = active ? PUBLIC_HYPS[active] : undefined
 
   return (
     <div className="pub-shell">
-      <PageBand hyp={hyp} />
       <PublicTopbar active={active} />
       <main className="pub-main">
         <Outlet />
