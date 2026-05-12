@@ -118,10 +118,10 @@ export const SCREENS: ScreenRow[] = [
   { group: 'H2', label: 'Plan & Billing', route: '/settings?tab=billing', status: 'pending', sprint: 'S2.10' },
   // H3
   { group: 'H3', label: 'Risk Radar', route: '/risk', status: 'done', sprint: 'S2.7.a' },
-  { group: 'H3', label: 'Incident Replay', route: '/incidents/:id?tab=replay', status: 'next', sprint: 'S2.7.b' },
-  { group: 'H3', label: 'Event Detail · 3분리', route: '/incidents/:id?tab=event', status: 'pending', sprint: 'S2.7.c' },
+  { group: 'H3', label: 'Incident Replay', route: '/incidents/:id?tab=replay', status: 'done', sprint: 'S2.7.b' },
+  { group: 'H3', label: 'Event Detail · 3분리', route: '/incidents/:id?tab=event', status: 'next', sprint: 'S2.7.c' },
   { group: 'H3', label: 'Reviewer Brief 연결', route: '/incidents/:id?tab=reviewer', status: 'pending', sprint: 'S2.7.c' },
-  { group: 'H3', label: 'Incident Note', route: '/incidents/:id?tab=note', status: 'pending', sprint: 'S2.7.b' },
+  { group: 'H3', label: 'Incident Note', route: '/incidents/:id?tab=note', status: 'done', sprint: 'S2.7.b' },
   // H4 (Onboarding)
   { group: 'H4', label: '워크스페이스 생성', route: '/onboarding/ws', status: 'stub', sprint: 'S2.8' },
   { group: 'H4', label: 'AI 도구 connect', route: '/onboarding/connect', status: 'stub', sprint: 'S2.8' },
@@ -192,13 +192,14 @@ export const PROTOTYPE_MARKS: PrototypeMark[] = [
   { id: 9, trace: 'SESSION_DETAIL/ExplainBack/Share/SelfRecall 초기값 s-024/s-025 고정', resolveWhen: 'S5 실 데이터 자동 해소', note: '현재 mock 한계 배지로 정직성' },
   { id: 10, trace: 'Workspace 셀렉터 mock 이름', resolveWhen: 'S5 실 워크스페이스 연결' },
   { id: 11, trace: '페르소나·다크 토글 Zustand 메모리 only', resolveWhen: 'S5+ localStorage 필요 시' },
+  { id: 12, trace: 'Risk Radar 시그널의 9 session id(s-003/008/009/011/012/013/014/017/018)가 sessions seed 미포함', resolveWhen: 'S5 실 데이터 자동 해소', note: '클릭 시 SessionDetail fallback 메시지 — D6 결정' },
 ]
 
 export const PROJECT_META = {
   name: 'Agent Work Memory',
   tagline: 'AI Audit Trail SaaS for Korean SMB',
   ownerEmail: 'jay@spacewalk.tech',
-  currentCommit: '261d2c9',
+  currentCommit: 'b4d93fb',
   lastUpdated: '2026-05-11',
 }
 
@@ -211,11 +212,11 @@ export type NextAction = {
 
 /** "지금 해야 할 한 가지." Linear inbox 패러다임. */
 export const NEXT_ACTION: NextAction = {
-  sprint: 'S2.7.b',
-  title: 'Incident hub + Replay + Note — H3 2/5',
+  sprint: 'S2.7.c',
+  title: 'Event Detail + Reviewer Brief — H3 5/5 마무리',
   detail:
-    '/incidents/:id 4탭 wrapper(replay/event/reviewer/note) 도입 + Replay canvas + Note timeline. Event Detail · Reviewer Brief는 S2.7.c.',
-  primaryRoute: '/incidents/INC-26-014',
+    '/incidents/:id 4탭 wrapper의 event/reviewer 탭 채움. Event 핵심 fact + 3분리 + 분류 라디오, ReviewerBrief split(의도/결과) + match-line 3건. 완료 시 H3 사이클 닫힘.',
+  primaryRoute: '/incidents/INC-26-014?tab=event',
 }
 
 /** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */

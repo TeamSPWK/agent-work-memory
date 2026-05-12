@@ -11,6 +11,7 @@ import { Share } from './screens/Share'
 import { SelfRecall } from './screens/SelfRecall'
 import { Audit } from './screens/Audit'
 import { Risk } from './screens/Risk'
+import { Incident } from './screens/Incident'
 import { StatusBoard } from './screens/dev/StatusBoard'
 import { NAV_ITEMS } from './lib/seed/navigation'
 
@@ -425,6 +426,126 @@ describe('AppShell + product IA', () => {
     expect(alert).toHaveTextContent('prod 사고 발생')
     const cta = screen.getByRole('link', { name: /Incident Replay$/ })
     expect(cta).toHaveAttribute('href', '/incidents/INC-26-014')
+  })
+
+  it('Incident defaults to replay tab with canvas + 3 buckets + KPI', () => {
+    render(
+      <MemoryRouter initialEntries={['/incidents/INC-26-014']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="incidents/:id" element={<Incident />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', {
+        name: '지원자 목록 페이지 9분간 504 (prod)',
+        level: 1,
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Replay', selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: '사고 타임라인 캔버스' })).toBeInTheDocument()
+    expect(screen.getByText('원인 후보')).toBeInTheDocument()
+    expect(screen.getByText('확실한 증거')).toBeInTheDocument()
+    expect(screen.getByText('불명확')).toBeInTheDocument()
+    expect(screen.getByText('관련 이벤트')).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: 'system 감지 mock 한계 안내' })).toBeInTheDocument()
+  })
+
+  it('Incident replay canvas mark click updates right-side detail', () => {
+    render(
+      <MemoryRouter initialEntries={['/incidents/INC-26-014']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="incidents/:id" element={<Incident />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    // 기본 선택은 focus=true 인 e3 (prod 인덱스 마이그레이션 실행)
+    expect(screen.getByText('prod 인덱스 마이그레이션 실행')).toBeInTheDocument()
+
+    // e8 (관리자 세션 만료) mark 클릭 → 우측 detail 갱신
+    fireEvent.click(screen.getByRole('button', { name: /16:36 · 관리자 세션 만료/ }))
+    expect(
+      screen.getByRole('heading', { name: '이벤트 detail' }),
+    ).toBeInTheDocument()
+    const detailHeading = screen.getAllByText('관리자 세션 만료 (정시 갱신)')
+    expect(detailHeading.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('Incident note tab renders timeline + draft textarea, append adds a row', () => {
+    render(
+      <MemoryRouter initialEntries={['/incidents/INC-26-014?tab=note']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="incidents/:id" element={<Incident />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Incident Note', level: 1 })).toBeInTheDocument()
+    expect(
+      screen.getByText(/prod 마이그레이션 직후 시간 일치/),
+    ).toBeInTheDocument()
+    const textarea = screen.getByLabelText('새 메모')
+    expect(textarea).toBeInTheDocument()
+
+    const saveBtn = screen.getByRole('button', { name: /메모 저장/ })
+    expect(saveBtn).toBeDisabled()
+
+    fireEvent.change(textarea, { target: { value: '16:42 — lock 해소 확인. 응답시간 회복.' } })
+    expect(saveBtn).not.toBeDisabled()
+    fireEvent.click(saveBtn)
+    expect(screen.getByText(/lock 해소 확인. 응답시간 회복/)).toBeInTheDocument()
+  })
+
+  it('Incident event tab renders S2.7.c placeholder', () => {
+    render(
+      <MemoryRouter initialEntries={['/incidents/INC-26-014?tab=event']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="incidents/:id" element={<Incident />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText(/Event Detail · 3분리 — 미구현/)).toBeInTheDocument()
+    expect(screen.getByText(/S2\.7\.c sub-sprint에서 채웁니다/)).toBeInTheDocument()
+  })
+
+  it('Incident reviewer tab renders S2.7.c placeholder', () => {
+    render(
+      <MemoryRouter initialEntries={['/incidents/INC-26-014?tab=reviewer']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="incidents/:id" element={<Incident />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText(/Reviewer Brief — 미구현/)).toBeInTheDocument()
+  })
+
+  it('Incident falls back to replay when tab is unknown + mock incident notice for unknown id', () => {
+    render(
+      <MemoryRouter initialEntries={['/incidents/INC-99-999?tab=bogus']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="incidents/:id" element={<Incident />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('tab', { name: 'Replay', selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: 'mock incident 안내' })).toBeInTheDocument()
   })
 
   it('StatusBoard renders phases + sprints + screens matrix', () => {

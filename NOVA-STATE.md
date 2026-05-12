@@ -1,7 +1,7 @@
 # Nova State
 
-- **Goal**: S2.7.a Risk Radar 완료(`/risk`) → S2.7.b Incident hub + Replay + Note 진입 대기
-- **Phase**: frontend ingest — m2 S1+S2.1~S2.6+S2.7.a + DT.1 done. H1 6/6 + H2 4/5(Billing 이연) + H3 1/5. 화면 11/28+1.
+- **Goal**: S2.7.b Incident hub + Replay + Note 완료 → S2.7.c Event Detail + Reviewer Brief 진입 대기
+- **Phase**: frontend ingest — m2 S1+S2.1~S2.6+S2.7.a~.b + DT.1 done. H1 6/6 + H2 4/5(Billing 이연) + H3 3/5. 화면 13/28+1.
 - **Blocker**: 없음. 후속 결정·프로토타입 흔적은 `docs/projects/STATUS.md` + `/dev/status` 대시보드 참조.
 
 ## Tasks
@@ -17,8 +17,8 @@
 | m2 S2.5.c SelfRecall | done | PASS(qa, 조건부) — split layout, match-line ok/extra, 핸드오프 textarea, 셀프 hardcode 주석 | screens/SelfRecall.tsx |
 | m2 S2.6 Audit (H2 4/5) | done | PASS(qa, 조건부) — 4탭 ?tab= 라우팅 + KPI weak 버튼 + mock 한계 배지(role=status) + Billing은 /settings?tab=export 이연 | screens/Audit.tsx + audit/{AuditTrail,Principles,Integrity,PdfPreview}.tsx + seed/audit.ts |
 | m2 S2.7.a Risk Radar (H3 1/5) | done | PASS(qa) — 8 risk-tile + DB inline 4행 + 7 카테고리 신호 리스트 + 사고 alert cta → /incidents/INC-26-014 | screens/Risk.tsx + seed/risk.ts |
-| **m2 S2.7.b Incident hub + Replay + Note (H3 2/5)** | ⏭ NEXT | — | /incidents/:id 4탭 wrapper + Replay canvas + Note timeline |
-| m2 S2.7.c Event Detail + Reviewer Brief (H3 5/5) | pending | — | S2.7.b 완료 후 |
+| m2 S2.7.b Incident hub + Replay + Note (H3 3/5) | done | PASS(qa) — Incident 4탭 wrapper(replay/note 채움, event/reviewer는 S2.7.c placeholder) + incident-canvas 2D timeline + 3 bucket + Note composer + system 감지 mock 배지 | screens/Incident.tsx + incident/{Replay,Note}.tsx + seed/incident.ts |
+| **m2 S2.7.c Event Detail + Reviewer Brief (H3 5/5)** | ⏭ NEXT | — | event/reviewer 탭 채움, 4탭 모두 활성 |
 | m2 S2.8+ Workspace/Settings/Onboarding | pending | — | S2.7 완료 후 |
 | m2 S1.1 외부 서비스 (Supabase Tokyo · Vercel · 도메인) | pending | — | 사용자 외부 계정 단계 |
 | 시안 → 코드 이식 (m2.5 외부 페이지) | pending | — | m2 S2 완료 후 |
@@ -45,6 +45,7 @@
 | — | — | — |
 
 ## Last Activity
+- m2 S2.7.b Incident hub + Replay + Note (qa) → PASS — useSearchParams ?tab= 4탭(replay/event/reviewer/note), Incident 래퍼 + 인라인 PlaceholderScreen 2탭, Replay incident-canvas 2D timeline (xPct + sevSize map + ic-mark clickable + ic-axis T0), 3 bucket(likely/verified/unknown), KPI 4, 우측 detail (selected event), system 감지 mock 배지(role=status), Note timeline + 메모 composer(자동 timestamp + draft preview) + Postmortem 양식. mock incident(INC-99-999) fallback 배지. PROTOTYPE_MARKS 12 추가(D6 결정). test 28/28 | 2026-05-12
 - m2 S2.7.a Risk Radar (qa) → PASS — 8 risk-tile(role=tablist), DB inline 4행 + RISK_SIGNALS 7 카테고리 전환, 사고 alert cta(role=alert) → /incidents/INC-26-014, test 22/22 | 2026-05-12
 - m2 S2.6 Audit (qa + Evaluator) → PASS(조건부) — /audit 4탭(trail/principles/integrity/pdf), useSearchParams 라우팅, AUDIT_EVENTS 8건+broken 1건, COMPLIANCE 7원칙(ok5/warn2), Integrity mock 한계 배지(role=status), Billing은 S2.10 이연(/settings?tab=export Link), test 19/19, Evaluator surgical fix 2건 반영(KPI 3·4 weak 버튼 + PDF 시각 슬라이스) | 2026-05-12
 - DT.1.2 Dashboard 토스 스타일 전면 재설계 → PASS — 큰 숫자 "6/28" + 우측 그룹 mini bars + Phase 가로 stepper(●─●─○─○) + Sprint 컴팩트 리스트(✓/→/◯) + 매트릭스·보류·흔적 details collapse. 한 화면 1 task 원칙 충족 | 2026-05-11

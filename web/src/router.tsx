@@ -10,6 +10,7 @@ import { Share } from './screens/Share'
 import { SelfRecall } from './screens/SelfRecall'
 import { Audit } from './screens/Audit'
 import { Risk } from './screens/Risk'
+import { Incident } from './screens/Incident'
 import { StatusBoard } from './screens/dev/StatusBoard'
 import { ONBOARDING_STEPS } from './lib/seed/navigation'
 
@@ -27,7 +28,7 @@ export const router = createBrowserRouter([
       { path: 'sessions/:id/share', element: <Share /> },
       { path: 'audit', element: <Audit /> },
       { path: 'risk', element: <Risk /> },
-      { path: 'incidents/:id', element: <PlaceholderScreen label="Incident" /> },
+      { path: 'incidents/:id', element: <Incident /> },
       { path: 'workspace', element: <PlaceholderScreen label="Workspace" /> },
       { path: 'settings', element: <PlaceholderScreen label="Settings" /> },
       { path: 'dev/status', element: <StatusBoard /> },
