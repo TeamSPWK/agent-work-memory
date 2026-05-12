@@ -185,7 +185,7 @@ export function Workspace() {
             >
               <li>AI 도구 1개 이상 연결</li>
               <li>최근 세션 1건 자동 import (백그라운드 30초~2분)</li>
-              <li>Reviewer 1명 지정 → 7대 원칙 §1 활성</li>
+              <li>Reviewer 1명 지정 → 검토자 권한 활성</li>
               <li>Today에 첫 세션 행 표시 → 완료</li>
             </ol>
             <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 8 }}>
@@ -201,7 +201,7 @@ export function Workspace() {
               운영 원칙
             </div>
             <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 4 }}>
-              1인 운영 self-serve. 24/7 지원은 없습니다. 대신 워크스페이스 데이터는 본인이 언제든
+              Self-serve 셋업 · 24/7 지원은 없습니다. 대신 워크스페이스 데이터는 본인이 언제든
               JSON으로 export 가능 (Settings · Profile).
             </div>
           </div>

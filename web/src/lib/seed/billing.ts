@@ -2,20 +2,23 @@ export type PlanUsage = {
   plan: string
   price: number
   activeOps: number
-  limit: number
+  limit: number | string
   nextBillAt: string
 }
 
+/* 외부 Pricing 페이지(PUBLIC_TIERS)와 동일 SSOT.
+ * 디자인 파트너 50% 적용 후 월 ₩50,000 → publicLanding.ts Team priceStrike와 일치.
+ * Active Operator 정의: 지난 30일 1회 이상 AI 작업이 기록된 사용자. */
 export const PLAN_USAGE: PlanUsage = {
-  plan: 'Starter',
+  plan: 'Team',
   price: 100000,
   activeOps: 5,
-  limit: 5,
+  limit: '무제한',
   nextBillAt: '2026-06-01',
 }
 
 export type BillingPlan = {
-  id: 'free' | 'starter' | 'team' | 'pro' | 'ent'
+  id: 'free' | 'team' | 'business'
   name: string
   price: number | null
   ops: number | string
@@ -26,12 +29,12 @@ export type BillingPlan = {
   featured?: boolean
 }
 
+/* 외부 PUBLIC_TIERS와 가격·이름·보존·export 정합.
+ * Free 보존 7일, Team ₩100,000, Business ₩300,000. */
 export const BILLING_PLANS: BillingPlan[] = [
-  { id: 'free',    name: 'Free',       price: 0,      ops: 1,    retention: '30일', export: false,           sso: false },
-  { id: 'starter', name: 'Starter',    price: 100000, ops: 5,    retention: '90일', export: 'CSV',           sso: false, current: true },
-  { id: 'team',    name: 'Team',       price: 250000, ops: 15,   retention: '1년',  export: 'CSV+PDF',       sso: false, featured: true },
-  { id: 'pro',     name: 'Pro',        price: 500000, ops: 30,   retention: '3년',  export: 'CSV+PDF+JSON',  sso: true },
-  { id: 'ent',     name: 'Enterprise', price: null,   ops: '협의', retention: '협의', export: '전체',         sso: 'SCIM' },
+  { id: 'free',     name: 'Free',     price: 0,      ops: 1,        retention: '7일',  export: false,             sso: false },
+  { id: 'team',     name: 'Team',     price: 100000, ops: '무제한',  retention: '90일', export: 'PDF · CSV',       sso: false, current: true, featured: true },
+  { id: 'business', name: 'Business', price: 300000, ops: '무제한',  retention: '5년',  export: 'PDF 양식 커스터마이즈', sso: 'SCIM' },
 ]
 
 export type InvoiceState = 'issued' | 'pending'
@@ -72,7 +75,7 @@ export type UsageAlert = {
 export const USAGE_ALERTS: UsageAlert[] = [
   { id: 'op80',    label: 'Active OP 80% 도달',          defaultOn: true },
   { id: 'op100',   label: 'Active OP 100% 도달 (한도 초과)', defaultOn: true },
-  { id: 'amount20', label: '월 청구액 ±20% 변동',           defaultOn: false },
+  { id: 'amount20', label: '월 청구액 ±20% 변동',           defaultOn: true },
 ]
 
 export type BizInfo = {
@@ -95,7 +98,7 @@ export type PartnerDiscount = {
 }
 
 export const PARTNER_DISCOUNT: PartnerDiscount = {
-  label: '6개월 50% 할인 적용 중',
+  label: '디자인 파트너 50% 할인 적용 중 (Team)',
   period: '2026-04 ~ 2026-09 · 월 50,000원 (VAT 별도). 만료 60일 전 안내.',
   monthly: 50000,
 }

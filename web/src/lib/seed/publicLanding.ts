@@ -85,8 +85,8 @@ export const PUBLIC_PRINCIPLES: PrincipleRow[] = [
   { name: '책임성',      state: 'ok',   note: 'Operator·Reviewer 역할별 책임 추적' },
   { name: '안전성',      state: 'ok',   note: 'Risk Radar 8 카테고리 사전 감지' },
   { name: '공정성',      state: 'ok',   note: 'Reviewer 무작위 배정 옵션' },
-  { name: '프라이버시',  state: 'ok',   note: '원문 transcript 미저장 (§11.5)' },
-  { name: '인간 감독',   state: 'warn', note: 'Reviewer SLA 1인 운영 환경에선 영업시간 한정 · 보강 권고' },
+  { name: '프라이버시',  state: 'ok',   note: '원문 transcript 미저장 — 개인정보처리방침 참고' },
+  { name: '인간 감독',   state: 'warn', note: 'Reviewer SLA 영업시간 한정 · 보강 권고' },
   { name: '관리 책임',   state: 'warn', note: '데이터 거주국 Tokyo, 5년 보존 정책 운영 매뉴얼 보강 필요' },
 ]
 
@@ -110,7 +110,7 @@ export const PUBLIC_TIERS: Tier[] = [
   {
     id: 'free',
     name: 'Free',
-    desc: '1인 인디 / 평가용 단일 사용자',
+    desc: '인디 · 평가용 단일 사용자',
     price: 0,
     priceLabel: '₩0',
     per: '/ mo',
@@ -121,7 +121,7 @@ export const PUBLIC_TIERS: Tier[] = [
       { ok: true,  t: 'Audit 보존 7일' },
       { ok: false, t: '해시 체인 무결성 검증' },
       { ok: false, t: '인공지능기본법 §27 PDF export' },
-      { ok: true,  t: 'H1 회상 · H4 온보딩 5화면' },
+      { ok: true,  t: '회상 사이클 · 빠른 온보딩 5화면' },
       { ok: false, t: 'Reviewer 응답 보장 (영업시간)' },
     ],
   },
@@ -141,7 +141,7 @@ export const PUBLIC_TIERS: Tier[] = [
       { ok: true, t: 'Audit 보존 90일' },
       { ok: true, t: '해시 체인 무결성 검증' },
       { ok: true, t: '인공지능기본법 §27 PDF export 무제한' },
-      { ok: true, t: 'H1·H2·H3·H4 전체 화면' },
+      { ok: true, t: '회상·감사·사고 원인·온보딩 전체 화면' },
       { ok: true, t: 'Reviewer 응답 보장 (영업시간 1~2 영업일)' },
     ],
   },
@@ -174,7 +174,7 @@ export const PUBLIC_FAQ_LANDING: FaqItem[] = [
   },
   {
     q: '개인도 쓸 수 있나요? 학생도?',
-    a: '네. Free 플랜이 1인 인디 / 학생 / 평가용으로 제공됩니다. 결제 단위는 *지난 30일 1회 이상 AI 작업이 기록된 사용자(Active Operator)* 이며, 혼자 쓰면 결제 없이 평가할 수 있습니다.',
+    a: '네. Free 플랜이 인디 · 학생 · 평가용으로 제공됩니다. 결제 단위는 *지난 30일 1회 이상 AI 작업이 기록된 사용자(Active Operator)* 이며, 혼자 쓰면 결제 없이 평가할 수 있습니다.',
   },
   {
     q: 'AI 처음 써보는데 사용할 수 있나요?',
@@ -185,7 +185,7 @@ export const PUBLIC_FAQ_LANDING: FaqItem[] = [
     a: '저장되지 않습니다. 의도 / 변경 / 결과 메타데이터만 해시 체인으로 기록합니다. 가입 · 약관 · 개인정보처리방침에 같은 원칙을 명시합니다.',
   },
   {
-    q: '1인 창업자가 만든다는데, 24/7 응답 보장은?',
+    q: '24/7 응답 보장은 되나요?',
     a: '보장하지 않습니다. 응답은 영업시간 1~2 영업일, 무음 시간대(밤 9시 ~ 오전 8시)에는 자동 응답으로 안내합니다. 상태 페이지는 무음 시간에도 사고 발생 시 즉시 갱신합니다.',
   },
   {
@@ -206,17 +206,17 @@ export type CompareRow = {
 }
 
 export const PUBLIC_COMPARE: CompareRow[] = [
-  { row: 'H1 · Operator 회상 사이클',          free: '✓',         team: '✓',                       biz: '✓' },
-  { row: 'H2 · 감사·결제 트리거',               free: '—',         team: '✓',                       biz: '✓' },
-  { row: 'H3 · 10분 1차 원인 도출',             free: '—',         team: '✓',                       biz: '✓' },
-  { row: 'H4 · 5분 온보딩',                      free: '✓',         team: '✓',                       biz: '✓' },
+  { row: 'Operator 회상 사이클',                 free: '✓',         team: '✓',                       biz: '✓' },
+  { row: '감사·결제 자동 트리거',                free: '—',         team: '✓',                       biz: '✓' },
+  { row: '10분 1차 사고 원인 도출',              free: '—',         team: '✓',                       biz: '✓' },
+  { row: '5분 온보딩',                            free: '✓',         team: '✓',                       biz: '✓' },
   { row: 'Workspace 멤버 (Reviewer 무료)',     free: '1명',       team: '무제한',                   biz: '무제한' },
   { row: 'Audit 보존 기간',                      free: '7일',       team: '90일',                     biz: '5년' },
   { row: 'PDF export (인공지능기본법 §27)',     free: '—',         team: '무제한',                   biz: '양식 커스터마이즈' },
   { row: 'Reviewer 응답 보장',                   free: '—',         team: '1~2 영업일',               biz: '1 영업일' },
   { row: 'Support 시간대',                       free: '—',         team: '영업시간',                 biz: '영업시간 + 무음 시간대 통보' },
   { row: '결제 + 세금계산서',                     free: '—',         team: '토스페이먼츠 · PopBill',   biz: '토스페이먼츠 · PopBill' },
-  { row: '환불 정책',                            free: '해당 없음', team: '전자상거래법 · §7.5',     biz: '전자상거래법 · §7.5' },
+  { row: '환불 정책',                            free: '해당 없음', team: '환불 정책 페이지 참고',   biz: '환불 정책 페이지 참고' },
   { row: 'Data 거주국',                          free: 'Tokyo',     team: 'Tokyo',                    biz: 'Tokyo' },
 ]
 
@@ -234,7 +234,7 @@ export const PUBLIC_FAQ_PRICING: FaqItem[] = [
     a: '예. Settings → Audit Export에서 기간을 선택하면 §27 권고 양식의 PDF가 생성됩니다. SHA-256 hash chain 무결성 검증 결과도 함께 포함됩니다.',
   },
   {
-    q: '1인 운영이라는데 다운타임 보장은?',
+    q: '다운타임·SLA는 어떻게 되나요?',
     a: 'SLA는 제공하지 않습니다. 상태 페이지에 30일 uptime을 공개하며, 무음 시간대 사고도 즉시 갱신합니다. Notifications 페이지에서 무음 시간대를 조정할 수 있습니다.',
   },
   {

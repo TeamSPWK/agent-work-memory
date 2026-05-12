@@ -95,7 +95,7 @@ export function Members() {
                 </td>
                 <td className="muted tnum">{m.lastActive}</td>
                 <td>
-                  <span className="tag neutral">RBAC · {personaRbac[m.persona]}</span>
+                  <span className="tag neutral">권한 · {personaRbac[m.persona]}</span>
                 </td>
                 <td>
                   {m.review ? (
