@@ -1,12 +1,24 @@
 /* Agent Work Memory — prototype styles
-   Built on Wanted LaaS tokens. Calm operations tone. */
+   Built on Wanted LaaS tokens. Calm operations tone.
+   데스크탑 1440px 기준. 모바일 대응은 별도 스프린트.  */
+
+:root {
+  /* ─── Layout ─── */
+  --layout-max: 1440px;        /* inside-app 콘솔 최대 폭 */
+  --sidebar-w: 248px;          /* 좌측 네비 고정 폭 */
+  --topbar-h: 56px;            /* 상단 바 고정 높이 */
+  --main-pad-x: 32px;          /* main 좌우 여백 */
+  --main-pad-y: 24px;          /* main 상단 여백 */
+  --main-pad-bottom: 64px;     /* main 하단 여백 */
+}
 
 html, body {
-  background: var(--bg-base);
+  background: var(--bg-elevated);   /* 1440px 잘림 좌우 여백도 elevated로 자연스럽게 */
   color: var(--text-normal);
   font: var(--t-body2);
   letter-spacing: var(--ls-body);
   font-feature-settings: "ss01", "tnum";
+  margin: 0;
 }
 
 button { font-family: inherit; cursor: pointer; }
@@ -14,12 +26,21 @@ input, textarea, select { font-family: inherit; }
 a { color: inherit; text-decoration: none; }
 
 /* ─── App shell ─── */
-.app {
-  display: grid;
-  grid-template-columns: 248px 1fr;
-  grid-template-rows: 56px 1fr;
-  grid-template-areas: "logo top" "nav main";
+/* outer — viewport 전체. 1440 넘으면 좌우 elevated 여백 노출 */
+.app-shell {
   min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+/* inner — 최대 1440 cap. 그 이하에서는 풀폭 반응형 */
+.app {
+  width: 100%;
+  max-width: var(--layout-max);
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  grid-template-rows: var(--topbar-h) 1fr;
+  grid-template-areas: "logo top" "nav main";
+  background: var(--bg-base);
 }
 .logo {
   grid-area: logo;
@@ -116,11 +137,30 @@ a { color: inherit; text-decoration: none; }
 }
 .nav-divider { height: 1px; background: var(--line-soft); margin: 12px 8px; }
 
+/* dev-only 메뉴 — 로컬 환경(localhost·127.0.0.1)에서만 노출. 운영 빌드 시 NAV_ITEMS filter로 자동 제거. */
+.nav-item.nav-item-dev {
+  margin-top: auto;     /* 사이드바 하단으로 밀어 운영 메뉴와 시각 분리 */
+  border-top: 1px dashed var(--line-soft);
+  padding-top: 12px;
+  color: var(--text-assistive);
+}
+.nav-item.nav-item-dev .nav-item-badge {
+  margin-left: auto;
+  font: var(--t-caption2);
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--accent-light);
+  color: var(--accent-strong);
+}
+
 .main {
   grid-area: main;
-  padding: 24px 32px 64px;
+  padding: var(--main-pad-y) var(--main-pad-x) var(--main-pad-bottom);
   background: var(--bg-elevated);
   overflow-x: hidden;
+  /* main 안쪽 콘텐츠는 1192 max — sidebar(248) + main = 1440 균형. */
+  min-width: 0;
 }
 
 /* ─── Hypothesis banner (top of each flow) ─── */
@@ -220,6 +260,7 @@ a { color: inherit; text-decoration: none; }
   display: inline-flex; align-items: center; gap: 4px;
   height: 22px; padding: 0 8px; border-radius: 4px;
   font: var(--t-caption1-strong); letter-spacing: var(--ls-label);
+  white-space: nowrap;   /* "검토 완료" 등 짧은 chip이 두 줄로 깨지지 않도록 */
 }
 .tag.neutral { background: var(--bg-subtle); color: var(--text-neutral); }
 .tag.blue { background: var(--primary-light); color: var(--primary-strong); }
@@ -244,6 +285,7 @@ a { color: inherit; text-decoration: none; }
   border-bottom: 1px solid var(--line-soft);
   background: var(--bg-elevated);
   position: sticky; top: 0;
+  white-space: nowrap;   /* "변경/명령" 같은 헤더가 두 줄로 깨지지 않도록 */
 }
 .tbl td {
   padding: 12px 12px;
@@ -1493,6 +1535,53 @@ a { color: inherit; text-decoration: none; }
   }
   /* 토큰 색이 forced-colors에서 무시되므로 의미 텍스트는 시스템 컬러로 */
   .tag.green, .compliance .check { forced-color-adjust: none; }
+}
+
+/* ============ Skeleton — 토스식 SWR 로딩 ============ */
+/* 캐시 즉시 표시 + 첫 진입에서만 skel 표출. shimmer는 가벼운 1.4s linear. */
+.skel {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--line-soft) 0%,
+    rgba(0, 0, 0, 0.03) 50%,
+    var(--line-soft) 100%
+  );
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.4s linear infinite;
+}
+[data-theme='dark'] .skel {
+  background: linear-gradient(
+    90deg,
+    var(--line-soft) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    var(--line-soft) 100%
+  );
+  background-size: 200% 100%;
+}
+.skel-card {
+  background: var(--surface-card);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+@keyframes skel-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel { animation: none; }
+}
+@media (forced-colors: active) {
+  .skel {
+    animation: none;
+    background: ButtonFace;
+    border: 1px solid ButtonText;
+  }
 }
 
 
