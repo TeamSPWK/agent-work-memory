@@ -1,8 +1,12 @@
 /**
- * Dev-track project status SSOT.
+ * Dev-track project status SSOT — /dev/status 화면이 읽는 데이터.
  *
- * 본 데이터는 docs/projects/STATUS.md 와 1:1 매핑된다.
- * 매 sprint 마무리 시 두 곳을 함께 갱신한다(`.claude/rules/operations-sync.md §1`).
+ * Phase·Sprint·NEXT_ACTION 갱신 시 항상 동시 갱신해야 하는 파트너 문서:
+ *   - NOVA-STATE.md (Goal·Phase·Tasks)
+ *   - docs/projects/plans/<현재 페이즈>.md (현재는 local-dogfooding-ready.md)
+ *   - docs/projects/STATUS.md (선택 — 화면 매트릭스 변동 시)
+ *
+ * 룰: `.claude/rules/phase-sync.md` (트리거·체크리스트·정합성).
  */
 
 export type PhaseStatus = 'done' | 'active' | 'pending'
@@ -54,63 +58,126 @@ export type PrototypeMark = {
 
 export const PHASES: Phase[] = [
   {
-    id: 'p0',
-    label: 'Design — Claude.ai 시안 lock',
+    id: 'A',
+    label: '시안→코드 — m2 inside-app 28 + m2.5 외부 14 + UX Audit S1~S3',
     status: 'done',
-    exit: 'v0.1(inside-app 23) + v0.2(외부 14) lock',
-    note: 'p0-design-v0/, p0-design-v0.2/',
+    exit: 'Critical 6/8 + High 11/13 + Medium 10/12 + WCAG AA',
+    note: 'closed (~2026-05-12)',
   },
   {
-    id: 'p1',
-    label: 'm2 Build — inside-app (Vite+Supabase+토스)',
+    id: 'B',
+    label: 'M0 부분 PASS — S1 회수·S1.5 hash·S1.6 baseline·S1.7·H2-b',
+    status: 'done',
+    exit: 'bin 회수 + hash chain CLI + 7 발견 baseline + SessionDetail fix + 변조 5/5',
+    note: 'S1.6에서 옵션 C 채택 → 측정 직진 시도하다 Phase C 분기',
+  },
+  {
+    id: 'C',
+    label: 'Local Dogfooding Ready — 실사용 수준 도달',
     status: 'active',
-    exit: 'Plan §8 exit criteria 8건 모두 PASS',
-    note: 'm2-frontend-from-design.md',
+    exit: 'C8 자기 보고 "하루 1회 이상 가치" + 7 발견 중 5건 fix',
+    note: 'docs/projects/plans/local-dogfooding-ready.md',
   },
   {
-    id: 'p2',
-    label: 'm2.5 Build — 외부 페이지 (소개·로그인·결제·법무)',
-    status: 'active',
-    exit: 'Plan exit criteria 8건 PASS',
-    note: 'm2.5/S1 스캐폴드 완료, S2 시각 이식 진행 예정',
-  },
-  {
-    id: 'p3',
-    label: 'Launch & Iterate — 디자인 파트너 5팀 · 운영',
+    id: 'D',
+    label: 'M0/S2 자기 캡처 1주 측정 (재개)',
     status: 'pending',
-    exit: 'PRD §11 retention 70%+',
-    note: 'M2 Plan + dogfooding',
+    exit: 'V0 손실 0 + 누락률 ≤ 5%',
+    note: 'blocked by C8',
+  },
+  {
+    id: 'E',
+    label: 'M0/S3 잔여 가설 — H1 1분 회상·H2-a 매칭·H3 RCA',
+    status: 'pending',
+    exit: 'PRD §5.3 합격선',
+    note: 'blocked by D',
+  },
+  {
+    id: 'F',
+    label: 'M0/S4 PRD §1.1 정정 + M1 진입 결정',
+    status: 'pending',
+    exit: 'PRD PR + 결정 문서',
+    note: 'blocked by E. 외부 D0 인터뷰는 본 phase 통과 후',
+  },
+  {
+    id: 'G',
+    label: 'M1 Foundation — Stack 결정·multi-tenant',
+    status: 'pending',
+    exit: 'Supabase Tokyo·Clerk·Vercel·토스페이먼츠 4안 결정',
+    note: 'blocked by F',
   },
 ]
 
+/**
+ * 현재 활성 페이즈(C — Local Dogfooding Ready)의 sprint들.
+ * Phase A·B(시안→코드, M0 부분 PASS)는 PHASES에서 done으로 표현, 개별 sprint는 압축 (Phase A 28+14·Phase B S1·S1.5·S1.6·S1.7·H2-b — git log 또는 NOVA-STATE 참조).
+ * Phase D~G도 PHASES에 표현, sprint 분해는 진입 시점에 채움.
+ */
 export const SPRINTS: Sprint[] = [
-  { id: 'S1', goal: '부트스트랩 (Vite+TS+CI)', status: 'done', commit: 'f6a6784', exit: 'localhost 토큰 적용' },
-  { id: 'S1.1', goal: '외부 서비스 (Supabase Tokyo · Vercel · 도메인)', status: 'pending', note: '사용자 외부 계정 단계' },
-  { id: 'S2', goal: '시안 → 정적 28화면 + onboarding 5', status: 'next', exit: 'criteria #1 v0.1 정합', note: 'H1 6/6 완료, H2~ 진행 중' },
-  { id: 'S3', goal: 'Supabase 스키마 + RLS', status: 'pending', exit: 'criteria #2 RLS 격리' },
-  { id: 'S4', goal: 'Audit hash chain 트리거', status: 'pending', exit: 'criteria #3 hash chain' },
-  { id: 'S5', goal: '화면↔Supabase 연결', status: 'pending', exit: '28화면 실 데이터', note: 'Auth 들어옴' },
-  { id: 'S6', goal: 'PDF export (Edge Function + Pretendard)', status: 'pending', exit: 'criteria #4 PDF 한글' },
-  { id: 'S7', goal: 'GitHub App webhook + 세션 매칭', status: 'pending', exit: 'criteria #6 webhook', note: 'legacy-v1 P1 포팅' },
-  { id: 'S8', goal: '토스페이먼츠 + PopBill', status: 'pending', exit: 'criteria #5 결제+세금계산서' },
-  { id: 'S9', goal: 'H4 온보딩 5분 측정', status: 'pending', exit: 'criteria #7 5분 이하' },
-  { id: 'S10', goal: '1개월 운영비 측정', status: 'pending', exit: 'criteria #8 월 70만 이하' },
-  { id: 'S11', goal: '/nova:check 전체', status: 'pending', exit: '8 criteria 모두 PASS', note: 'm2 완료' },
+  {
+    id: 'C1',
+    goal: '측정 환경 자동 기동 + dev/status 메뉴',
+    status: 'done',
+    exit: 'npm run init → Claude 재시작 → 5분 안에 본인 새 세션 1건 Today 노출 + dev/status 사이드바 진입',
+    note: 'npm run init 인프라 (tester-onboarding) + ingest cache (44s→4.3s) + dev/status hostname 분기 노출 — 모두 PASS. 잔여: capture hook 본 worktree 설치 검증',
+  },
+  {
+    id: 'C2',
+    goal: 'Intent 가공 — 단편 → 의도 한 줄',
+    status: 'next',
+    exit: '30 세션 단편 비율 7/30 → ≤ 1/30',
+    note: 'agentSummary 우선 + 직전 user turn fallback + *(요약 부족)* 명시. S1.6 발견 #1',
+  },
+  {
+    id: 'C3',
+    goal: 'Audit summary + WorkPacket 의도 변환',
+    status: 'pending',
+    exit: 'Audit 30 행·WorkPacket 24건 모두 의도 한국어 한 줄, 원문은 hover',
+    note: 'tool→verb 사전 (Bash·Read·Edit·Write·Grep·Task) + agentSummary 우선. S1.6 발견 #2,#7',
+  },
+  {
+    id: 'C4',
+    goal: 'Risk 세션 fan-out',
+    status: 'pending',
+    exit: 'Risk Radar 실 데이터 ≥ 4건 + Today/Sessions 위험 chip 노출',
+    note: 'workPackets riskCount > 0 → sessions 전파. S1.6 발견 #5. C2·C3 후',
+  },
+  {
+    id: 'C5',
+    goal: 'SessionDetail 실 데이터 어댑터 (25→15+ fields)',
+    status: 'pending',
+    exit: '본인 실 세션 mock seed 없이 대화 5턴+명령 3+파일 2 표시',
+    note: 'flowSteps·evidence·unresolved·confirmedCommits 4 필드. S1.6 발견 #3. C2 후',
+  },
+  {
+    id: 'C6',
+    goal: 'Repo 파서 정합 100%',
+    status: 'pending',
+    exit: '30 세션 모두 정상 repo 표시 (날짜 파편 0건)',
+    note: 'bin/awm.mjs cwd 추출 — 05/12·YYYY-MM-DD/new-chat 사례. S1.6 발견 #6. 독립 병렬',
+  },
+  {
+    id: 'C7',
+    goal: 'Incident·Reviewer 깊은 화면 jargon 평이화',
+    status: 'pending',
+    exit: '영어 jargon 0건 (Reviewer Brief→검토 요약, Operator Explain Back→Operator 설명 메모 등)',
+    note: 'Incident.tsx·Replay.tsx·EventDetail.tsx·ReviewerBrief.tsx + i18n key + 테스트 라벨. 독립 병렬',
+  },
+  {
+    id: 'C8',
+    goal: '1주 dogfooding 검증',
+    status: 'pending',
+    exit: '5/5 영업일 + 7 baseline 재측정 + 자기 보고 "하루 1회 이상 가치"',
+    note: '코드 변경 0. 본인 실 작업 + 매일 1회 Today + 매일 1건 ExplainBack + 1주 후 자기 보고. C2~C7 PASS 후',
+  },
 ]
 
-export const DEV_TRACK_SPRINTS: Sprint[] = [
-  { id: 'DT.1', goal: '/dev/status 라우트 + StatusBoard', status: 'done', note: 'H1 S2.5 완료 직후 진입·완성' },
-]
+/** 본 페이즈 sprint 추가 진행 시 누적. 현재는 Phase C 안에서만 분해. */
+export const DEV_TRACK_SPRINTS: Sprint[] = []
 
+/** Phase A.5 m2.5 외부 14 화면 — closed. 압축 표시용. */
 export const M25_SPRINTS: Sprint[] = [
-  { id: 'm2.5/S1', goal: 'Public route 14 스캐폴드 + PublicShell', status: 'done', exit: 'localhost 14 페이지 dispatch', note: 'PublicStub placeholder + PUBLIC_BIZ env-aware' },
-  { id: 'm2.5/S2', goal: 'v0.2 컴포넌트 → 14 TSX 시각 이식', status: 'next', exit: 'criteria #1 시안 픽셀 정합', note: 'S2.a 랜딩·S2.b 가격 done. S2.c 가입/로그인/재설정 next' },
-  { id: 'm2.5/S3', goal: '라우트 가드 + 가입→H4 핸드오프 (/app/* prefix)', status: 'pending', exit: 'criteria #2·#3', note: 'D7 결정' },
-  { id: 'm2.5/S4', goal: 'SEO + sitemap + OG', status: 'pending', exit: 'criteria #4' },
-  { id: 'm2.5/S5', goal: '사업자 정보 single source (env wiring)', status: 'pending', exit: 'criteria #5' },
-  { id: 'm2.5/S6', goal: 'Active Operator 정의 single source', status: 'pending', exit: 'criteria #6' },
-  { id: 'm2.5/S7', goal: '법무 4종 문구 합류 + check-legal-sync', status: 'pending', exit: 'criteria #7' },
-  { id: 'm2.5/S8', goal: '라이트/다크 footer 가독성 검증', status: 'pending', exit: 'criteria #8' },
+  { id: 'm2.5 (closed)', goal: 'Public 14 화면 + Auth 3 + Legal 4 + Errors 3 + Landing + Pricing + Company + Status', status: 'done', note: 'Phase A에 흡수. 상세는 git log 또는 NOVA-STATE Tasks 압축 표' },
 ]
 
 export const SCREENS: ScreenRow[] = [
@@ -238,8 +305,8 @@ export const PROJECT_META = {
   name: 'Agent Work Memory',
   tagline: 'AI Audit Trail SaaS for Korean SMB',
   ownerEmail: 'jay@spacewalk.tech',
-  currentCommit: '8b1d679',
-  lastUpdated: '2026-05-11',
+  currentCommit: 'dcc3955',
+  lastUpdated: '2026-05-13',
 }
 
 export type NextAction = {
@@ -251,11 +318,11 @@ export type NextAction = {
 
 /** "지금 해야 할 한 가지." Linear inbox 패러다임. */
 export const NEXT_ACTION: NextAction = {
-  sprint: 'm2.5/S2.c',
-  title: '가입/로그인/재설정 3 페이지 (.auth-wrap)',
+  sprint: 'C2',
+  title: 'Intent 가공 — 단편 답변 → 의도 한 줄',
   detail:
-    'S2.b 가격 + 비교표 12행 + AOP 정의 + FAQ 5 done. 다음 public-auth.jsx → Signup/Login/Reset 3 TSX + .auth-wrap·.auth-form·.solo-note·.h4-mini CSS.',
-  primaryRoute: '/signup',
+    'Phase C 진입. Sessions 30 중 7건이 < 20자 단편(예: "오케이 진행해", "다음 작업은?"). bin/awm.mjs parseSessionFile에서 agentSummary 우선 + 직전 user turn fallback + 그것도 < 20자면 *(요약 부족)* 명시. S1.6 발견 #1, H1 1분 회상 직접 위협.',
+  primaryRoute: '/sessions',
 }
 
 /** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */

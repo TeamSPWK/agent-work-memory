@@ -312,6 +312,11 @@ function PhaseStepper() {
 
 function SprintList({ activeSprintId }: { activeSprintId: string }) {
   const allSprints = [...SPRINTS, ...DEV_TRACK_SPRINTS]
+  // 활성 페이즈 라벨을 sprint 섹션 헤더에 동적으로 박는다 — m2 트랙 잔존 라벨 정정.
+  const activePhase = PHASES.find((p) => p.status === 'active')
+  const activePhaseLabel = activePhase
+    ? `Phase ${activePhase.id} — ${activePhase.label.split(' — ')[0]}`
+    : 'Sprint'
   return (
     <section style={{ marginTop: 32 }}>
       <div
@@ -323,7 +328,7 @@ function SprintList({ activeSprintId }: { activeSprintId: string }) {
         }}
       >
         <h2 style={{ font: 'var(--t-label2-strong)', color: 'var(--text-neutral)', margin: 0 }}>
-          m2 Sprint
+          {activePhaseLabel} — Sprint
         </h2>
         <div className="muted" style={{ font: 'var(--t-caption1)' }}>
           현재 {activeSprintId} · 총 {allSprints.length}

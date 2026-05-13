@@ -62,6 +62,13 @@ const paths: Record<string, ReactNode> = {
       <path {...stroke} d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
     </>
   ),
+  // gear — 개발 상태 메뉴 등 dev 화면용. settings보다 단순한 톱니 1개.
+  gear: (
+    <>
+      <circle {...stroke} cx="12" cy="12" r="3" />
+      <path {...stroke} d="M12 4v2M12 18v2M4 12h2M18 12h2M6.3 6.3l1.4 1.4M16.3 16.3l1.4 1.4M6.3 17.7l1.4-1.4M16.3 7.7l1.4-1.4" />
+    </>
+  ),
   bell: (
     <>
       <path {...stroke} d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2H4.5z" />
