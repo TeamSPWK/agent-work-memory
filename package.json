@@ -36,6 +36,7 @@
     "local": "npm run mvp",
     "mvp": "npm run build && node ./bin/awm.mjs ingest --limit 30 && node ./bin/awm.mjs serve --port 5173",
     "preview": "vite preview --host 127.0.0.1",
+    "init": "bash scripts/awm-init.sh",
     "serve": "bash scripts/awm-serve.sh start",
     "serve:stop": "bash scripts/awm-serve.sh stop",
     "serve:restart": "bash scripts/awm-serve.sh restart",

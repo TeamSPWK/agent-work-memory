@@ -109,7 +109,8 @@ async function main() {
   }
 
   if (scope === "capture" && action === "install" && target === "claude") {
-    installClaudeHook();
+    const autoMerge = args.includes("--auto-merge");
+    installClaudeHook({ autoMerge });
     return;
   }
 
@@ -401,7 +402,7 @@ function detectRisk(searchable) {
   return undefined;
 }
 
-function installClaudeHook() {
+function installClaudeHook({ autoMerge = false } = {}) {
   ensureState();
   const hooksDir = join(stateDir, "hooks");
   mkdirSync(hooksDir, { recursive: true });
@@ -435,7 +436,56 @@ spawnSync(process.execPath, [${JSON.stringify(cliPath)}, "capture", "event", "--
   writeFileSync(snippetPath, `${JSON.stringify(snippet, null, 2)}\n`);
   console.log(`Claude hook script written: ${hookPath}`);
   console.log(`Claude settings snippet written: ${snippetPath}`);
-  console.log("Merge the snippet into .claude/settings.json after review.");
+
+  if (autoMerge) {
+    const result = autoMergeClaudeSettings(snippet);
+    console.log(`Auto-merge: ${result.action} ${result.path}`);
+    if (result.added > 0) console.log(`  + ${result.added} hook group(s) appended.`);
+    if (result.skipped > 0) console.log(`  · ${result.skipped} already present (idempotent).`);
+    console.log("Claude Code 재시작 후 새 세션부터 캡처가 시작됩니다.");
+  } else {
+    console.log("Merge the snippet into .claude/settings.local.json (or pass --auto-merge).");
+  }
+}
+
+function autoMergeClaudeSettings(snippet) {
+  const claudeDir = join(cwd, ".claude");
+  const settingsPath = join(claudeDir, "settings.local.json");
+  mkdirSync(claudeDir, { recursive: true });
+
+  let existing = {};
+  let action = "created";
+  if (existsSync(settingsPath)) {
+    try {
+      existing = JSON.parse(readFileSync(settingsPath, "utf8"));
+      action = "merged into";
+    } catch (error) {
+      throw new Error(`.claude/settings.local.json corrupt — please fix manually: ${error.message}`);
+    }
+  }
+
+  existing.hooks = existing.hooks ?? {};
+  let added = 0;
+  let skipped = 0;
+  for (const [eventName, hookGroups] of Object.entries(snippet.hooks)) {
+    existing.hooks[eventName] = existing.hooks[eventName] ?? [];
+    for (const group of hookGroups) {
+      const groupCommands = group.hooks?.map((h) => h.command) ?? [];
+      const isDuplicate = existing.hooks[eventName].some(
+        (g) =>
+          (g.matcher ?? null) === (group.matcher ?? null) &&
+          (g.hooks?.map((h) => h.command) ?? []).join("|") === groupCommands.join("|"),
+      );
+      if (isDuplicate) {
+        skipped += 1;
+      } else {
+        existing.hooks[eventName].push(group);
+        added += 1;
+      }
+    }
+  }
+  writeFileSync(settingsPath, `${JSON.stringify(existing, null, 2)}\n`);
+  return { path: settingsPath, action, added, skipped };
 }
 
 function installGitHook() {

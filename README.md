@@ -3,6 +3,18 @@
 > **AI Audit Trail SaaS for Korean SMB.**
 > AI 에이전트가 자율적으로 만드는 변경(코드·DB·인프라)을 팀이 검토·감사·복원할 수 있게 하는 한국 B2B SaaS.
 
+## Quick Start — 테스터 (5분)
+
+```bash
+git clone https://github.com/TeamSPWK/agent-work-memory.git
+cd agent-work-memory
+npm run init    # Node ≥ 20 · install · build · Claude Code hook 자동 머지 · serve
+```
+
+이후 Claude Code를 *완전 종료 후 재시작* → http://127.0.0.1:5173/today
+
+브라우저로 단계별 가이드: [`docs/tester-quickstart.html`](./docs/tester-quickstart.html) (self-contained, file:// 로 바로 열기)
+
 ## 현재 단계 — Design-First Restart (2026-05-10~)
 
 본 레포는 **디자인 우선 단계**입니다. v1 구현(2025-09 ~ 2026-05) 8개월치 코드는 본 시점에 의도적으로 archive하고, *PRD 가치를 시각으로 먼저 검증한 뒤 새로 구현*하는 방향으로 전환했습니다.
