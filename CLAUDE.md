@@ -125,6 +125,10 @@ UI/UX 코드(`web/src/**` · CSS · 화면·컴포넌트·라우트) 변경 시 
 - **dev 메타 분리** (§12.5): 가설 추적·SCREENS 매트릭스·sprint 진행률은 `/dev/status`에만. 외부 페이지 노출 X.
 상세 룰: `.claude/rules/ui-consistency-tracks.md`
 
+## Phase·Sprint 싱크 (필수)
+페이즈 전환·스프린트 추가/완료·NEXT_ACTION 변경 시 반드시 `.claude/rules/phase-sync.md`를 따른다.
+요약: NOVA-STATE.md + `web/src/lib/dev/projectStatus.ts` + `docs/projects/plans/<현재 페이즈>.md` 3곳을 *항상 함께* 갱신. 한 곳만 바꾸면 /dev/status가 NOVA-STATE와 어긋나고 다음 세션 Claude가 옛날 페이즈로 작업 시작.
+
 ## 운영 동기화 (1인 창업자 sustainability)
 운영 결정·고객 데이터·비용·규제 변경 시 반드시 `.claude/rules/operations-sync.md`를 따른다.
 - 문서: PARA 구조 (`docs/projects/`·`docs/areas/`·`docs/resources/`·`docs/archive/`). 새 .md는 PARA 위치 결정 후 작성.
