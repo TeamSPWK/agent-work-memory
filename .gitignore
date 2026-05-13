@@ -9,6 +9,8 @@ dist
 .nova/
 .nova-orchestration.json
 .claude/scheduled_tasks.lock
+# 개인 로컬 Claude Code 설정 (hook 절대경로 등 머신별)
+.claude/settings.local.json
 .playwright-mcp/
 # Playwright 시각 검증 스크린샷 (로컬 회귀 비교용, 커밋 X)
 *-1440-*.png
