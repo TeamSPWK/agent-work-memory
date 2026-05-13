@@ -124,51 +124,65 @@ export const SPRINTS: Sprint[] = [
   {
     id: 'C2',
     goal: 'Intent 가공 — 단편 → 의도 한 줄',
-    status: 'next',
-    exit: '30 세션 단편 비율 7/30 → ≤ 1/30',
-    note: 'agentSummary 우선 + 직전 user turn fallback + *(요약 부족)* 명시. S1.6 발견 #1',
+    status: 'done',
+    exit: 'PASS — prefix 없는 단편 7/30 → 0/30, (요약 부족) prefix 9/30, agent raw 둔갑 0건',
+    note: 'pickIntentSummary 4단 fallback + tests/intent-summary.test.mjs 13. docs/verifications/phase-c2-intent-summary.md',
   },
   {
     id: 'C3',
     goal: 'Audit summary + WorkPacket 의도 변환',
-    status: 'pending',
-    exit: 'Audit 30 행·WorkPacket 24건 모두 의도 한국어 한 줄, 원문은 hover',
-    note: 'tool→verb 사전 (Bash·Read·Edit·Write·Grep·Task) + agentSummary 우선. S1.6 발견 #2,#7',
+    status: 'done',
+    exit: 'PASS — Audit raw command 0/30, WorkPacket raw 단편 0/24, rawSummary 보존',
+    note: 'humanizeAuditSummary view-layer 변환 + Bash 골드 사전 13 + 도구 verb 사전 + packetSummary 우선순위 교체. docs/verifications/phase-c3-audit-workpacket-summary.md',
   },
   {
     id: 'C4',
     goal: 'Risk 세션 fan-out',
-    status: 'pending',
-    exit: 'Risk Radar 실 데이터 ≥ 4건 + Today/Sessions 위험 chip 노출',
-    note: 'workPackets riskCount > 0 → sessions 전파. S1.6 발견 #5. C2·C3 후',
+    status: 'done',
+    exit: 'PASS — sessions.risks UI 노출 5/30, relatedRisks 3건 fan-out, Risk Radar 실 데이터 8건',
+    note: '3가지 회로 끊김 동시 fix (어댑터·직렬화·fan-out). 5건 모두 false positive — D 측정 후 detectRisk 재조정. docs/verifications/phase-c4-risk-fanout.md',
   },
   {
     id: 'C5',
-    goal: 'SessionDetail 실 데이터 어댑터 (25→15+ fields)',
-    status: 'pending',
-    exit: '본인 실 세션 mock seed 없이 대화 5턴+명령 3+파일 2 표시',
-    note: 'flowSteps·evidence·unresolved·confirmedCommits 4 필드. S1.6 발견 #3. C2 후',
+    goal: 'SessionDetail 실 데이터 어댑터 + C2 polish',
+    status: 'done',
+    exit: 'PASS — commandCount > 0: 16/30, flowSteps 30/30 (평균 4.5단계), (요약 부족) prefix 9/30 → 1/30',
+    note: 'cmds:0 hardcode 제거 + 9 fields propagate + SessionDetail isLive 4 패널. C2 polish 묶음 처리(라이브 검증 발견). docs/verifications/phase-c5-sessiondetail-adapter.md',
   },
   {
     id: 'C6',
     goal: 'Repo 파서 정합 100%',
-    status: 'pending',
-    exit: '30 세션 모두 정상 repo 표시 (날짜 파편 0건)',
-    note: 'bin/awm.mjs cwd 추출 — 05/12·YYYY-MM-DD/new-chat 사례. S1.6 발견 #6. 독립 병렬',
+    status: 'done',
+    exit: 'PASS — 30/30 정상, 잘못 추출 repo 0건. isValidCwdValue 폴백 + 11 unit test',
+    note: 'inferRepoLabel invalid cwdValue 시 dirname(file.path) 폴백. docs/verifications/phase-c6-repo-parser.md',
   },
   {
     id: 'C7',
     goal: 'Incident·Reviewer 깊은 화면 jargon 평이화',
-    status: 'pending',
-    exit: '영어 jargon 0건 (Reviewer Brief→검토 요약, Operator Explain Back→Operator 설명 메모 등)',
-    note: 'Incident.tsx·Replay.tsx·EventDetail.tsx·ReviewerBrief.tsx + i18n key + 테스트 라벨. 독립 병렬',
+    status: 'done',
+    exit: 'PASS — 30+ 라벨 평이화 (Reviewer Brief→검토 요약, Audit Trail row→감사 기록 행 등). 고유명사·기술 약어 의도 유지',
+    note: '4 파일 + i18n 카탈로그 12 키 + App.test.tsx 5 라벨. docs/verifications/phase-c7-jargon.md',
+  },
+  {
+    id: 'C8a',
+    goal: 'Critical 11건 dogfooding 가드 fix',
+    status: 'done',
+    exit: 'PASS — A1 Today KPI 실데이터(310/6/6/80%) + A2 Risk FP 라벨 + A3 C5 충족 + A4 Integrity 카피 + B1 ingest 380KB→111KB + B2 race+retry + C1 Pricing 모순 해소+VAT + C2 eyebrow AA + C3 dev 메타 격리 + D1 BOILERPLATE 분리 + H6 lint',
+    note: 'root 119/119 + web 71/71 + tsc clean + lint 0 warnings. docs/projects/plans/c8a-critical-fix.md',
+  },
+  {
+    id: 'R1',
+    goal: 'bin/awm.mjs 5분할',
+    status: 'next',
+    exit: 'bin/lib/{view-verbs,intent,risk-fanout,repo-parser,http-routes}.mjs 모듈 분리. 단일 3263줄 → 5 모듈',
+    note: 'Phase D 진입 전 별도 1~2일 sprint. C8a와 영역 분리, 충돌 X',
   },
   {
     id: 'C8',
     goal: '1주 dogfooding 검증',
     status: 'pending',
     exit: '5/5 영업일 + 7 baseline 재측정 + 자기 보고 "하루 1회 이상 가치"',
-    note: '코드 변경 0. 본인 실 작업 + 매일 1회 Today + 매일 1건 ExplainBack + 1주 후 자기 보고. C2~C7 PASS 후',
+    note: '코드 변경 0. C8a + R1 PASS 후 진입. docs/verifications/phase-c8-dogfooding.md',
   },
 ]
 
@@ -305,7 +319,7 @@ export const PROJECT_META = {
   name: 'Agent Work Memory',
   tagline: 'AI Audit Trail SaaS for Korean SMB',
   ownerEmail: 'jay@spacewalk.tech',
-  currentCommit: 'dcc3955',
+  currentCommit: '453379f', // C8a 변경은 미커밋 (사용자 승인 후)
   lastUpdated: '2026-05-13',
 }
 
@@ -318,11 +332,11 @@ export type NextAction = {
 
 /** "지금 해야 할 한 가지." Linear inbox 패러다임. */
 export const NEXT_ACTION: NextAction = {
-  sprint: 'C2',
-  title: 'Intent 가공 — 단편 답변 → 의도 한 줄',
+  sprint: 'R1',
+  title: 'bin/awm.mjs 5분할 — 책임 분리 (Phase D 측정 전)',
   detail:
-    'Phase C 진입. Sessions 30 중 7건이 < 20자 단편(예: "오케이 진행해", "다음 작업은?"). bin/awm.mjs parseSessionFile에서 agentSummary 우선 + 직전 user turn fallback + 그것도 < 20자면 *(요약 부족)* 명시. S1.6 발견 #1, H1 1분 회상 직접 위협.',
-  primaryRoute: '/sessions',
+    'Phase C8a PASS 후 nova:review C2 결함(3263줄 단일 파일에 view-verbs·intent·risk-fanout·repo-parser·http-routes·webhook·CLI argv 6+ 책임)을 R1 sprint에서 처리. bin/lib/{view-verbs,intent,risk-fanout,repo-parser,http-routes}.mjs 5 모듈로 책임 분리 + import 경로 갱신. 기존 tests 그대로 유지(import 변경만). 1~2일 추정. R1 PASS 후 C8 dogfooding 진입.',
+  primaryRoute: '/dev/status',
 }
 
 /** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */

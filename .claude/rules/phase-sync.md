@@ -48,6 +48,8 @@
 [ ] (선택) docs/projects/STATUS.md — 화면 매트릭스 변동 시
 [ ] (선택) web/src/App.test.tsx — StatusBoard 테스트가 변경 라벨 검증 시
 [ ] 빌드+테스트 PASS 확인 (`cd web && npm test -- --run`)
+[ ] projectStatus.ts 변경 시: `npm run build && npm run serve:restart`
+    (dist/는 정적 serve라 자동 reload 없음 — 빌드 안 하면 /dev/status 화면 stale)
 ```
 
 ## 4. 회피할 안티 패턴
@@ -57,6 +59,7 @@
 - ❌ plan 신설 없이 NOVA-STATE에 sprint 표만 추가 — 마스터 분해(의존성 그래프·CPS·exit 근거)가 사라져 *왜 이 sprint인가* 추적 불가.
 - ❌ NEXT_ACTION을 갱신 안 함 — Linear inbox 패러다임 깨짐. /dev/status 진입자가 *지금 무엇 해야* 모름.
 - ❌ Phase 전환 후 1인 sustainability 검토 누락 — sprint가 모두 *1주 안에* 끝나는지, 직렬·병렬 구성이 1인 운영에 맞는지 plan에서 명시.
+- ❌ projectStatus.ts 갱신 후 build·serve:restart 빠뜨림 — TS·테스트는 통과해도 dist/가 옛날 스냅샷 그대로라 /dev/status가 stale. 사용자가 "왜 싱크 안 맞춰?"로 인지 (2026-05-13 C2 sprint에서 발견).
 
 ## 5. 정합성 검증 (수동, 자동화 backlog)
 
