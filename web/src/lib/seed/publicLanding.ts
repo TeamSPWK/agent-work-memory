@@ -113,7 +113,7 @@ export const PUBLIC_TIERS: Tier[] = [
     desc: '인디 · 평가용 단일 사용자',
     price: 0,
     priceLabel: '₩0',
-    per: '/ mo',
+    per: '/ 월',
     cta: '5분 안에 워크스페이스 만들기',
     feat: true,
     items: [
@@ -128,11 +128,12 @@ export const PUBLIC_TIERS: Tier[] = [
   {
     id: 'team',
     name: 'Team',
-    desc: 'B2B SaaS · D2C 시리즈 A 까지 권장',
+    // Phase C8a C1 — DSA Art.25 + 한국 표시광고법: VAT 별도 명시.
     price: 100000,
     priceLabel: '₩100,000',
     priceStrike: '₩200,000',
-    per: '/ mo · 5 Operator 기준',
+    desc: 'B2B SaaS · D2C 시리즈 A 까지 권장 (VAT 별도)',
+    per: '/ 월 · 5 Operator 기준',
     cta: '5분 안에 워크스페이스 만들기',
     feat: false,
     dp50: true,
@@ -148,10 +149,10 @@ export const PUBLIC_TIERS: Tier[] = [
   {
     id: 'business',
     name: 'Business',
-    desc: '15+ Active Operator · 5년 audit 보존 의무',
     price: 300000,
     priceLabel: '₩300,000',
-    per: '/ mo · 15 Operator 기준',
+    desc: '15+ Active Operator · 5년 audit 보존 의무 (VAT 별도)',
+    per: '/ 월 · 15 Operator 기준',
     cta: '디자인 파트너 신청',
     feat: false,
     items: [
@@ -159,7 +160,7 @@ export const PUBLIC_TIERS: Tier[] = [
       { ok: true, t: 'Audit 보존 5년 (인공지능기본법 권고)' },
       { ok: true, t: '해시 체인 + 일일 무결성 자동 검사' },
       { ok: true, t: 'PDF export · 양식 커스터마이즈' },
-      { ok: true, t: '전체 H1~H4 + Workspace + Settings' },
+      { ok: true, t: '회상·감사·사고 원인·온보딩 전체 + Workspace + Settings' },
       { ok: true, t: 'Reviewer 응답 보장 (영업시간 1 영업일)' },
     ],
   },
@@ -194,7 +195,8 @@ export const PUBLIC_FAQ_LANDING: FaqItem[] = [
   },
   {
     q: '디자인 파트너 50% 할인은 언제까지?',
-    a: '선착순 5팀 · 기간 한정 없음. 5팀이 채워지면 자동 종료됩니다. 격주 인터뷰 1회를 조건으로 합니다.',
+    // Phase C8a C1 — DSA Art.25 자기모순 해소. "선착순+한정없음"은 형식논리적으로 모순.
+    a: '처음 5팀에만 50% 할인이 적용됩니다 — 5팀이 채워지면 6번째부터는 정가입니다. 격주 인터뷰 1회를 조건으로 합니다.',
   },
 ]
 

@@ -4,6 +4,7 @@ import type { Persona } from '../state/ui'
 import { NAV_ITEMS } from '../lib/seed/navigation'
 import { WORKSPACES } from '../lib/seed/workspaces'
 import { Icon } from '../components/Icon'
+import { isLocalEnv } from '../lib/env'
 
 const PERSONAS: Persona[] = ['Operator', 'Reviewer', 'Admin']
 
@@ -11,6 +12,9 @@ export function Topbar() {
   const { persona, setPersona, theme, toggleTheme, workspaceId, setWorkspaceId } = useUi()
   const { pathname } = useLocation()
   const current = NAV_ITEMS.find((item) => pathname === item.to || pathname.startsWith(item.to + '/'))
+  // Phase C8a C3 — dev 메타 inside-app 격리. 페르소나 토글은 *시연용 mock*이므로
+  // 운영 도메인에서는 자동 숨김. 로컬에서만 디자인 시연 가능.
+  const local = isLocalEnv()
 
   return (
     <header className="topbar">
@@ -19,6 +23,7 @@ export function Topbar() {
         <select
           value={workspaceId}
           onChange={(e) => setWorkspaceId(e.target.value)}
+          aria-label="워크스페이스 전환"
           style={{
             border: 0,
             background: 'transparent',
@@ -42,10 +47,14 @@ export function Topbar() {
       </div>
 
       <div className="topright">
-        <span className="muted" style={{ font: 'var(--t-caption1)' }}>
-          시연용 페르소나
-        </span>
-        <PersonaToggle value={persona} onChange={setPersona} />
+        {local && (
+          <>
+            <span className="muted" style={{ font: 'var(--t-caption1)' }}>
+              시연용 페르소나
+            </span>
+            <PersonaToggle value={persona} onChange={setPersona} />
+          </>
+        )}
         <button
           className="icon-btn"
           onClick={toggleTheme}

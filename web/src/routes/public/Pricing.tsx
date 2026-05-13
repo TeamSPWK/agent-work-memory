@@ -28,7 +28,9 @@ export function Pricing() {
 
         <div className="dp-chip-row" role="region" aria-label="디자인 파트너 안내">
           <Icon name="share" size={16} />
-          디자인 파트너 5팀 한정 50% · 격주 인터뷰 1회 조건 · 기간 한정 없음 · 선착순 종료
+          {/* Phase C8a C1 — DSA Art.25: "선착순+한정없음" 자기모순 해소.
+             "처음 5팀까지만" 정직화. 표시광고법: 가격에 (VAT 별도) 카드별 명시. */}
+          디자인 파트너 처음 5팀까지 50% — 6번째부터 정가 · 격주 인터뷰 1회 조건
         </div>
 
         <div className="tier-grid" role="group" aria-label="플랜 비교">

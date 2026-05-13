@@ -241,9 +241,11 @@ a { color: inherit; text-decoration: none; }
 .card-h h3 { margin: 0; font: var(--t-heading3); color: var(--text-strong); }
 .card-h .sub { font: var(--t-caption1); color: var(--text-assistive); }
 
+/* Phase C8a C2 — WCAG 1.4.3 AA. primary-normal #0066ff on #fff = 4.07:1 (4.5:1 미달).
+ * primary-strong #005eeb on #fff ≈ 5.5:1로 caption text AA 통과. */
 .eyebrow {
   font: var(--t-caption1-strong); letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--primary-normal);
+  text-transform: uppercase; color: var(--primary-strong);
 }
 
 .kpi {
