@@ -177,8 +177,11 @@ describe('AppShell + product IA', () => {
         level: 1,
       }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent(/실 캡처 세션/)
+    // Phase C5 — 라이브 분기가 4 패널 풍부화로 진화. 기본 정보 + 대화 흐름 + 실행된 명령 + 변경 파일.
+    // (이전 'role=status 실 캡처 세션 배너'는 C5에서 제거 — 비어있다는 명시는 각 패널 안에서)
     expect(screen.getByRole('heading', { name: '기본 정보' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '대화 흐름' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '실행된 명령' })).toBeInTheDocument()
   })
 
   it('SessionDetail shows loading state while ingest is in-flight (S1.7)', async () => {
@@ -697,7 +700,7 @@ describe('AppShell + product IA', () => {
     // e8 (관리자 세션 만료) mark 클릭 → 우측 detail 갱신
     fireEvent.click(screen.getByRole('button', { name: /16:36 · 관리자 세션 만료/ }))
     expect(
-      screen.getByRole('heading', { name: '이벤트 detail' }),
+      screen.getByRole('heading', { name: '이벤트 상세' }),
     ).toBeInTheDocument()
     const detailHeading = screen.getAllByText('관리자 세션 만료 (정시 갱신)')
     expect(detailHeading.length).toBeGreaterThanOrEqual(1)
@@ -714,7 +717,7 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Incident Note', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '사고 메모', level: 1 })).toBeInTheDocument()
     expect(
       screen.getByText(/prod 마이그레이션 직후 시간 일치/),
     ).toBeInTheDocument()
@@ -744,7 +747,7 @@ describe('AppShell + product IA', () => {
     expect(
       screen.getByRole('heading', { name: '이 이벤트가 사고 원인일 가능성', level: 1 }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '이벤트 핵심 fact' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '이벤트 핵심 사실' })).toBeInTheDocument()
     expect(screen.getByRole('radiogroup', { name: '3분리 분류' })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: /원인 후보/, checked: true })).toBeInTheDocument()
     expect(screen.getByLabelText(/분류 사유/)).toBeInTheDocument()
@@ -779,9 +782,9 @@ describe('AppShell + product IA', () => {
     )
 
     expect(
-      screen.getByRole('heading', { name: 'Reviewer Brief — s-024', level: 1 }),
+      screen.getByRole('heading', { name: '검토 요약 — s-024', level: 1 }),
     ).toBeInTheDocument()
-    expect(screen.getByText('의도 — Operator Explain Back + AI 자동 추출')).toBeInTheDocument()
+    expect(screen.getByText('의도 — Operator 설명 메모 + AI 자동 추출')).toBeInTheDocument()
     expect(screen.getByText('결과 — 실제 변경 · 명령 · DB 영향')).toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: '의도 ↔ 결과 매칭' }),

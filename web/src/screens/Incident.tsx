@@ -16,7 +16,7 @@ const HEADERS: Record<TabId, { eyebrow: string; title: string; sub: string }> = 
   replay: {
     eyebrow: `진입 시점 · prod 사고 직후 · ${INCIDENT.id}`,
     title: INCIDENT.title,
-    sub: '가로축 시간(분), 세로축 카테고리. 클릭 시 우측 detail. 원인 단정 X — 후보·확실·불명 분리.',
+    sub: '가로축 시간(분), 세로축 카테고리. 클릭 시 우측 상세. 원인 단정 X — 후보·확실·불명 분리.',
   },
   event: {
     eyebrow: '사건 마커 · prod 인덱스 마이그레이션 (16:25)',
@@ -24,14 +24,14 @@ const HEADERS: Record<TabId, { eyebrow: string; title: string; sub: string }> = 
     sub: '3분리(후보·확실·불명) + 근거 자료 + 사람이 분류 변경하는 화면.',
   },
   reviewer: {
-    eyebrow: '진입 시점 · Incident Replay → 의도/결과 비교',
-    title: 'Reviewer Brief — s-024',
+    eyebrow: '진입 시점 · 사고 재생 → 의도/결과 비교',
+    title: '검토 요약 — s-024',
     sub: 'Operator의 *의도* vs 실제 *결과*를 좌우로 본다. 부수 변경이 있는지 즉시 확인.',
   },
   note: {
     eyebrow: `사고 누적 메모 · ${INCIDENT.id}`,
-    title: 'Incident Note',
-    sub: '조사 진행을 누적 작성. 각 메모는 자동 timestamp + 변조 불가 audit row가 됩니다.',
+    title: '사고 메모',
+    sub: '조사 진행을 누적 작성. 각 메모는 자동 시각 기록 + 변조 불가 감사 기록 행이 됩니다.',
   },
 }
 
@@ -64,14 +64,14 @@ export function Incident() {
               </span>
               <button className="btn" type="button" onClick={() => setTab('note')}>
                 <Icon name="pencil" size={14} />
-                Incident Note
+                사고 메모
               </button>
             </>
           )}
           {tab === 'note' && (
             <>
               <button className="btn" type="button" onClick={() => setTab('replay')}>
-                ← Replay
+                ← 재생
               </button>
               <button className="btn" type="button">
                 <Icon name="share" size={14} />
@@ -79,14 +79,14 @@ export function Incident() {
               </button>
               <button className="btn primary" type="button">
                 <Icon name="download" size={14} />
-                Postmortem 양식
+                사후 분석 양식
               </button>
             </>
           )}
           {tab === 'event' && (
             <>
               <button className="btn" type="button" onClick={() => setTab('replay')}>
-                ← Replay
+                ← 재생
               </button>
               <button className="btn primary" type="button" onClick={() => setTab('reviewer')}>
                 의도/결과 비교 →
@@ -95,7 +95,7 @@ export function Incident() {
           )}
           {tab === 'reviewer' && (
             <button className="btn" type="button" onClick={() => setTab('event')}>
-              ← Event detail
+              ← 이벤트 상세
             </button>
           )}
         </div>

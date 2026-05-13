@@ -40,7 +40,6 @@ export function t(key: MessageKey, vars?: Record<string, string | number>): stri
   const raw = catalog[key] ?? fallback[key]
   if (raw === undefined) {
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
       console.warn(`[i18n] missing key: ${key} (locale=${locale})`)
     }
     return key
@@ -57,7 +56,6 @@ export function useT() {
     const raw = catalog[key] ?? fallback[key]
     if (raw === undefined) {
       if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
         console.warn(`[i18n] missing key: ${key} (locale=${locale})`)
       }
       return key

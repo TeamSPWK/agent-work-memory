@@ -85,6 +85,20 @@ export const ko = {
   'audit.kpi.reviewedRate': 'AI 변경 검증율 · 30일',
   'audit.kpi.unreviewed': '미검토',
   'audit.cta.toReviewQueue': '검토 대기열로 →',
+
+  // ─── Incident (사고) 화면 — Phase C7 jargon 평이화 ───
+  'incident.tab.replay': '재생',
+  'incident.tab.event': '이벤트 상세',
+  'incident.tab.reviewer': '검토 요약',
+  'incident.tab.note': '사고 메모',
+  'incident.action.reviewerBrief': '검토 요약',
+  'incident.action.explainBack': 'Operator 설명 메모',
+  'incident.action.postmortem': '사후 분석 양식',
+  'common.audit.row': '감사 기록 행',
+  'common.audit.log': '감사 기록',
+  'common.cross.reference': '관련 자료',
+  'common.cross.link': '관련 링크',
+  'common.commit': '커밋',
 } as const
 
 export type MessageKey = keyof typeof ko

@@ -23,10 +23,10 @@ const FACT_ROWS: { label: string; value: ReactNode }[] = [
 ]
 
 const EVIDENCE: { i: string; l: string }[] = [
-  { i: 'audit', l: 'Audit Trail · ev-2401 (해시 9c4f7a1)' },
-  { i: 'git', l: 'commit f08c4b2 · feat(applicants): add created_at DESC index' },
-  { i: 'review', l: 'Reviewer Brief · 의도 vs 결과 — 부수 변경 0' },
-  { i: 'db', l: 'Datadog APM · 16:32 lock wait spike' },
+  { i: 'audit', l: '감사 기록 · ev-2401 (해시 9c4f7a1)' },
+  { i: 'git', l: '커밋 f08c4b2 · feat(applicants): add created_at DESC index' },
+  { i: 'review', l: '검토 요약 · 의도 vs 결과 — 부수 변경 0' },
+  { i: 'db', l: 'Datadog APM · 16:32 lock wait 급증' },
   { i: 'file', l: 'db/migrations/20260510_add_applicants_idx.sql · CREATE INDEX CONCURRENTLY' },
 ]
 
@@ -42,8 +42,8 @@ export function EventDetail() {
       <div className="col">
         <div className="card">
           <div className="card-h">
-            <h3>이벤트 핵심 fact</h3>
-            <span className="sub">변조 불가 audit row 기반</span>
+            <h3>이벤트 핵심 사실</h3>
+            <span className="sub">변조 불가 감사 기록 행 기반</span>
           </div>
           <table className="tbl">
             <tbody>
@@ -76,7 +76,7 @@ export function EventDetail() {
                 </td>
               </tr>
               <tr>
-                <td className="muted">매칭 commit</td>
+                <td className="muted">매칭 커밋</td>
                 <td>
                   <a className="link mono" href="#commit-f08c4b2">
                     f08c4b2
@@ -140,7 +140,7 @@ export function EventDetail() {
         <div className="card">
           <div className="card-h">
             <h3>근거 자료</h3>
-            <span className="sub">cross-reference</span>
+            <span className="sub">관련 자료</span>
           </div>
           <ul
             style={{
@@ -207,7 +207,7 @@ export function EventDetail() {
           </div>
           <div className="hr" />
           <div className="fieldset">
-            <label htmlFor="event-reason">분류 사유 (audit log에 기록)</label>
+            <label htmlFor="event-reason">분류 사유 (감사 기록에 기록)</label>
             <textarea
               id="event-reason"
               className="focus-stub"
@@ -224,7 +224,7 @@ export function EventDetail() {
         <div className="card tight">
           <div className="eyebrow">의도 ↔ 결과 미리보기</div>
           <div style={{ font: 'var(--t-label1)', marginTop: 6 }}>
-            Reviewer Brief에서 의도(Operator Explain Back)와 실제 변경을 좌우 비교합니다.
+            검토 요약에서 의도(Operator 설명 메모)와 실제 변경을 좌우 비교합니다.
           </div>
           <button
             className="btn weak sm"
@@ -233,12 +233,12 @@ export function EventDetail() {
             onClick={() => setParams({ tab: 'reviewer' }, { replace: true })}
           >
             <Icon name="review" size={12} />
-            Reviewer Brief 열기
+            검토 요약 열기
           </button>
         </div>
 
         <div className="card tight">
-          <div className="eyebrow">cross-link</div>
+          <div className="eyebrow">관련 링크</div>
           <div className="col" style={{ gap: 6, marginTop: 8 }}>
             <Link className="btn sm" to="/sessions/s-024" style={{ justifyContent: 'flex-start' }}>
               <Icon name="file" size={14} />
@@ -246,7 +246,7 @@ export function EventDetail() {
             </Link>
             <Link className="btn sm" to="/audit" style={{ justifyContent: 'flex-start' }}>
               <Icon name="audit" size={14} />
-              Audit Trail row aud-001
+              감사 기록 행 aud-001
             </Link>
           </div>
         </div>

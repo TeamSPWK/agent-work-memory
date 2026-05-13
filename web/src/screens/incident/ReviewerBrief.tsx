@@ -40,10 +40,10 @@ export function ReviewerBrief() {
     <>
       <div className="split" style={{ marginBottom: 16 }}>
         <div>
-          <div className="lh">의도 — Operator Explain Back + AI 자동 추출</div>
+          <div className="lh">의도 — Operator 설명 메모 + AI 자동 추출</div>
 
           <div className="eyebrow" style={{ marginBottom: 6 }}>
-            Explain Back · 직접 작성
+            설명 메모 · 직접 작성
           </div>
           <div
             className="card tight"
@@ -204,7 +204,7 @@ export function ReviewerBrief() {
         <div className="hr" />
         <div className="row between">
           <div className="muted" style={{ font: 'var(--t-caption1)' }}>
-            검토 액션은 audit log에 기록됩니다 (검토자·시각·메모).
+            검토 액션은 감사 기록에 남습니다 (검토자·시각·메모).
           </div>
           <div className="row tight">
             <label htmlFor="reviewer-memo" className="visually-hidden" style={{ display: 'none' }}>

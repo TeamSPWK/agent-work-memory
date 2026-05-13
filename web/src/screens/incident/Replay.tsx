@@ -229,7 +229,7 @@ export function Replay() {
         <div className="col">
           <div className="card tight">
             <div className="card-h">
-              <h3>이벤트 detail</h3>
+              <h3>이벤트 상세</h3>
               <span className="sub">{ev.at}</span>
             </div>
             <div style={{ font: 'var(--t-heading3)', color: 'var(--text-strong)' }}>{ev.title}</div>
@@ -247,7 +247,7 @@ export function Replay() {
             </div>
 
             <div className="hr" />
-            <div className="eyebrow">cross-reference</div>
+            <div className="eyebrow">관련 자료</div>
             <div className="col" style={{ gap: 6, marginTop: 8 }}>
               {ev.session && (
                 <Link
@@ -266,7 +266,7 @@ export function Replay() {
                 onClick={() => setParams({ tab: 'reviewer' }, { replace: true })}
               >
                 <Icon name="review" size={14} />
-                Reviewer Brief — 의도 vs 결과
+                검토 요약 — 의도 vs 결과
               </button>
               <button
                 className="btn sm"
@@ -274,7 +274,7 @@ export function Replay() {
                 style={{ justifyContent: 'flex-start' }}
               >
                 <Icon name="git" size={14} />
-                매칭 commit f08c4b2
+                매칭 커밋 f08c4b2
               </button>
               <Link
                 className="btn sm"
@@ -282,7 +282,7 @@ export function Replay() {
                 style={{ justifyContent: 'flex-start' }}
               >
                 <Icon name="audit" size={14} />
-                Audit Trail row aud-001
+                감사 기록 행 aud-001
               </Link>
             </div>
 
