@@ -14,21 +14,32 @@ type IngestSession = {
   commitCandidates?: Array<{ files: string[] }>
 }
 
-type IngestWorkPacket = {
+type IngestChainEvent = {
   id: string
-  repo: string
+  createdAt: string
+  event: string
+  sessionId?: string | null
   summary: string
-  lastActivity: string
-  riskCount: number
-  sessionIds: string[]
-  needsReviewCount: number
-  commitCandidateCount: number
+  risk?: SessionRisk | null
+  source?: string
+  hash?: string | null
+  prev?: string | null
+  broken?: boolean
+}
+
+type IngestAuditChain = {
+  ok: boolean
+  total: number
+  head: string | null
+  brokenAt: number | null
+  brokenReason: string | null
+  tail: IngestChainEvent[]
 }
 
 type IngestData = {
   ingestedAt?: string
   sessions?: IngestSession[]
-  workPackets?: IngestWorkPacket[]
+  auditChain?: IngestAuditChain
 }
 
 // --- 어댑터: IngestSession → SessionSeed ---
@@ -49,20 +60,19 @@ function toSessionSeed(s: IngestSession): SessionSeed {
   }
 }
 
-// --- 어댑터: IngestWorkPacket → AuditEvent ---
-function toAuditEvent(p: IngestWorkPacket): AuditEvent {
-  const risk: SessionRisk | null = p.riskCount > 0 ? { sev: 'med', cat: 'unknown' } : null
+// --- 어댑터: IngestChainEvent → AuditEvent (PRD §5.5 SHA-256 chain) ---
+function toAuditEventFromChain(e: IngestChainEvent): AuditEvent {
   return {
-    id: p.id,
-    at: p.lastActivity ?? '',
-    type: 'session.end',
-    session: p.sessionIds?.[0] ?? '',
-    summary: p.summary ?? '(요약 없음)',
-    actor: '로컬 사용자',
-    risk,
-    hash: p.id.slice(-8),
-    prev: '--------',
-    broken: false,
+    id: e.id,
+    at: e.createdAt ?? '',
+    type: e.event ?? 'event',
+    session: e.sessionId ?? '',
+    summary: e.summary ?? '(요약 없음)',
+    actor: e.source ?? '로컬 사용자',
+    risk: e.risk ?? null,
+    hash: typeof e.hash === 'string' ? e.hash.slice(0, 12) : '(미해시)',
+    prev: typeof e.prev === 'string' ? e.prev.slice(0, 12) : '--------',
+    broken: e.broken ?? false,
   }
 }
 
@@ -92,7 +102,7 @@ export function useIngest(): IngestState {
       .then((data) => {
         if (cancelled) return
         const sessions = (data.sessions ?? []).map(toSessionSeed)
-        const auditEvents = (data.workPackets ?? []).map(toAuditEvent)
+        const auditEvents = (data.auditChain?.tail ?? []).map(toAuditEventFromChain)
         setState({ loading: false, sessions, auditEvents, error: null })
       })
       .catch((e: unknown) => {

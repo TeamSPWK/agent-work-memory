@@ -18,6 +18,7 @@ import { dirname, extname, join, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createPersistence, validationError } from "./persist.mjs";
 import { scoreCommitCandidate, categorizeScore, buildMatchReason } from "./match.mjs";
+import { GENESIS_PREV, chainAppend, rebuildChain, verifyChain } from "./hashchain.mjs";
 import {
   addGitHubWebhookDeliveryToStore,
   getGitHubStatus,
@@ -172,7 +173,80 @@ async function main() {
     return;
   }
 
+  if (scope === "audit") {
+    if (action === "verify") {
+      const result = runAuditVerify();
+      process.exitCode = result.ok ? 0 : 1;
+      return;
+    }
+    if (action === "rebuild") {
+      runAuditRebuild();
+      return;
+    }
+    if (action === "show") {
+      runAuditShow(args.slice(2));
+      return;
+    }
+    throw new Error("Usage: awm audit <verify|rebuild|show --last N>");
+  }
+
   throw new Error(`Unknown command: ${args.join(" ")}`);
+}
+
+function runAuditVerify() {
+  if (!existsSync(eventsPath)) {
+    console.log("Audit chain: no events.jsonl yet (vacuously ok).");
+    return { ok: true, total: 0 };
+  }
+  const events = readEvents();
+  const result = verifyChain(events);
+  if (result.ok) {
+    console.log(`Audit chain OK — ${result.total} events verified.`);
+  } else {
+    console.error(
+      `Audit chain BROKEN at index ${result.brokenAt}: ${result.brokenReason}`,
+    );
+    const culprit = events[result.brokenAt];
+    if (culprit) {
+      console.error(
+        `  → event id=${culprit.id ?? "?"} createdAt=${culprit.createdAt ?? "?"} event=${culprit.event ?? "?"}`,
+      );
+    }
+  }
+  return result;
+}
+
+function runAuditRebuild() {
+  if (!existsSync(eventsPath)) {
+    console.log("No events.jsonl to rebuild.");
+    return;
+  }
+  const events = readEvents();
+  if (events.length === 0) {
+    console.log("events.jsonl is empty — nothing to rebuild.");
+    return;
+  }
+  const backup = `${eventsPath}.pre-chain-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+  writeFileSync(backup, readFileSync(eventsPath));
+  const rebuilt = rebuildChain(events);
+  const body = rebuilt.map((event) => JSON.stringify(event)).join("\n") + "\n";
+  writeFileSync(eventsPath, body);
+  console.log(`Audit chain rebuilt — ${rebuilt.length} events sealed. Backup: ${backup}`);
+}
+
+function runAuditShow(showArgs) {
+  if (!existsSync(eventsPath)) {
+    console.log("No events.jsonl yet.");
+    return;
+  }
+  const last = Number(readFlag(showArgs, "--last") ?? 5);
+  const events = readEvents();
+  const slice = events.slice(-Math.max(1, last));
+  for (const event of slice) {
+    const hash = typeof event.hash === "string" ? `${event.hash.slice(0, 12)}…` : "(미해시)";
+    const prev = typeof event.prev === "string" ? `${event.prev.slice(0, 12)}…` : "--------";
+    console.log(`${event.createdAt ?? "?"}  ${event.id ?? "?"}  prev=${prev}  hash=${hash}  ${event.event ?? ""}`);
+  }
 }
 
 function printHelp() {
@@ -193,6 +267,9 @@ Usage:
   awm serve --port 5173
   awm session summarize --tool codex --summary "..."
   awm today
+  awm audit verify              # SHA-256 chain 무결성 검증 (PRD §5.5)
+  awm audit rebuild             # 기존 events.jsonl 재해시 + .pre-chain-<ISO> 백업
+  awm audit show --last 5       # 최근 N개 이벤트의 prev/hash 표시
 `);
 }
 
@@ -250,7 +327,28 @@ function recordEvent(source, payload) {
     createdAt: new Date().toISOString(),
   };
 
-  appendFileSync(eventsPath, `${JSON.stringify(event)}\n`);
+  const sealed = sealEventForChain(event);
+  appendFileSync(eventsPath, `${JSON.stringify(sealed)}\n`);
+}
+
+function sealEventForChain(event) {
+  const prev = readLastChainHash();
+  return chainAppend(prev === GENESIS_PREV ? [] : [{ hash: prev }], event);
+}
+
+function readLastChainHash() {
+  if (!existsSync(eventsPath)) return GENESIS_PREV;
+  const raw = readFileSync(eventsPath, "utf8");
+  if (!raw) return GENESIS_PREV;
+  const lines = raw.split("\n").filter(Boolean);
+  if (lines.length === 0) return GENESIS_PREV;
+  const last = JSON.parse(lines[lines.length - 1]);
+  if (typeof last.hash !== "string" || last.hash.length !== 64) {
+    throw new Error(
+      "events.jsonl tail has no chain hash. Run `awm audit rebuild` to seal historical events.",
+    );
+  }
+  return last.hash;
 }
 
 function summarizePayload(eventName, command, prompt) {
@@ -623,6 +721,7 @@ function buildIngestResult(limit = 30) {
     .map(({ sortAt, ...event }) => event);
   const repositories = aggregateRepositories(sessions, githubActivity);
   const workPackets = buildWorkPackets(sessions);
+  const auditChain = buildAuditChainView();
 
   return {
     ingestedAt: new Date().toISOString(),
@@ -654,10 +753,43 @@ function buildIngestResult(limit = 30) {
     },
     repositories,
     workPackets,
+    auditChain,
     github,
     sessions: sessions.map(({ risks, timelineEvents, fileMeta, sortAt, ...session }) => session),
     riskEvents,
     timeline,
+  };
+}
+
+function buildAuditChainView(maxTail = 30) {
+  if (!existsSync(eventsPath)) {
+    return { ok: true, total: 0, head: null, tail: [], brokenAt: null, brokenReason: null };
+  }
+  const events = readEvents();
+  const result = verifyChain(events);
+  const tailStart = Math.max(0, events.length - maxTail);
+  const tail = events.slice(tailStart).map((event, offset) => {
+    const globalIndex = tailStart + offset;
+    return {
+      id: event.id,
+      createdAt: event.createdAt,
+      event: event.event,
+      sessionId: event.sessionId ?? null,
+      summary: event.summary,
+      risk: event.risk ?? null,
+      source: event.source,
+      hash: typeof event.hash === "string" ? event.hash : null,
+      prev: typeof event.prev === "string" ? event.prev : null,
+      broken: !result.ok && globalIndex >= (result.brokenAt ?? Infinity),
+    };
+  });
+  return {
+    ok: result.ok,
+    total: events.length,
+    head: events.length > 0 ? (events[events.length - 1].hash ?? null) : null,
+    brokenAt: result.brokenAt,
+    brokenReason: result.brokenReason,
+    tail,
   };
 }
 

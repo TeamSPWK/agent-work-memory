@@ -12,3 +12,5 @@ dist
 .playwright-mcp/
 # Playwright 시각 검증 스크린샷 (로컬 회귀 비교용, 커밋 X)
 *-1440-*.png
+# 하위 디렉토리 NOVA-STATE 스켈레톤 (다른 도구가 web/을 별도 프로젝트로 오인해 생성)
+web/NOVA-STATE.md
