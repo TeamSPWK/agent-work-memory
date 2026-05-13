@@ -15,7 +15,12 @@ export function Sessions() {
   // 목업→실데이터 flash 차단: loading 중에는 base 비움.
   const isLive = !ingest.loading && ingest.sessions.length > 0
   const showSeed = !ingest.loading && !isLive
-  const base = isLive ? ingest.sessions : showSeed ? SESSIONS : []
+  // Phase C8a (H6 lint fix) — base를 useMemo로 안정화. 이전엔 매 렌더마다 conditional이
+  // 새 배열 참조 생성 → 하위 useMemo deps 무효화 → 30 row 매 렌더 재필터.
+  const base = useMemo(
+    () => (isLive ? ingest.sessions : showSeed ? SESSIONS : []),
+    [isLive, showSeed, ingest.sessions],
+  )
   const [tool, setTool] = useState<string>('All')
   const [q, setQ] = useState('')
   const debouncedQ = useDebounce(q, 200)

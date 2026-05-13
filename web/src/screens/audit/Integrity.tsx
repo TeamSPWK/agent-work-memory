@@ -8,6 +8,9 @@ import { Icon } from '../../components/Icon'
 export function Integrity() {
   return (
     <>
+      {/* Phase C8a A4 — mock 한계 배너 카피 정직화.
+         실제 SHA-256 chain은 S1.5에서 이미 동작 (node bin/awm.mjs audit verify/rebuild/show).
+         화면은 시각 시안만 mock이며, 본 페이지가 *법적 산출물 시연*임을 명시. */}
       <div
         className="card tight"
         role="status"
@@ -19,8 +22,9 @@ export function Integrity() {
           color: 'var(--c-orange-30)',
         }}
       >
-        ⓘ 데모 mock 한계 — 이 화면의 해시 값은 디자인 데이터입니다. 실제 SHA-256 chain
-        계산·재검증은 m2 S4 (Supabase 트리거 + <code>hash-chain-verify</code> Edge Function)에서 적용됩니다.
+        ⓘ 시안 mock — 화면의 깨진 구간·해시 값은 디자인 예시입니다. 실제 SHA-256 chain 검증·재빌드는
+        터미널에서 <code>node bin/awm.mjs audit verify</code>로 즉시 확인 가능합니다 (M0/S1.5 완료).
+        실 데이터 노출은 후속 sprint에서 본 화면을 ingest auditChain에 연결합니다.
       </div>
 
       <div className="grid-3" style={{ marginBottom: 16 }}>
@@ -60,7 +64,7 @@ export function Integrity() {
       <div className="card">
         <div className="card-h">
           <h3>깨진 구간 detail</h3>
-          <span className="sub">m2 S4 SHA-256 hash chain 적용 예정</span>
+          <span className="sub">시안 예시 · 실 chain은 CLI verify로 검증</span>
         </div>
 
         <div

@@ -6,13 +6,20 @@ import { useIngest } from '../lib/useIngest'
 import { TodayHeroSkeleton, KpiGridSkeleton, TableRowsSkeleton } from '../components/Skeleton'
 import { useT } from '../lib/i18n'
 
-const TODAY_COUNT = { changed: 22, risk: 4, unexplained: 3 }
-
+// Phase C8a A1 — TODAY_TODO mock은 본 sprint scope 외(별도 backlog).
+// 내일 카드는 dogfooding 핵심 신호 아니라 mock 그대로 둠.
 const TODAY_TODO = [
   'prod 인덱스 적용 후 응답시간 모니터링 (개발 리드)',
   'Notion 동기화 키 노출 확인 (운영 매니저)',
   '결제 재시도 UI 검토 요약 확인 (개발 리드)',
 ]
+
+// 오늘 날짜 표시 — Asia/Seoul 기준 "M월 D일".
+function formatTodayLabel(now = new Date()): string {
+  const month = now.getMonth() + 1
+  const day = now.getDate()
+  return `${month}월 ${day}일`
+}
 
 export function Today() {
   const t = useT()
@@ -28,6 +35,15 @@ export function Today() {
   const unexplained = base.filter((s) => !s.explained)
   const firstUnexplainedId = unexplained[0]?.id ?? recent[0]?.id
 
+  // Phase C8a A1 — KPI 4 카드를 실데이터로 도출. hardcoded TODAY_COUNT 제거.
+  // delta(어제 대비)는 baseline 비교 데이터 없으므로 본 sprint에서는 표시 안 함 — Phase D 측정 후 추가.
+  const kpiChanged = base.reduce((acc, s) => acc + (s.files ?? 0), 0)
+  const kpiRisk = base.filter((s) => s.risk).length
+  const kpiUnexplained = unexplained.length
+  const kpiReviewRate = base.length > 0
+    ? Math.round((base.filter((s) => s.explained).length / base.length) * 100)
+    : 0
+
   return (
     <>
       <div className="page-h">
@@ -39,7 +55,7 @@ export function Today() {
         <div className="actions">
           <button className="btn" type="button">
             <Icon name="cal" size={14} />
-            오늘 · 5월 13일
+            오늘 · {formatTodayLabel()}
           </button>
           {firstUnexplainedId ? (
             <Link className="btn primary" to={`/sessions/${firstUnexplainedId}/explain`}>
@@ -106,7 +122,7 @@ export function Today() {
                 {t('today.hero.title.done', { total: recent.length })}
               </h2>
               <p className="today-hero-sub">
-                {t('today.hero.sub.done', { risk: TODAY_COUNT.risk })}
+                {t('today.hero.sub.done', { risk: kpiRisk })}
               </p>
             </div>
             <Link className="btn lg" to="/risk">
@@ -117,21 +133,18 @@ export function Today() {
       </section>
 
       <div className="grid-4" style={{ marginBottom: 16 }}>
-        <Kpi label={t('today.kpi.changed')} value={TODAY_COUNT.changed} delta="+8 어제 대비" deltaTone="pos" />
+        <Kpi label={t('today.kpi.changed')} value={kpiChanged} />
         <Kpi
           label={t('today.kpi.risk')}
-          value={TODAY_COUNT.risk}
-          valueColor="var(--status-negative)"
-          delta="+2 어제 대비"
-          deltaTone="neg"
+          value={kpiRisk}
+          valueColor={kpiRisk > 0 ? 'var(--status-negative)' : undefined}
         />
         <Kpi
           label={t('today.kpi.unexplained')}
-          value={TODAY_COUNT.unexplained}
-          valueColor="var(--accent-strong)"
-          delta="-1 어제 대비"
+          value={kpiUnexplained}
+          valueColor={kpiUnexplained > 0 ? 'var(--accent-strong)' : undefined}
         />
-        <Kpi label={t('today.kpi.reviewRate')} value={76} unit="%" delta="▲ 4%p" deltaTone="pos" />
+        <Kpi label={t('today.kpi.reviewRate')} value={kpiReviewRate} unit="%" />
       </div>
 
       <div className="grid-split">

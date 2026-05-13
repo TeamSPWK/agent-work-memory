@@ -75,19 +75,6 @@ export function SessionDetail() {
           </div>
         </div>
 
-        <div
-          className="card tight"
-          role="status"
-          style={{
-            marginBottom: 16,
-            background: 'var(--c-orange-95)',
-            borderColor: 'transparent',
-            color: 'var(--c-orange-30)',
-          }}
-        >
-          ⓘ 실 캡처 세션 — 상세 데이터(대화 맥락·실행된 명령·매칭 변경)는 아직 연결되지 않았습니다. 기본 정보만 표시합니다.
-        </div>
-
         <div className="card">
           <div className="card-h">
             <h3>기본 정보</h3>
@@ -107,6 +94,131 @@ export function SessionDetail() {
             <dd style={{ margin: 0 }}>{session.files}건 변경 / {session.cmds}건 명령</dd>
           </dl>
         </div>
+
+        {/* Phase C5 — 대화 흐름 (backend flowSteps map) */}
+        <div className="card" style={{ marginTop: 16 }}>
+          <div className="card-h">
+            <h3>대화 흐름</h3>
+            <span className="sub">단계 요약 · raw transcript는 저장 안 함</span>
+          </div>
+          {(session.flowSteps?.length ?? 0) === 0 ? (
+            <p className="muted" style={{ font: 'var(--t-caption1)', margin: 0 }}>
+              흐름 데이터가 비어 있습니다. 짧은 세션이거나 캡처 hook 시작 전 기록일 수 있습니다.
+            </p>
+          ) : (
+            <div className="col" style={{ gap: 10 }}>
+              {session.flowSteps!.map((step) => (
+                <div
+                  key={step.id ?? `${step.kind}-${step.index ?? step.title}`}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '70px 1fr',
+                    gap: 12,
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    background: step.kind === 'request' ? 'var(--bg-subtle)' : 'transparent',
+                  }}
+                >
+                  <div className="muted tnum" style={{ font: 'var(--t-caption1)' }}>
+                    {step.time ?? '—'}
+                    <br />
+                    <span className="badge">{step.kind}</span>
+                  </div>
+                  <div>
+                    <div className="strong" style={{ font: 'var(--t-label1-strong)' }}>{step.title}</div>
+                    <div style={{ font: 'var(--t-body2)', marginTop: 2 }}>{step.summary}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Phase C5 — 실행된 명령 (commandSamples) */}
+        <div className="card" style={{ marginTop: 16 }}>
+          <div className="card-h">
+            <h3>실행된 명령</h3>
+            <span className="sub">상위 10개 · 전체 {session.cmds}건</span>
+          </div>
+          {(session.commandSamples?.length ?? 0) === 0 ? (
+            <p className="muted" style={{ font: 'var(--t-caption1)', margin: 0 }}>
+              명령 기록 없음. 대화만 진행된 세션이거나 캡처 hook이 도구 호출을 잡지 못한 구간일 수 있습니다.
+            </p>
+          ) : (
+            <ol style={{ margin: 0, paddingLeft: 20 }}>
+              {session.commandSamples!.map((cmd, i) => (
+                <li
+                  key={i}
+                  className="mono"
+                  style={{ font: 'var(--t-caption1)', wordBreak: 'break-all', marginBottom: 4 }}
+                >
+                  {cmd}
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+
+        {/* Phase C5 — 변경 파일 + 커밋 후보 */}
+        <div className="card" style={{ marginTop: 16 }}>
+          <div className="card-h">
+            <h3>변경 파일 + 결과 커밋 후보</h3>
+            <span className="sub">시간·파일 근접 매칭</span>
+          </div>
+          {(session.commitCandidates?.length ?? 0) === 0 ? (
+            <p className="muted" style={{ font: 'var(--t-caption1)', margin: 0 }}>
+              매칭된 커밋 후보 없음. 작업 결과가 아직 커밋 안 됐거나 시간대가 멀 수 있습니다.
+            </p>
+          ) : (
+            <div className="col" style={{ gap: 12 }}>
+              {session.commitCandidates!.slice(0, 5).map((c) => (
+                <div key={c.hash} className="row" style={{ alignItems: 'flex-start', gap: 12 }}>
+                  <div
+                    className="tag neutral mono"
+                    style={{ font: 'var(--t-caption1)', flexShrink: 0 }}
+                  >
+                    {c.shortHash}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ font: 'var(--t-label1)' }}>{c.subject ?? '(제목 없음)'}</div>
+                    <div className="muted" style={{ font: 'var(--t-caption1)', marginTop: 2 }}>
+                      {c.committedAt ?? '시각 없음'} · 신뢰도 {c.confidence ?? 'medium'} · 변경 {c.files?.length ?? 0}개
+                    </div>
+                    {c.files && c.files.length > 0 && (
+                      <ul className="muted" style={{ font: 'var(--t-caption1)', margin: '4px 0 0', paddingLeft: 16 }}>
+                        {c.files.slice(0, 5).map((f) => (
+                          <li key={f} className="mono">{f}</li>
+                        ))}
+                        {c.files.length > 5 && <li>… 외 {c.files.length - 5}개</li>}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Phase C5 — 미해결 항목 */}
+        {(session.unresolved?.length ?? 0) > 0 && (
+          <div
+            className="card"
+            style={{
+              marginTop: 16,
+              background: 'var(--c-orange-95)',
+              borderColor: 'transparent',
+            }}
+          >
+            <div className="card-h">
+              <h3 style={{ color: 'var(--c-orange-30)' }}>미해결 항목</h3>
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 20 }}>
+              {session.unresolved!.map((u, i) => (
+                <li key={i} style={{ font: 'var(--t-body2)' }}>{u}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </>
     )
   }

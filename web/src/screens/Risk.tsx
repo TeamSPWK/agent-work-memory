@@ -11,6 +11,7 @@ import {
 import { Icon } from '../components/Icon'
 import { RiskChip } from '../components/RiskChip'
 import { tabKeyHandler } from '../lib/useTabKeyboard'
+import { useIngest } from '../lib/useIngest'
 
 const SEV_CHIP: Record<'high' | 'med' | 'low', { tone: string; label: string }> = {
   high: { tone: 'red', label: '고위험' },
@@ -30,6 +31,19 @@ export function Risk() {
   const signals = useMemo(() => RISK_SIGNALS[selected] ?? [], [selected])
   const onTabKey = tabKeyHandler(RISK_KEY_IDS, selected, setSelected)
 
+  // Phase C4 — 실제 sessions에서 감지된 위험 집계. cat 안 '(연관)' substring으로
+  // 직접 위험과 packet fan-out 위험을 구분 (ingest.ts pickSessionRisk와 contract 일치).
+  const { sessions } = useIngest()
+  const directRiskSessions = useMemo(
+    () => sessions.filter((s) => s.risk && !s.risk.cat.includes('(연관)')),
+    [sessions],
+  )
+  const relatedRiskSessions = useMemo(
+    () => sessions.filter((s) => s.risk && s.risk.cat.includes('(연관)')),
+    [sessions],
+  )
+  const hasRealSignal = directRiskSessions.length + relatedRiskSessions.length > 0
+
   return (
     <>
       <div className="page-h">
@@ -47,6 +61,55 @@ export function Risk() {
             <Icon name="cal" size={14} />
             최근 7일
           </button>
+        </div>
+      </div>
+
+      {/* Phase C8a A2 — false positive 라벨 명시.
+         NOVA-STATE Phase C4 기록상 현 5/30 신호 모두 false positive(intent text path 우연 매칭).
+         "감지된 위험"으로 단언하면 dogfooding 1주 안에 *항상 위험=무시* 학습 발생.
+         배경 톤 neutral 유지 + "잠재" + "검토 필요" 명시 + Phase D detectRisk 재튜닝 예고. */}
+      <div
+        className="card"
+        role="region"
+        aria-label="잠재 위험 신호 집계"
+        style={{
+          marginBottom: 16,
+          background: 'var(--bg-subtle)',
+          borderColor: 'transparent',
+        }}
+      >
+        <div className="row between" style={{ alignItems: 'center' }}>
+          <div>
+            <div
+              style={{
+                font: 'var(--t-label1-strong)',
+                color: 'var(--text-strong)',
+              }}
+            >
+              잠재 위험 신호 {directRiskSessions.length}건 — 검토 필요
+              {relatedRiskSessions.length > 0 && (
+                <span className="muted" style={{ fontWeight: 400 }}>
+                  {' · '}같은 작업 묶음 연관 {relatedRiskSessions.length}건
+                </span>
+              )}
+            </div>
+            <div
+              className="muted"
+              style={{ font: 'var(--t-caption1)', marginTop: 4 }}
+            >
+              {hasRealSignal
+                ? '현재 휴리스틱(intent text·명령 regex 매칭)으로 잡힌 신호이며 false positive 가능. 세션을 열어 실제 위험 여부를 확인하세요. detectRisk 패턴 재튜닝은 Phase D 측정 후 진행.'
+                : '잠재 위험 신호가 아직 없음. 아래 카테고리는 시안 예시이며, 본인 작업 중 위험 명령이 잡히면 여기 표시됩니다.'}
+            </div>
+          </div>
+          {directRiskSessions.length > 0 && (
+            <Link
+              className="btn"
+              to={`/sessions/${directRiskSessions[0].id}`}
+            >
+              최근 신호 세션 검토
+            </Link>
+          )}
         </div>
       </div>
 
