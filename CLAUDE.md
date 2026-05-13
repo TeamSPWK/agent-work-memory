@@ -26,9 +26,50 @@ v1에서 *Vite 8 + React 18 + TS 5.7 SPA + Node ESM CLI + 로컬 `.awm/`*를 사
 2. *1인 운영 가능성* (managed services 우선)
 3. *한국 latency·결제·세금계산서* 정합
 
-## Build & Verify — 미정
+## Build & Verify
 
-본 단계엔 빌드 명령 없음. Claude.ai Artifacts에서 시안 작업.
+M0 Tech Validation 진입(2026-05-13) 후 v1 자산이 main에 통합돼 *로컬 작동*. Stack 결정(M1)은 별개.
+
+### 빌드·테스트
+
+```bash
+npm install                      # 첫 1회 (82 pkg, 0 vuln)
+npm run build                    # vite8 — web/ → dist/  (~170ms)
+cd web && npm test -- --run      # web 67 case (jsdom)
+npx vitest run                   # root 40 case (hashchain 17 + match/persist/github)
+cd web && npx tsc --noEmit       # TS strict
+```
+
+### 로컬 서버 운영 (백그라운드 PID 관리)
+
+```bash
+npm run serve            # build(없으면) + ingest --limit 30 + serve --port 5173 (백그라운드)
+npm run serve:status     # PID + lsof 포트 LISTEN
+npm run serve:logs       # 마지막 40줄 (bash scripts/awm-serve.sh logs -f 로 follow)
+npm run serve:restart    # stop + start
+npm run serve:stop       # SIGTERM 5회 폴링 → SIGKILL fallback
+
+# override
+AWM_PORT=5174 AWM_INGEST_LIMIT=50 npm run serve
+```
+
+PID/log: `.awm/serve.pid`·`.awm/serve.log` (gitignored). 진입점 http://127.0.0.1:5173/today.
+
+### Audit Layer (PRD §5.5)
+
+```bash
+node bin/awm.mjs audit verify         # SHA-256 chain 무결성, exit 1로 변조 차단
+node bin/awm.mjs audit rebuild        # 기존 events 재해시 + .pre-chain-<ISO> 백업
+node bin/awm.mjs audit show --last 5  # 최근 N개의 prev/hash 디버그 출력
+```
+
+### 캡처 hook (S2 측정 시작 시 1회)
+
+```bash
+node bin/awm.mjs capture install claude   # .awm/hooks/ + .awm/claude-settings-snippet.json 생성
+# snippet을 .claude/settings.json 에 머지 후 Claude Code 재시작
+node bin/awm.mjs capture install git-hooks
+```
 
 ## Non-Negotiables (advisory — 강제 미설치)
 - `.env`, `.secret/`, `*.pem`, `*.key`, 액세스 토큰을 커밋·로그·이슈에 노출하지 않는다.
