@@ -5,6 +5,37 @@ export type SessionRisk = {
   cat: string
 }
 
+// Phase C5 — SessionDetail isLive 분기에서 mock seed 없이 실 데이터 표시용 optional 확장.
+// mock SESSIONS 배열은 그대로(optional이라 undefined OK), 71 web test 영향 없음.
+export type SessionFlowStep = {
+  id?: string
+  index?: number
+  kind: 'request' | 'agent' | 'tool' | 'verification' | 'decision' | string
+  title: string
+  summary: string
+  time?: string
+  evidence?: Array<{ id?: string; type?: string; label?: string; href?: string }>
+}
+
+export type SessionEvidenceItem = {
+  id?: string
+  type?: string
+  label?: string
+  href?: string
+}
+
+export type SessionCommitCandidate = {
+  hash: string
+  shortHash: string
+  subject?: string
+  files?: string[]
+  committedAt?: string
+  confidence?: 'high' | 'medium' | 'low' | string
+  confirmed?: boolean
+  rejected?: boolean
+  matchReason?: string
+}
+
 export type SessionSeed = {
   id: string
   tool: string
@@ -17,6 +48,17 @@ export type SessionSeed = {
   cmds: number
   state: string
   explained: boolean
+  // Phase C5 — SessionDetail 패널용 (모두 optional)
+  flowSteps?: SessionFlowStep[]
+  evidence?: SessionEvidenceItem[]
+  unresolved?: string[]
+  commandSamples?: string[]
+  commitCandidates?: SessionCommitCandidate[]
+  confirmedCommits?: string[]
+  linkedCommits?: string[]
+  agentSummary?: string
+  workBriefObjective?: string
+  fullIntent?: string
 }
 
 export const SESSIONS: SessionSeed[] = [

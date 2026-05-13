@@ -8,6 +8,7 @@ import {
   readFileSync,
   readSync,
   readdirSync,
+  realpathSync,
   statSync,
   writeFileSync,
   appendFileSync,
@@ -56,10 +57,21 @@ const GITHUB_WEBHOOK_MAX_BYTES = 25 * 1024 * 1024;
 
 const args = process.argv.slice(2);
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+const __filename = fileURLToPath(import.meta.url);
+const isCliEntry = (() => {
+  try {
+    return Boolean(process.argv[1]) && realpathSync(process.argv[1]) === realpathSync(__filename);
+  } catch {
+    return false;
+  }
+})();
+
+if (isCliEntry) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}
 
 async function main() {
   const [scope, action, target, ...rest] = args;
@@ -359,6 +371,84 @@ function summarizePayload(eventName, command, prompt) {
   return String(eventName);
 }
 
+// Phase C3 — events.jsonl raw summary를 한국어 의도 한 줄로 view-layer 변환.
+// 기록 시 summary(hash chain 포함)는 raw 그대로 유지하고, buildAuditChainView가 화면 노출용으로만 변환.
+// rawSummary 필드에 원본 보존 → hover/디버깅 가능.
+function humanizeAuditSummary(event) {
+  const rawSummary = String(event?.summary ?? "");
+  const summary = computeAuditVerb(event) ?? rawSummary ?? "이벤트";
+  return { summary, rawSummary };
+}
+
+function computeAuditVerb(event) {
+  const eventName = event?.event;
+  if (!eventName) return null;
+
+  if (eventName === "SessionStart") return "세션 시작";
+  if (eventName === "SessionEnd" || eventName === "Stop") return "세션 종료";
+  if (eventName === "UserPromptSubmit") return "사용자 요청 도착";
+  if (eventName === "Notification") return "알림";
+  if (eventName === "session_summary") return "세션 요약";
+  if (eventName === "pre_commit") return "커밋 직전 검사";
+
+  if (eventName === "PreToolUse" || eventName === "PostToolUse") {
+    return verbForTool(event);
+  }
+  return null;
+}
+
+function verbForTool(event) {
+  const tool = event?.toolName;
+  const input = event?.payload?.tool_input ?? {};
+
+  if (tool === "Bash") {
+    const command = String(input.command ?? "").trim();
+    if (!command) return "명령 실행";
+    return bashGoldVerb(command) ?? `명령 실행 — ${truncate(command, 60)}`;
+  }
+
+  if (tool === "Read" || tool === "Edit" || tool === "Write" || tool === "NotebookEdit") {
+    const verb = tool === "Read" ? "파일 읽기"
+      : tool === "Edit" ? "파일 수정"
+      : tool === "Write" ? "파일 작성"
+      : "노트북 수정";
+    const filePath = String(input.file_path ?? input.notebook_path ?? "").trim();
+    if (!filePath) return verb;
+    const basename = filePath.split("/").filter(Boolean).at(-1);
+    return basename ? `${verb} — ${basename}` : verb;
+  }
+
+  if (tool === "Grep") return "검색";
+  if (tool === "Glob") return "파일 찾기";
+  if (tool === "Task") return "에이전트 호출";
+  if (tool === "WebFetch") return "웹 페이지 가져오기";
+  if (tool === "WebSearch") return "웹 검색";
+  if (tool === "TodoWrite") return "할 일 갱신";
+  if (tool === "ExitPlanMode") return "Plan 승인 요청";
+
+  if (!tool) return null;
+  return `${tool} 호출`;
+}
+
+// Bash command 안의 자주 쓰는 ~10개 패턴만 한국어로. 나머지는 호출자가 폴백.
+function bashGoldVerb(command) {
+  const c = String(command).replace(/\s+/g, " ").trim();
+  if (/(^|\s|&&\s*)npm\s+(test\b|run\s+test\b)/i.test(c)) return "테스트 실행";
+  if (/(^|\s|&&\s*)npx\s+vitest\b/i.test(c)) return "테스트 실행";
+  if (/(^|\s|&&\s*)npm\s+run\s+build\b/i.test(c)) return "빌드";
+  if (/(^|\s|&&\s*)npm\s+run\s+serve\b/i.test(c)) return "로컬 서버 실행";
+  if (/(^|\s|&&\s*)npm\s+(install|i)\b/i.test(c)) return "패키지 설치";
+  if (/(^|\s|&&\s*)git\s+commit\b/i.test(c)) return "커밋";
+  if (/(^|\s|&&\s*)git\s+status\b/i.test(c)) return "git 상태 조회";
+  if (/(^|\s|&&\s*)git\s+diff\b/i.test(c)) return "git diff 조회";
+  if (/(^|\s|&&\s*)git\s+log\b/i.test(c)) return "git log 조회";
+  if (/(^|\s|&&\s*)git\s+push\b/i.test(c)) return "git push";
+  if (/(^|\s|&&\s*)node\s+bin\/awm\.mjs\b/i.test(c)) return "awm CLI";
+  if (/(^|\s|&&\s*)(ls|cat|head|tail|find|grep|rg)\b/i.test(c)) return "파일 탐색";
+  if (/(^|\s|&&\s*)npx\s+tsc\b/i.test(c)) return "타입 검사";
+  return null;
+}
+
 function buildEvidence(command, payload) {
   const evidence = [];
   if (command) evidence.push({ type: "command", label: command });
@@ -401,6 +491,51 @@ function detectRisk(searchable) {
     return { category: "Operational", severity: "medium", reason: "운영 영향이 큰 경로 또는 키워드가 감지됨" };
   }
   return undefined;
+}
+
+// Phase C4 — risk 매칭 범위 좁힘. file.relativePath·cwdGuess는 false positive 원인
+// (예: ~/.claude/image-cache/<hash>가 permission/secret 패턴 우연 매칭). 사용자 텍스트·명령만 검사.
+function narrowRiskSearchable({ firstText = "", lastText = "", commands = [] }) {
+  return [firstText, lastText, ...(commands ?? [])].filter(Boolean).join("\n");
+}
+
+// Phase C4 — packet → session risk fan-out.
+// 같은 workPacket에 묶인 sessions 중 risks 있는 session(들)의 위험을
+// 다른 sessions의 relatedRisks에 propagate. session.risks(직접)와 분리해
+// UI/측정 시 *직접 위험*과 *연관 위험*을 구분 가능.
+// 입력 sessions는 immutable — 새 객체 배열 반환.
+function buildSessionRisks(sessions, workPackets) {
+  const bySessionId = new Map(sessions.map((session) => [session.id, session]));
+
+  // packetId → { directRisks: [{ sourceSessionId, risk }] }
+  const packetIndex = new Map();
+  for (const packet of workPackets ?? []) {
+    const directRisks = [];
+    for (const sessionId of packet.sessionIds ?? []) {
+      const session = bySessionId.get(sessionId);
+      if (!session) continue;
+      for (const risk of session.risks ?? []) {
+        directRisks.push({ sourceSessionId: sessionId, risk });
+      }
+    }
+    if (directRisks.length > 0) packetIndex.set(packet.id, { sessionIds: packet.sessionIds, directRisks });
+  }
+
+  return sessions.map((session) => {
+    const relatedRisks = [];
+    for (const { sessionIds, directRisks } of packetIndex.values()) {
+      if (!sessionIds.includes(session.id)) continue;
+      for (const { sourceSessionId, risk } of directRisks) {
+        if (sourceSessionId === session.id) continue; // 자기 자신은 직접 risks에 이미 있음
+        relatedRisks.push({
+          ...risk,
+          sourceSessionId,
+          relation: "packet",
+        });
+      }
+    }
+    return { ...session, relatedRisks };
+  });
 }
 
 function installClaudeHook({ autoMerge = false } = {}) {
@@ -801,6 +936,9 @@ function buildIngestResult(limit = 30, { persist = true } = {}) {
     .map(({ sortAt, ...event }) => event);
   const repositories = aggregateRepositories(sessions, githubActivity);
   const workPackets = buildWorkPackets(sessions);
+  // Phase C4 — packet → session risk fan-out. sessions를 packet 묶음 정보로 풍부화해
+  // 각 session.relatedRisks에 같은 packet 안 다른 세션의 위험 신호 propagate.
+  const enrichedSessions = buildSessionRisks(sessions, workPackets);
   const auditChain = buildAuditChainView();
 
   const manualFilesForInputs = collectFiles(sessionsDir, ".json", 1);
@@ -847,7 +985,9 @@ function buildIngestResult(limit = 30, { persist = true } = {}) {
     workPackets,
     auditChain,
     github,
-    sessions: sessions.map(({ risks, timelineEvents, fileMeta, sortAt, ...session }) => session),
+    // Phase C4 — sessions[].risks·relatedRisks를 UI까지 전달.
+    // timelineEvents·fileMeta·sortAt은 내부 메타라 prune 유지.
+    sessions: enrichedSessions.map(({ timelineEvents, fileMeta, sortAt, ...session }) => session),
     riskEvents,
     timeline,
   };
@@ -862,12 +1002,14 @@ function buildAuditChainView(maxTail = 30) {
   const tailStart = Math.max(0, events.length - maxTail);
   const tail = events.slice(tailStart).map((event, offset) => {
     const globalIndex = tailStart + offset;
+    const humanized = humanizeAuditSummary(event);
     return {
       id: event.id,
       createdAt: event.createdAt,
       event: event.event,
       sessionId: event.sessionId ?? null,
-      summary: event.summary,
+      summary: humanized.summary,
+      rawSummary: humanized.rawSummary,
       risk: event.risk ?? null,
       source: event.source,
       hash: typeof event.hash === "string" ? event.hash : null,
@@ -959,7 +1101,13 @@ function buildSessionFromRecords({
   const gitEvidence = collectGitEvidence(cwdGuess, startedAt, endedAt);
   const repoIdentity = resolveSessionRepoIdentity(cwdGuess, gitEvidence?.gitRoot);
   const repo = repoIdentity.repoFullName ?? gitEvidence?.repoLabel ?? inferRepoLabel(cwdGuess, file);
-  const searchable = [firstText, lastText, ...commands, file.relativePath, cwdGuess].join("\n");
+  // Phase C4 — path/cwd 매칭에서 false positive 발생(image-cache 같은 경로가
+  // permission/secret 패턴에 우연 매칭). 사용자 텍스트·명령만 검사.
+  const searchable = narrowRiskSearchable({
+    firstText,
+    lastText,
+    commands,
+  });
   const risk = detectRisk(searchable);
   const sessionId = segment
     ? `${parentSessionId}_flow${String(segment.index + 1).padStart(2, "0")}_${hashString(firstText).slice(0, 6)}`
@@ -1010,6 +1158,13 @@ function buildSessionFromRecords({
     commands.length ? `명령/도구 ${commands.length}건` : "",
     commitSummary,
   ].filter(Boolean).join(" · ");
+  const intent = pickIntentSummary({
+    firstText,
+    userTexts: readableUserTexts,
+    commitCandidates,
+    tool,
+    commands,
+  });
 
   const session = {
     id: sessionId,
@@ -1021,10 +1176,8 @@ function buildSessionFromRecords({
     repoRoot: repoIdentity.repoRoot ?? gitEvidence?.gitRoot,
     startedAt: localTime(new Date(startedAt)),
     endedAt: localTime(new Date(endedAt)),
-    fullIntent: firstText ? truncate(firstText, 520) : undefined,
-    intentSummary: firstText
-      ? truncate(firstText, 180)
-      : summarizeMissingIntent(tool, commands),
+    fullIntent: intent.fullIntent,
+    intentSummary: intent.intentSummary,
     agentSummary: agentSummary
       || (commandSummary
         ? `명령/도구 사용 후보: ${truncate(commandSummary, 160)}`
@@ -1045,6 +1198,10 @@ function buildSessionFromRecords({
     unresolved: risk ? [risk.reason] : [],
     workBrief,
     flowSteps,
+    // Phase C5 — UI 어댑터(useIngest.ts) cmds·실행된 명령 패널이 사용.
+    // commandCount=total, commandSamples=상위 10개(사이드바 chip·SessionDetail 패널).
+    commandCount: commands.length,
+    commandSamples: commands.slice(0, 10),
     parentSessionId: segment ? parentSessionId : undefined,
     segmentIndex: segment ? segment.index + 1 : undefined,
     segmentCount: segment ? segmentCount : undefined,
@@ -1519,13 +1676,119 @@ function chooseIntentText(texts) {
     ?? texts[0];
 }
 
+// Phase C2 — intentSummary 단편 처리. 4단 fallback:
+//   1) firstText 명료 → 그대로
+//   2) 직전 명료 user turn 있음 → 그것으로 대체
+//   3) 단편 + 커밋 후보 있음 → '(요약 부족) "원문" — 결과 커밋 X "subject" 추정'
+//   4) 단편 + 커밋 없음 → '(요약 부족) <원문>' or summarizeMissingIntent
+// 목적: baseline 단편 7/30 → ≤ 1/30, agent raw 답변이 의도로 둔갑하는 케이스 0.
+// 상수는 함수 내부에 둔다 — 모듈 평가 중 main() 호출이 line 67에서 일어나므로
+// 모듈 top-level const는 TDZ 위반 위험.
+function isFragmentIntent(text) {
+  // Phase C2 polish — MIN_LEN=20 폐기. 한국어는 4~10자에 의도 명료한 경우 다수
+  // ("S5 시작"·"동적화 진행"·"C4 진행" 등). vague pattern OR 빈 텍스트만 단편으로.
+  // isVagueIntentText 안에 length≤4 가드 있음.
+  const normalized = String(text ?? "").replace(/\s+/g, " ").trim();
+  if (!normalized) return true;
+  return isVagueIntentText(normalized);
+}
+
+function pickIntentSummary({
+  firstText,
+  userTexts = [],
+  commitCandidates = [],
+  tool = "AI",
+  commands = [],
+}) {
+  const FRAGMENT_LABEL = "(요약 부족)";
+  const cleaned = String(firstText ?? "").replace(/\s+/g, " ").trim();
+
+  if (cleaned && !isFragmentIntent(cleaned)) {
+    return {
+      intentSummary: truncate(cleaned, 180),
+      fullIntent: truncate(cleaned, 520),
+      isFragment: false,
+    };
+  }
+
+  const seen = new Set(cleaned ? [cleaned] : []);
+  const candidate = [...userTexts]
+    .reverse()
+    .map((t) => String(t ?? "").replace(/\s+/g, " ").trim())
+    .find((t) => t && !seen.has(t) && !isFragmentIntent(t) && !isAssistantBoilerplate(t));
+  if (candidate) {
+    return {
+      intentSummary: truncate(candidate, 180),
+      fullIntent: truncate(candidate, 520),
+      isFragment: false,
+    };
+  }
+
+  const bestCommit = commitCandidates[0];
+
+  if (cleaned) {
+    if (bestCommit) {
+      const subj = truncate(bestCommit.subject ?? "", 80);
+      const hint = `${FRAGMENT_LABEL} "${truncate(cleaned, 50)}" — 결과 커밋 ${bestCommit.shortHash} "${subj}" 추정`;
+      return {
+        intentSummary: truncate(hint, 180),
+        fullIntent: truncate(hint, 520),
+        isFragment: true,
+      };
+    }
+    const raw = `${FRAGMENT_LABEL} ${cleaned}`;
+    return {
+      intentSummary: truncate(raw, 180),
+      fullIntent: truncate(raw, 520),
+      isFragment: true,
+    };
+  }
+
+  if (bestCommit) {
+    const subj = truncate(bestCommit.subject ?? "", 100);
+    const hint = `${FRAGMENT_LABEL} 사용자 요청 미기록 — 결과 커밋 ${bestCommit.shortHash} "${subj}" 추정`;
+    return {
+      intentSummary: truncate(hint, 180),
+      fullIntent: truncate(hint, 520),
+      isFragment: true,
+    };
+  }
+
+  const fallback = summarizeMissingIntent(tool, commands);
+  return {
+    intentSummary: truncate(fallback, 180),
+    fullIntent: truncate(fallback, 520),
+    isFragment: true,
+  };
+}
+
 function isStrongIntentText(text) {
   if (isAssistantBoilerplate(text)) return false;
   return /해줘|해주세요|진행|수정|구현|만들|확인|왜|어떻게|문제|에러|검토|평가|설명|알려|부탁/i.test(text);
 }
 
+// Phase C8a D1 — assistant boilerplate 패턴을 데이터로 분리 (Missing_Lookup).
+// 새 패턴 추가 시 코드 수정 X — 배열에 추가만. since 메타로 추적.
+// TDZ 회피: const를 함수 안으로 (module 평가 line 67에서 main() 호출 — C2와 동일 패턴).
 function isAssistantBoilerplate(text) {
-  return /검증을 시작하겠습니다|신규 파일들을 검증하겠습니다|체계적으로 살펴보겠습니다|작업을 시작하겠습니다|이제 .*확인하겠습니다|먼저 .*확인하겠습니다|계속 .*확인하겠습니다|살펴보겠습니다|진행하겠습니다|수정하겠습니다|구현하겠습니다|세션 시작 훅 확인|에이전트 세션 시작 훅|로컬 권한\/샌드박스 설정 확인/i.test(text);
+  const BOILERPLATE_PATTERNS = [
+    { pattern: /검증을 시작하겠습니다/i, since: "C2" },
+    { pattern: /신규 파일들을 검증하겠습니다/i, since: "C2" },
+    { pattern: /체계적으로 살펴보겠습니다/i, since: "C2" },
+    { pattern: /작업을 시작하겠습니다/i, since: "C2" },
+    { pattern: /이제 .*확인하겠습니다/i, since: "C2" },
+    { pattern: /먼저 .*확인하겠습니다/i, since: "C2" },
+    { pattern: /계속 .*확인하겠습니다/i, since: "C2" },
+    { pattern: /살펴보겠습니다/i, since: "C2" },
+    { pattern: /진행하겠습니다/i, since: "C2" },
+    { pattern: /수정하겠습니다/i, since: "C2" },
+    { pattern: /구현하겠습니다/i, since: "C2" },
+    { pattern: /세션 시작 훅 확인/i, since: "C2" },
+    { pattern: /에이전트 세션 시작 훅/i, since: "C2" },
+    { pattern: /로컬 권한\/샌드박스 설정 확인/i, since: "C2" },
+  ];
+  const value = String(text ?? "");
+  return BOILERPLATE_PATTERNS.some(({ pattern }) => pattern.test(value));
 }
 
 function buildCommitCandidate(commit, index, startedAt, endedAt, signals = []) {
@@ -1637,8 +1900,12 @@ function refineSessionTitle(title, intent, commitCandidates, tool) {
 
 function isVagueIntentText(text = "") {
   const normalized = String(text).replace(/\s+/g, " ").trim();
+  // Phase C2 polish (2026-05-13) — 길이 임계를 8 → 4로 낮춤.
+  // 8자 임계가 *"S5 시작"·"동적화 진행"·"C4 진행"* 같은 짧지만 명료한 한국어 의도까지 폄훼.
+  // 한국어 4자 이하면 거의 인사·단답·확인(예: "안녕"·"감사"·"오케이")이라 단편 분류 안전.
+  // 명료 인정 케이스는 pattern 매칭에 의존.
   return /^(네|넵|응|오케이|좋아|진행|다음|계속|확인|커밋|\/clear|clear)[\s.!?~]*(진행|진행합시다|해주세요|해줘|부탁|만|만 해줘|합시다)?[\s.!?~]*$/i.test(normalized)
-    || normalized.length <= 8;
+    || normalized.length <= 4;
 }
 
 function collectSessionSignals(value, texts, commands, timestamps, cwdCandidates, userTexts = [], key = "") {
@@ -1925,9 +2192,11 @@ function packetTitle(sessions) {
 }
 
 function packetSummary(sessions) {
+  // Phase C3 — C2 가공된 intentSummary 우선. workBrief.objective는 raw firstText 기반이라 단편 노출 위험.
   const primary = sessions[0];
   const extras = sessions.length > 1 ? ` 관련 세션 ${sessions.length}개를 묶었습니다.` : "";
-  return `${truncate(primary.workBrief?.objective || primary.intentSummary || primary.agentSummary, 180)}${extras}`;
+  const base = primary.intentSummary || primary.workBrief?.objective || primary.agentSummary;
+  return `${truncate(base, 180)}${extras}`;
 }
 
 function scorePacketEvidence({
@@ -2122,9 +2391,28 @@ function resolveSessionRepoIdentity(cwdValue, gitRoot) {
   return { repoRoot: gitRoot };
 }
 
+// Phase C6 — 날짜 파편(`05/12`·`2026-05-12/new-chat`)이나 1-segment 값이
+// cwdValue로 들어왔을 때 invalid 판정해 file.path dirname 기반 폴백 사용.
+// baseline #6 (30 세션 중 3건 repo 잘못 추출) 회귀 차단.
+function isValidCwdValue(value) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized || normalized.length < 3) return false;
+  // MM/DD 또는 M/D 같은 날짜 파편
+  if (/^\d{1,2}\/\d{1,2}(\/|$)/.test(normalized)) return false;
+  // YYYY-MM-DD 시작 (날짜로 끝나든 추가 segment 있든)
+  if (/^\d{4}-\d{2}-\d{2}(\/|$)/.test(normalized)) return false;
+  // absolute path는 ok
+  if (normalized.startsWith("/")) return true;
+  // relative path는 최소 2-segment 필요 (parent/name 추출 가능)
+  const parts = normalized.split("/").filter(Boolean);
+  if (parts.length < 2) return false;
+  return true;
+}
+
 function inferRepoLabel(cwdValue, file) {
-  const parts = cwdValue.split("/").filter(Boolean);
-  const name = parts.at(-1) ?? file.source.id;
+  const source = cwdValue && isValidCwdValue(cwdValue) ? cwdValue : dirname(file.path);
+  const parts = String(source).split("/").filter(Boolean);
+  const name = parts.at(-1) ?? file.source?.id ?? "local";
   const parent = parts.at(-2) ?? "local";
   return `${parent}/${name}`;
 }
@@ -2210,7 +2498,30 @@ function serveLocalApp(values = []) {
       if (url.pathname === "/api/mvp" || url.pathname === "/api/ingest") {
         const refresh = url.searchParams.get("refresh") === "1";
         const limit = Number(url.searchParams.get("limit") ?? 30);
+        const level = url.searchParams.get("level"); // "summary" | null
         const ingest = refresh ? buildAndStoreIngest(limit) : getCachedOrBuildIngest(limit);
+
+        // Phase C8a B1 — `?level=summary` 옵션 추가. 목록 화면(Today/Sessions/Risk)용
+        // 경량 응답. flowSteps·commandSamples·evidence·commitCandidates 같은 무거운
+        // 필드를 sessions에서 제외해 payload 크기를 줄임. SessionDetail은 후속 sprint에서
+        // 신규 `/api/sessions/:id` 엔드포인트로 분리 예정.
+        if (level === "summary") {
+          const trimmedSessions = (ingest.sessions ?? []).map((s) => ({
+            id: s.id,
+            tool: s.tool,
+            actor: s.actor,
+            repo: s.repo,
+            intentSummary: s.intentSummary,
+            startedAt: s.startedAt,
+            status: s.status,
+            commandCount: s.commandCount,
+            risks: s.risks,
+            relatedRisks: s.relatedRisks,
+          }));
+          sendJson(response, { ...ingest, sessions: trimmedSessions });
+          return;
+        }
+
         sendJson(response, ingest);
         return;
       }
@@ -2982,3 +3293,14 @@ function run(command, commandArgs, options = {}) {
 function shellQuote(value) {
   return `'${String(value).replaceAll("'", "'\\''")}'`;
 }
+
+export {
+  pickIntentSummary,
+  isFragmentIntent,
+  humanizeAuditSummary,
+  packetSummary,
+  narrowRiskSearchable,
+  buildSessionRisks,
+  isValidCwdValue,
+  inferRepoLabel,
+};
