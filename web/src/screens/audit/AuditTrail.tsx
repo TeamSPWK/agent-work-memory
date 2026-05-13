@@ -4,6 +4,7 @@ import { AUDIT_EVENTS, AUDIT_STATS } from '../../lib/seed/audit'
 import { Icon } from '../../components/Icon'
 import { RiskChip } from '../../components/RiskChip'
 import { useIngest } from '../../lib/useIngest'
+import { KpiGridSkeleton, TableRowsSkeleton } from '../../components/Skeleton'
 
 const RANGES = ['오늘', '주', '월', '30일', '분기'] as const
 type Range = (typeof RANGES)[number]
@@ -18,16 +19,19 @@ export function AuditTrail() {
   const [range, setRange] = useState<Range>('30일')
   const [, setParams] = useSearchParams()
 
+  if (ingest.loading) {
+    return (
+      <>
+        <KpiGridSkeleton />
+        <div className="card">
+          <TableRowsSkeleton rows={8} cols={5} />
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
-      {ingest.loading && (
-        <div className="card tight" role="status" style={{ marginBottom: 16 }}>
-          <p style={{ font: 'var(--t-body2)', color: 'var(--text-assistive)', margin: 0 }}>
-            데이터 불러오는 중…
-          </p>
-        </div>
-      )}
-
       <div className="grid-4" style={{ marginBottom: 16 }}>
         <div className="card tight">
           <div className="kpi">
@@ -37,7 +41,7 @@ export function AuditTrail() {
               <span style={{ font: 'var(--t-heading3)' }}>%</span>
             </div>
             <div className="muted tnum" style={{ font: 'var(--t-caption1)' }}>
-              {AUDIT_STATS.reviewed} / {AUDIT_STATS.totalChanges}건 Reviewer 승인
+              {AUDIT_STATS.reviewed} / {AUDIT_STATS.totalChanges}건 검토자 승인
             </div>
           </div>
           <div className="bar" style={{ marginTop: 10 }}>
@@ -54,13 +58,13 @@ export function AuditTrail() {
             <div className="delta neg">15% — 인공지능기본법 권고 ≤ 10%</div>
           </div>
           <button className="btn weak sm" type="button" style={{ marginTop: 10 }}>
-            Reviewer Brief 큐로 →
+            검토 대기열로 →
           </button>
         </div>
 
         <div className="card tight">
           <div className="kpi">
-            <div className="l">체인 무결성</div>
+            <div className="l">기록 변조 검증</div>
             <div className="v" style={{ color: 'var(--status-positive)' }}>
               ✓ {AUDIT_STATS.integrityTotal.toLocaleString('ko-KR')}건
             </div>
@@ -267,7 +271,7 @@ export function AuditTrail() {
               <th>이벤트</th>
               <th>작업자</th>
               <th>위험</th>
-              <th style={{ width: 240 }}>해시 체인</th>
+              <th style={{ width: 240 }}>변조 방지 서명</th>
             </tr>
           </thead>
           <tbody>

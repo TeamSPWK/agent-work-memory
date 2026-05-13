@@ -54,9 +54,9 @@ export function ExplainBack() {
     <>
       <div className="page-h">
         <div>
-          <div className="eyebrow">진입 시점 · Today에서 "설명 부족" 클릭</div>
-          <h1>Explain Back 노트</h1>
-          <p>점수·평가가 아닌 *협업 가능한 작업 요약*입니다. 팀 회상과 핸드오프에만 쓰입니다.</p>
+          <div className="eyebrow">오늘 화면에서 "설명 부족" 클릭</div>
+          <h1>설명 메모</h1>
+          <p>점수·평가가 아닌 *협업 가능한 작업 요약*입니다. 팀 회상과 인수인계에만 쓰입니다.</p>
         </div>
         <div className="actions">
           <Link className="btn" to={`/sessions/${session.id}`}>
@@ -79,7 +79,7 @@ export function ExplainBack() {
             color: 'var(--c-orange-30)',
           }}
         >
-          ⓘ 데모 mock 한계 — 이 세션(<code>{session.id}</code>)의 Explain Back 초안은 아직 채워지지 않았습니다. 아래는 참고용으로 <code>{SESSION_DETAIL.id}</code>의 예시를 표시합니다.
+          ⓘ 데모 예시 — 이 세션의 설명 메모 초안은 아직 채워지지 않았습니다. 아래는 참고용 예시 데이터입니다.
         </div>
       )}
 
@@ -138,9 +138,9 @@ export function ExplainBack() {
               }}
             >
               <li>팀 공유 요약 (오늘 페이지 카드)</li>
-              <li>Reviewer Brief — *의도* 좌측 패널</li>
-              <li>Audit Trail — 작업자 의도 기록 (감사 자료)</li>
-              <li>사고 발생 시 Incident Replay 사이드바</li>
+              <li>검토 요약 — *의도* 좌측 패널</li>
+              <li>감사 기록 — 작업자 의도 기록 (감사 자료)</li>
+              <li>사고 발생 시 사고 재생 사이드바</li>
             </ul>
           </div>
 

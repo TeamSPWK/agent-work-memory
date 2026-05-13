@@ -17,7 +17,7 @@ const SUMMARY = `[5/10 (월) · B2B SaaS 워크스페이스 · AI 작업 요약]
    → .gitignore 확인 완료. push 이력은 미확인.
    담당: 운영 매니저
 3) [-] 결제 실패 재시도 UI 5파일 (15:48)
-   → Reviewer Brief 검토 대기.
+   → 검토 요약 대기.
    담당: 프론트엔드`
 
 const CHANNELS = [
@@ -58,13 +58,13 @@ export function Share() {
     <>
       <div className="page-h">
         <div>
-          <div className="eyebrow">진입 시점 · Today 또는 Explain Back 저장 후</div>
+          <div className="eyebrow">오늘 화면 또는 설명 메모 저장 후</div>
           <h1>팀 공유 요약</h1>
           <p>슬랙·노션·이메일에 그대로 붙여 넣을 수 있는 한국어 요약입니다.</p>
         </div>
         <div className="actions">
           <Link className="btn" to={`/sessions/${session.id}/explain`}>
-            ← Explain Back
+            ← 설명 메모
           </Link>
           <button className="btn primary" type="button" onClick={handleCopy}>
             <Icon name="copy" size={14} />

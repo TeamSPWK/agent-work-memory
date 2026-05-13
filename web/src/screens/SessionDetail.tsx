@@ -4,6 +4,7 @@ import { SESSION_DETAIL, type DetailMatchAxis } from '../lib/seed/sessionDetail'
 import { Icon } from '../components/Icon'
 import { RiskChip } from '../components/RiskChip'
 import { useIngest } from '../lib/useIngest'
+import { Skeleton } from '../components/Skeleton'
 
 const AXIS_LABEL: Record<DetailMatchAxis, string> = {
   time: 'TIME',
@@ -24,10 +25,16 @@ export function SessionDetail() {
   if (!session) {
     if (loading) {
       return (
-        <div className="card" style={{ padding: 24 }} role="status">
-          <p style={{ font: 'var(--t-body2)', color: 'var(--text-assistive)', margin: 0 }}>
-            세션 데이터 불러오는 중…
-          </p>
+        <div className="card" style={{ padding: 24 }} role="status" aria-label="세션 불러오는 중">
+          <Skeleton width={120} height={11} />
+          <div style={{ height: 12 }} />
+          <Skeleton width="70%" height={26} />
+          <div style={{ height: 18 }} />
+          <Skeleton height={14} />
+          <div style={{ height: 8 }} />
+          <Skeleton width="85%" height={14} />
+          <div style={{ height: 8 }} />
+          <Skeleton width="60%" height={14} />
         </div>
       )
     }
@@ -40,7 +47,7 @@ export function SessionDetail() {
           요청한 세션 ID <code>{id}</code> 가 존재하지 않습니다.
         </p>
         <Link className="btn" to="/sessions" style={{ marginTop: 16, display: 'inline-flex' }}>
-          ← Sessions 목록으로
+          ← 작업 세션 목록으로
         </Link>
       </div>
     )
@@ -63,7 +70,7 @@ export function SessionDetail() {
             </Link>
             <Link className="btn primary" to={`/sessions/${session.id}/explain`}>
               <Icon name="pencil" size={14} />
-              Explain Back 채우기
+              설명 메모 채우기
             </Link>
           </div>
         </div>
@@ -78,13 +85,12 @@ export function SessionDetail() {
             color: 'var(--c-orange-30)',
           }}
         >
-          ⓘ 실 캡처 세션 — 시안 상세 데이터(대화·명령·매칭 commit)는 미연결입니다. 어댑터 25→7 필드 확장은 S1.6 baseline 발견 #3 fix 후 표시 예정.
+          ⓘ 실 캡처 세션 — 상세 데이터(대화 맥락·실행된 명령·매칭 변경)는 아직 연결되지 않았습니다. 기본 정보만 표시합니다.
         </div>
 
         <div className="card">
           <div className="card-h">
-            <h3>기본 메타</h3>
-            <span className="sub">ingest 어댑터 매핑 7 필드</span>
+            <h3>기본 정보</h3>
           </div>
           <dl style={{ display: 'grid', gridTemplateColumns: '120px 1fr', rowGap: 8, columnGap: 16, margin: 0 }}>
             <dt className="muted">도구</dt>
@@ -122,7 +128,7 @@ export function SessionDetail() {
           </Link>
           <Link className="btn primary" to={`/sessions/${session.id}/explain`}>
             <Icon name="pencil" size={14} />
-            Explain Back 채우기
+            설명 메모 채우기
           </Link>
         </div>
       </div>
