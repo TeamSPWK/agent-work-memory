@@ -45,6 +45,7 @@ const persistence = createPersistence({ stateDir });
 const { atomicWriteJsonSync, readJsonSafe, runQueued, emitEvent } = persistence;
 const discoveryPath = join(stateDir, "discovery.json");
 const ingestPath = join(stateDir, "ingest.json");
+const parseCachePath = join(stateDir, "parse-cache.json");
 const linksPath = join(stateDir, "links.json");
 const reviewsPath = join(stateDir, "reviews.json");
 const githubActivityPath = join(stateDir, "github-activity.json");
@@ -264,7 +265,7 @@ Usage:
   awm discover
   awm github status --json
   awm github sync --since <ISO>
-  awm ingest --limit 30
+  awm ingest --limit 30 [--force-rebuild] [--no-write]
   awm serve --port 5173
   awm session summarize --tool codex --summary "..."
   awm today
@@ -716,44 +717,73 @@ function ingestSessions(values = []) {
   const limit = Number(readFlag(values, "--limit") ?? 30);
   const asJson = values.includes("--json");
   const noWrite = values.includes("--no-write");
-  const result = buildIngestResult(limit);
+  const forceRebuild = values.includes("--force-rebuild");
+  let result;
+  let cacheHit = false;
+  if (!forceRebuild && existsSync(ingestPath)) {
+    try {
+      const cached = JSON.parse(readFileSync(ingestPath, "utf8"));
+      if (isIngestCacheValid(cached, currentIngestInputs(limit))) {
+        result = cached;
+        cacheHit = true;
+      }
+    } catch {}
+  }
+  if (!result) result = buildIngestResult(limit, { persist: !noWrite });
 
-  if (!noWrite) writeFileSync(ingestPath, `${JSON.stringify(result, null, 2)}\n`);
+  if (!noWrite && !cacheHit) writeFileSync(ingestPath, `${JSON.stringify(result, null, 2)}\n`);
 
   if (asJson) {
     console.log(JSON.stringify(result, null, 2));
     return;
   }
 
-  console.log(`AWM Ingest (${localDate(new Date(result.ingestedAt))})`);
+  console.log(`AWM Ingest (${localDate(new Date(result.ingestedAt))})${cacheHit ? " — cache hit" : ""}`);
   console.log(`Sessions: ${result.sessions.length}`);
   console.log(`Risks: ${result.riskEvents.length}`);
   console.log(`Repositories: ${result.repositories.length}`);
-  if (!noWrite) console.log(`Ingest written: ${ingestPath}`);
+  if (!noWrite && !cacheHit) console.log(`Ingest written: ${ingestPath}`);
 }
 
-function buildIngestResult(limit = 30) {
+function buildIngestResult(limit = 30, { persist = true } = {}) {
   const discovery = buildDiscoveryResult({ includeAllFiles: true });
   const confirmedLinks = readLinks();
   const reviews = readReviews();
   const githubActivity = readGitHubActivity();
   const github = buildGitHubVisibility(githubActivity);
-  writeFileSync(
-    discoveryPath,
-    `${JSON.stringify({ ...discovery, sources: discovery.sources.map(({ allFiles, ...source }) => source) }, null, 2)}\n`,
-  );
+  if (persist) {
+    writeFileSync(
+      discoveryPath,
+      `${JSON.stringify({ ...discovery, sources: discovery.sources.map(({ allFiles, ...source }) => source) }, null, 2)}\n`,
+    );
+  }
   const files = discovery.sources
     .flatMap((source) => source.allFiles.map((file) => ({ ...file, source })))
     .filter(isUserVisibleSessionFile)
     .sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt))
     .slice(0, limit);
 
+  const parseCache = loadParseCache();
+  const nextParseCache = {};
   const discoveredSessions = files
-    .flatMap((file, index) => parseSessionFile(file, index))
+    .flatMap((file, index) => {
+      const cacheKey = `${file.path}`;
+      const cacheEntry = parseCache[cacheKey];
+      let sessions;
+      if (cacheEntry && cacheEntry.mtime === file.modifiedAt && cacheEntry.bytes === file.bytes && cacheEntry.index === index) {
+        sessions = cacheEntry.sessions;
+      } else {
+        sessions = parseSessionFile(file, index);
+        nextParseCache[cacheKey] = { mtime: file.modifiedAt, bytes: file.bytes, index, sessions };
+      }
+      if (cacheEntry && !nextParseCache[cacheKey]) nextParseCache[cacheKey] = cacheEntry;
+      return sessions;
+    })
     .filter(Boolean)
     .map((session) => mergeGitHubActivityIntoSession(session, githubActivity))
     .map((session) => applyLinksToSession(session, confirmedLinks[session.id]))
     .map((session) => applyReviewToSession(session, reviews[session.id]));
+  if (persist) saveParseCache(nextParseCache);
   const manualSessions = collectFiles(sessionsDir, ".json", 1)
     .sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt))
     .slice(0, limit)
@@ -773,9 +803,21 @@ function buildIngestResult(limit = 30) {
   const workPackets = buildWorkPackets(sessions);
   const auditChain = buildAuditChainView();
 
+  const manualFilesForInputs = collectFiles(sessionsDir, ".json", 1);
+  const inputs = {
+    limit,
+    sources: files.map((f) => ({ path: f.path, mtime: f.modifiedAt })),
+    manual: manualFilesForInputs.map((f) => ({ path: f.path, mtime: f.modifiedAt })),
+    links: statMtimeOrNull(linksPath),
+    reviews: statMtimeOrNull(reviewsPath),
+    githubActivity: statMtimeOrNull(githubActivityPath),
+    events: statMtimeOrNull(eventsPath),
+  };
+
   return {
     ingestedAt: new Date().toISOString(),
     limit,
+    inputs,
     sources: [
       ...discovery.sources.map((source) => ({
         id: source.id,
@@ -2168,9 +2210,7 @@ function serveLocalApp(values = []) {
       if (url.pathname === "/api/mvp" || url.pathname === "/api/ingest") {
         const refresh = url.searchParams.get("refresh") === "1";
         const limit = Number(url.searchParams.get("limit") ?? 30);
-        const ingest = refresh || !existsSync(ingestPath)
-          ? buildAndStoreIngest(limit)
-          : JSON.parse(readFileSync(ingestPath, "utf8"));
+        const ingest = refresh ? buildAndStoreIngest(limit) : getCachedOrBuildIngest(limit);
         sendJson(response, ingest);
         return;
       }
@@ -2284,6 +2324,95 @@ function buildAndStoreIngest(limit = 30) {
   const ingest = buildIngestResult(limit);
   writeFileSync(ingestPath, `${JSON.stringify(ingest, null, 2)}\n`);
   return ingest;
+}
+
+function loadParseCache() {
+  if (!existsSync(parseCachePath)) return {};
+  try {
+    return JSON.parse(readFileSync(parseCachePath, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function saveParseCache(cache) {
+  try {
+    writeFileSync(parseCachePath, JSON.stringify(cache));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[awm] parse-cache save failed (will rebuild next time): ${message}`);
+  }
+}
+
+function statMtimeOrNull(filePath) {
+  try {
+    if (!existsSync(filePath)) return null;
+    return statSync(filePath).mtime.toISOString();
+  } catch {
+    return null;
+  }
+}
+
+function currentIngestInputs(limit) {
+  const discovery = buildDiscoveryResult({ includeAllFiles: true });
+  const files = discovery.sources
+    .flatMap((source) => source.allFiles.map((file) => ({ ...file, source })))
+    .filter(isUserVisibleSessionFile)
+    .sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt))
+    .slice(0, limit);
+  const manual = collectFiles(sessionsDir, ".json", 1);
+  return {
+    limit,
+    sources: files.map((f) => ({ path: f.path, mtime: f.modifiedAt })),
+    manual: manual.map((f) => ({ path: f.path, mtime: f.modifiedAt })),
+    links: statMtimeOrNull(linksPath),
+    reviews: statMtimeOrNull(reviewsPath),
+    githubActivity: statMtimeOrNull(githubActivityPath),
+    events: statMtimeOrNull(eventsPath),
+  };
+}
+
+function isIngestCacheValid(cached, currentInputs) {
+  // events.jsonl은 auditChain만 영향. heavy 캐시 무효화 기준에서 제외.
+  // auditChain은 응답 직전 신선하게 재생성된다 (refreshAuditChain).
+  if (!cached || !cached.inputs) return false;
+  if (cached.inputs.limit !== currentInputs.limit) return false;
+  if (!sameMtimeList(cached.inputs.sources, currentInputs.sources)) return false;
+  if (!sameMtimeList(cached.inputs.manual, currentInputs.manual)) return false;
+  if (cached.inputs.links !== currentInputs.links) return false;
+  if (cached.inputs.reviews !== currentInputs.reviews) return false;
+  if (cached.inputs.githubActivity !== currentInputs.githubActivity) return false;
+  return true;
+}
+
+function refreshAuditChain(ingest) {
+  // events.jsonl이 매 capture마다 갱신 — auditChain만 신선화하고 캐시는 유지.
+  return { ...ingest, auditChain: buildAuditChainView() };
+}
+
+function sameMtimeList(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  if (a.length !== b.length) return false;
+  const byPath = new Map(b.map((entry) => [entry.path, entry.mtime]));
+  for (const entry of a) {
+    if (byPath.get(entry.path) !== entry.mtime) return false;
+  }
+  return true;
+}
+
+function getCachedOrBuildIngest(limit = 30) {
+  if (existsSync(ingestPath)) {
+    try {
+      const cached = JSON.parse(readFileSync(ingestPath, "utf8"));
+      const currentInputs = currentIngestInputs(limit);
+      if (isIngestCacheValid(cached, currentInputs)) {
+        return refreshAuditChain(cached);
+      }
+    } catch {
+      // fall through to rebuild
+    }
+  }
+  return buildAndStoreIngest(limit);
 }
 
 function scheduleIngestRebuild(limit = 30) {
