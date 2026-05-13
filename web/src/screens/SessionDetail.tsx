@@ -3,6 +3,7 @@ import { SESSIONS } from '../lib/seed/sessions'
 import { SESSION_DETAIL, type DetailMatchAxis } from '../lib/seed/sessionDetail'
 import { Icon } from '../components/Icon'
 import { RiskChip } from '../components/RiskChip'
+import { useIngest } from '../lib/useIngest'
 
 const AXIS_LABEL: Record<DetailMatchAxis, string> = {
   time: 'TIME',
@@ -13,10 +14,23 @@ const AXIS_LABEL: Record<DetailMatchAxis, string> = {
 
 export function SessionDetail() {
   const { id = '' } = useParams<{ id?: string }>()
-  const session = SESSIONS.find((s) => s.id === id)
+  const { loading, sessions: ingestSessions } = useIngest()
+  const liveSession = ingestSessions.find((s) => s.id === id)
+  const seedSession = SESSIONS.find((s) => s.id === id)
+  const session = liveSession ?? seedSession
+  const isLive = Boolean(liveSession) && !seedSession
   const d = SESSION_DETAIL
 
   if (!session) {
+    if (loading) {
+      return (
+        <div className="card" style={{ padding: 24 }} role="status">
+          <p style={{ font: 'var(--t-body2)', color: 'var(--text-assistive)', margin: 0 }}>
+            세션 데이터 불러오는 중…
+          </p>
+        </div>
+      )
+    }
     return (
       <div className="card" style={{ padding: 24 }}>
         <h1 style={{ font: 'var(--t-title3)', color: 'var(--text-strong)', margin: 0 }}>
@@ -29,6 +43,65 @@ export function SessionDetail() {
           ← Sessions 목록으로
         </Link>
       </div>
+    )
+  }
+
+  if (isLive) {
+    return (
+      <>
+        <div className="page-h">
+          <div>
+            <div className="eyebrow">세션 · {session.id}</div>
+            <h1>{session.intent}</h1>
+            <p>
+              {session.tool} · {session.actor} · {session.repo} · {session.when}
+            </p>
+          </div>
+          <div className="actions">
+            <Link className="btn" to="/sessions">
+              ← 리스트
+            </Link>
+            <Link className="btn primary" to={`/sessions/${session.id}/explain`}>
+              <Icon name="pencil" size={14} />
+              Explain Back 채우기
+            </Link>
+          </div>
+        </div>
+
+        <div
+          className="card tight"
+          role="status"
+          style={{
+            marginBottom: 16,
+            background: 'var(--c-orange-95)',
+            borderColor: 'transparent',
+            color: 'var(--c-orange-30)',
+          }}
+        >
+          ⓘ 실 캡처 세션 — 시안 상세 데이터(대화·명령·매칭 commit)는 미연결입니다. 어댑터 25→7 필드 확장은 S1.6 baseline 발견 #3 fix 후 표시 예정.
+        </div>
+
+        <div className="card">
+          <div className="card-h">
+            <h3>기본 메타</h3>
+            <span className="sub">ingest 어댑터 매핑 7 필드</span>
+          </div>
+          <dl style={{ display: 'grid', gridTemplateColumns: '120px 1fr', rowGap: 8, columnGap: 16, margin: 0 }}>
+            <dt className="muted">도구</dt>
+            <dd style={{ margin: 0 }}>{session.tool}</dd>
+            <dt className="muted">작업자</dt>
+            <dd style={{ margin: 0 }}>{session.actor}</dd>
+            <dt className="muted">레포</dt>
+            <dd style={{ margin: 0 }}>{session.repo || '(미연결)'}</dd>
+            <dt className="muted">의도</dt>
+            <dd style={{ margin: 0 }}>{session.intent}</dd>
+            <dt className="muted">상태</dt>
+            <dd style={{ margin: 0 }}>{session.state}</dd>
+            <dt className="muted">파일·명령</dt>
+            <dd style={{ margin: 0 }}>{session.files}건 변경 / {session.cmds}건 명령</dd>
+          </dl>
+        </div>
+      </>
     )
   }
 

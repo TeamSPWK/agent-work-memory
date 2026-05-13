@@ -137,6 +137,71 @@ describe('AppShell + product IA', () => {
     ).toBeInTheDocument()
   })
 
+  it('SessionDetail renders live capture card for ingest sessions (S1.7 seed-id mismatch fix)', async () => {
+    const { useIngest } = await import('./lib/useIngest')
+    vi.mocked(useIngest).mockReturnValueOnce({
+      loading: false,
+      sessions: [
+        {
+          id: 'claude_abc_flow08_4b8bb4',
+          tool: 'Claude Code',
+          when: '2026-05-13 09:15',
+          actor: '로컬 사용자',
+          repo: 'agent-work-memory',
+          intent: 'M0/S1.7 SessionDetail seed-id mismatch fix',
+          risk: null,
+          files: 2,
+          cmds: 0,
+          state: '추가 확인 필요',
+          explained: false,
+        },
+      ],
+      auditEvents: [],
+      error: null,
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/sessions/claude_abc_flow08_4b8bb4']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions/:id" element={<SessionDetail />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', {
+        name: 'M0/S1.7 SessionDetail seed-id mismatch fix',
+        level: 1,
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(/실 캡처 세션/)
+    expect(screen.getByRole('heading', { name: '기본 메타' })).toBeInTheDocument()
+  })
+
+  it('SessionDetail shows loading state while ingest is in-flight (S1.7)', async () => {
+    const { useIngest } = await import('./lib/useIngest')
+    vi.mocked(useIngest).mockReturnValueOnce({
+      loading: true,
+      sessions: [],
+      auditEvents: [],
+      error: null,
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/sessions/claude_unknown_x']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions/:id" element={<SessionDetail />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('status')).toHaveTextContent(/세션 데이터 불러오는 중/)
+  })
+
   it('ExplainBack renders 5 fields composer for s-024', () => {
     render(
       <MemoryRouter initialEntries={['/sessions/s-024/explain']}>
