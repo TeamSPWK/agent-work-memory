@@ -9,7 +9,7 @@
 ### Phase C — Local Dogfooding Ready (현재)
 | Sprint | Status | 무엇을 | Exit Criteria | Note |
 |--------|--------|-------|--------------|------|
-| **C1** 측정 환경 자동 기동 + dev/status 메뉴 | done(부분) | npm run init 인프라(완) + Sidebar 사이드바 dev 메뉴(이번 세션 PASS) | 본 worktree에서 init→재시작→5분 안에 본인 새 세션 1건 Today 노출 | dev/status 사이드바 노출은 hostname=localhost/127/0 분기. 잔여: capture hook 본 worktree 설치 검증 |
+| **C1** 측정 환경 자동 기동 + dev/status 메뉴 | done | npm run init 인프라 + Sidebar dev 메뉴(hostname=localhost/127/0 분기) + capture hook 본 worktree 설치 검증 (SessionStart/PreToolUse/PostToolUse 이벤트 prev/hash chain 적재 확인) | 본 worktree에서 init→재시작→5분 안에 본인 새 세션 1건 Today 노출 — 충족 | 운영 배포 자동 숨김. C2~C7 진입 가능 |
 | **C2** Intent 가공 — 단편 → 의도 한 줄 | pending | bin/awm.mjs parseSessionFile 또는 useIngest toSessionSeed에서 agentSummary 우선·직전 user turn fallback·*(요약 부족)* 명시 | 30 세션 단편 비율 7/30 → ≤ 1/30 | S1.6 baseline 발견 #1 |
 | **C3** Audit summary + WorkPacket 의도 변환 | pending | bin/awm.mjs buildAuditChainView·buildWorkPacket — tool→verb 사전(Bash·Read·Edit·Write·Grep·Task) + agentSummary 우선 + raw fallback | Audit 30 행·WorkPacket 24건 모두 의도 한국어 한 줄 | S1.6 발견 #2,#7 |
 | **C4** Risk 세션 fan-out | pending | bin/awm.mjs buildSessionRisks(packet→sessions 전파) + Risk.tsx mock seed → 실 데이터 | Risk Radar 실 데이터 ≥ 4건 + Today/Sessions 위험 chip 노출 | S1.6 발견 #5. C2·C3 후 |
@@ -71,13 +71,13 @@
 | — | — | — |
 
 ## Last Activity
+- **Phase C1 fully done + UX Polish 5분할 커밋 (5/5 PASS)** | 2026-05-13. C1 capture hook 본 worktree 설치 검증 — SessionStart/PreToolUse/PostToolUse 이벤트가 prev/hash chain으로 적재 확인 (`node bin/awm.mjs audit show --last 5`). 5분할 커밋: 7c76193 perf(SWR+Skeleton+1440) / 9c7822e i18n / cb4bfa7 ux(jargon) / f2fb725 dev(메뉴) / 80b6837 docs(state). 다음 세션 시작: C2 Intent 가공 sprint (`/nova:plan C2` 또는 `/nova:run C2`) — bin/awm.mjs parseSessionFile에서 agentSummary 우선 + 직전 user turn fallback + (요약 부족) 명시, 30 세션 단편 7/30 → ≤1/30 exit.
 - **UX Polish 검증 + Surgical Fix 8건 → PASS** | 2026-05-13. Evaluator(senior-dev) + /nova:ux-audit 5인 적대적 평가 → Critical 2 / High 10 / Medium 7 / Low 6 / Dark Pattern 0건. 커밋 전 surgical fix 8건: (a) useIngest.ts revalidating 4줄 삭제 [Eval H1 lint blocker 해소] (b) state/ingest.ts error 상태 자동 retry bail 1줄 [Eval H2] (c) AuditTrail "해시 체인"→"변조 방지 서명" (d) Share "Reviewer Brief 검토 대기"→"검토 요약 대기" (e) Settings billing eyebrow "컴플라이언스 패널→업그레이드"→"설정·요금제" (f) Sidebar DEV 뱃지 aria-hidden (WCAG 4.1.2) (g) SessionDetail 내부 메타 "S1.6 baseline 발견 #3"·"어댑터 25→7" 제거 (rules §3.1) + "기본 메타"→"기본 정보" (h) ExplainBack mock 한계 문구 평이화. 재검증: web 71/71 PASS / tsc clean / lint 0 errors (3 warnings 기존) / build 150ms. **후속 sprint 이연**: Today seed mock 배너 + i18n 본문 카탈로그 확장 + aria-busy/aria-live + html lang 동기화 + 동적 날짜는 C5·C7로, skip-link + 위험 색 의미 통일은 별도 a11y polish sprint로.
 - **Phase 재구조화 — Local Dogfooding Ready (Phase C) 신설** + dev/status 메뉴 로컬 노출. 사용자 진단 *"지금 하려는 방향이 로컬에서 실사용 수준까지의 개발이 아직 안 된 거잖아"* → M0/S2 측정 직진 보류 + S1.6 7 발견 중 5건을 sprint(C2~C6)로 분해 + 기존 jargon 잔존(Incident 화면)을 C7로 분리 + 1주 dogfooding을 C8로 정형화. Goal·Phase·Blocker 모두 갱신, Tasks 새 페이즈 C 상위 + 시안→코드/M0 부분 PASS는 압축. 산출물: `docs/projects/plans/local-dogfooding-ready.md` (CPS + 8 sprint + 의존성 그래프 + 1인 sustainability). dev/status 메뉴는 hostname=localhost/127/0 분기로 노출(NAV_ITEMS.devOnly + Sidebar filter + .nav-item-dev DEV 뱃지 CSS) — 운영 배포에는 자동 숨김. 검증: web 71/71 PASS. | 2026-05-13
 - UX Polish 세션 — SWR 캐싱 + Skeleton + i18n + 한국어 + 1440px 기준 + jargon 평이화 → PASS. 사용자 피드백 3건(메뉴 이동 시 데이터 로딩 체감 느림 / 로딩 정적 / 메뉴 문구 어려움) + 1440px 기준 부재 + 표 줄바꿈 깨짐. **변경 ~25 파일**: (1) `web/src/state/ingest.ts` 신규 zustand store + 60s SWR (화면 이동마다 fetch 4.3s 반복 차단) (2) `web/src/components/Skeleton.tsx` + global.css shimmer (Today/Sessions/Audit/SessionDetail 정적 텍스트→실제 콘텐츠 모양 skeleton) (3) `web/src/lib/i18n/{index,messages.ko}.ts` 신규 — 라이브러리 의존성 0, t() + locale store, 다국어(en/ja) 추가 시 카탈로그 등록만 (4) 사이드바 6 메뉴 한국어화(오늘·작업 세션·감사 기록·위험 추적·팀·설정) (5) jargon 평이화: Explain Back→설명 메모, Reviewer Brief→검토 요약, Audit Trail→감사 기록, 셀프 회상→내가 시킨 일 다시보기, 체인 무결성→기록 변조 검증 등 — 깊은 화면(Incident)은 Phase C7로 분리 (6) `--layout-max:1440px / --sidebar-w:248px` 토큰 + `.app-shell` outer wrapper + `.app` max-width 1440 가운데 정렬, 1440 이하 풀폭 (7) `.tag` + `.tbl th` white-space: nowrap + Sessions `<colgroup>` (검토 완료/변경 명령 두 줄 깨짐 해소) (8) 도구 필터 `All`→`전체` + 검색 placeholder repo→저장소. 검증: web 71/71 + node 55/55 + build 178ms + tsc clean. | 2026-05-13
-- Audit Trail UX Polish — 목업 flash 차단 + 의도/무결성 2 패널 분할 → PASS. AuditTrail에 `작업 패킷` 패널(7 컬럼) + `Chain tail — 변조 불가성 증거 (PRD §5.5)` 패널 분리 + isLive 분기로 seed flash 차단(Today/Sessions/Audit 3 화면). web 67→71 (분할 1 + flash 3). Chain tail summary가 PreToolUse raw 노출 — Phase C3로 이전. | 2026-05-13
-- Ingest Incremental Cache (2층 L1 inputs mtime + L2 file parse) → PASS. /api/ingest 44s → 4.3s (10배), L1 hit 62ms. PRD §11 H4 5분 first-value 가설 실용성 확보. | 2026-05-13
-- Tester Onboarding (`npm run init` 한 줄 + `docs/tester-quickstart.html`) → PASS. 8단계 onboarding → 1 명령 + 1 재시작. Phase C1 인프라 핵심. | 2026-05-13
-- M0/S1·S1.5·S1.6 baseline·S1.7·H2-b — 위 Tasks 표 압축 참조. | 2026-05-12~13
+- Audit Trail UX Polish — 목업 flash 차단 + 의도/무결성 2 패널 분할 → PASS. | 2026-05-13
+- Ingest Incremental Cache — /api/ingest 44s → 4.3s (10배), L1 hit 62ms → PASS. | 2026-05-13
+- Tester Onboarding + M0/S1·S1.5·S1.6·S1.7·H2-b — Tasks 표 압축 참조. | 2026-05-12~13
 
 ## Refs
 - **현재 페이즈 마스터: `docs/projects/plans/local-dogfooding-ready.md`** (Phase C 8 sprint + 의존성 그래프)
