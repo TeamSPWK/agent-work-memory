@@ -125,7 +125,7 @@ export function Members() {
         style={{ marginTop: 16, background: 'var(--bg-subtle)', borderColor: 'transparent' }}
       >
         <div className="muted" style={{ font: 'var(--t-caption1)' }}>
-          역할 변경 · 초대 · 삭제는 모두 Audit Trail에 자동 기록됩니다 (변경 사유 입력 권장).
+          역할 변경 · 초대 · 삭제는 모두 감사 기록에 자동 저장됩니다 (변경 사유 입력 권장).
         </div>
       </div>
     </>

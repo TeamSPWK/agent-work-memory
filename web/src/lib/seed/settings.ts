@@ -14,7 +14,7 @@ export type NotifRule = {
 export const NOTIF_RULES: NotifRule[] = [
   { event: '고위험 신호 (DB · Secret · Destructive)', email: true,  slack: true,  channeltalk: false, inapp: true },
   { event: '미설명 세션 (24h)',                        email: false, slack: true,  channeltalk: false, inapp: true },
-  { event: '체인 무결성 깨짐',                          email: true,  slack: true,  channeltalk: true,  inapp: true },
+  { event: '기록 변조 검증 깨짐',                       email: true,  slack: true,  channeltalk: true,  inapp: true },
   { event: 'Reviewer 응답 지연 (30분+)',                email: false, slack: true,  channeltalk: false, inapp: true },
   { event: '비용 한도 임박 (Active Op 80%)',            email: true,  slack: false, channeltalk: false, inapp: true },
 ]

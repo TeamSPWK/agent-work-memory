@@ -6,6 +6,7 @@ import { RiskChip } from '../components/RiskChip'
 import { useDebounce } from '../lib/useDebounce'
 import { tabKeyHandler } from '../lib/useTabKeyboard'
 import { useIngest } from '../lib/useIngest'
+import { TableRowsSkeleton } from '../components/Skeleton'
 
 const TOOLS = ['All', 'Claude Code', 'Cursor', 'Codex', 'Gemini'] as const
 
@@ -36,9 +37,9 @@ export function Sessions() {
     <>
       <div className="page-h">
         <div>
-          <div className="eyebrow">진입 시점 · Today에서 jump 또는 직접</div>
-          <h1>Sessions</h1>
-          <p>도구별로 세션을 훑고, 검토 상태와 위험 신호로 필터링합니다.</p>
+          <div className="eyebrow">오늘 화면에서 들어오거나 직접</div>
+          <h1>작업 세션</h1>
+          <p>AI 도구별로 세션을 훑고, 검토 상태와 위험 신호로 필터링합니다.</p>
         </div>
         <div className="actions">
           <button className="btn" type="button">
@@ -51,14 +52,6 @@ export function Sessions() {
           </button>
         </div>
       </div>
-
-      {ingest.loading && (
-        <div className="card tight" role="status" style={{ marginBottom: 16 }}>
-          <p style={{ font: 'var(--t-body2)', color: 'var(--text-assistive)', margin: 0 }}>
-            데이터 불러오는 중…
-          </p>
-        </div>
-      )}
 
       <div className="card">
         <div className="row between" style={{ marginBottom: 14 }}>
@@ -74,14 +67,14 @@ export function Sessions() {
                 onClick={() => setTool(t)}
                 onKeyDown={tabKeyHandler(TOOLS, tool as (typeof TOOLS)[number], setTool)}
               >
-                {t}
+                {t === 'All' ? '전체' : t}
               </button>
             ))}
           </div>
           <div className="row tight" style={{ alignItems: 'center' }}>
             <input
               className="focus-stub"
-              placeholder="의도·작업자·repo 검색"
+              placeholder="의도·작업자·저장소 검색"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               style={{
@@ -96,7 +89,9 @@ export function Sessions() {
           </div>
         </div>
 
-        {ingest.loading ? null : list.length === 0 ? (
+        {ingest.loading ? (
+          <TableRowsSkeleton rows={7} cols={5} />
+        ) : list.length === 0 ? (
           <div className="empty-state" role="status" aria-label="검색 결과 없음">
             <Icon name="review" size={32} />
             <h3>일치하는 세션이 없습니다.</h3>
@@ -129,6 +124,16 @@ export function Sessions() {
           </div>
         ) : (
           <table className="tbl">
+            <colgroup>
+              <col style={{ width: 110 }} />
+              <col style={{ width: 96 }} />
+              <col />
+              <col style={{ width: 110 }} />
+              <col style={{ width: 80 }} />
+              <col style={{ width: 96 }} />
+              <col style={{ width: 110 }} />
+              <col style={{ width: 64 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>도구</th>
@@ -136,7 +141,7 @@ export function Sessions() {
                 <th>의도 요약</th>
                 <th>작업자</th>
                 <th>위험</th>
-                <th>변경/명령</th>
+                <th>변경 / 명령</th>
                 <th>상태</th>
                 <th></th>
               </tr>

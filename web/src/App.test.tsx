@@ -69,8 +69,8 @@ describe('AppShell + product IA', () => {
     expect(screen.getByText('위험 신호')).toBeInTheDocument()
     expect(screen.getAllByText('설명 부족 세션').length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('팀 평균 검토 완료율')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '오늘의 Work Session 타임라인' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Explain Back 채우기/ })).toHaveAttribute(
+    expect(screen.getByRole('heading', { name: '오늘의 작업 타임라인' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /설명 메모 채우기/ })).toHaveAttribute(
       'href',
       expect.stringMatching(/^\/sessions\/s-\d+\/explain$/),
     )
@@ -87,12 +87,12 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Sessions', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '작업 세션', level: 1 })).toBeInTheDocument()
     const filter = screen.getByRole('tablist', { name: '도구 필터' })
-    for (const tool of ['All', 'Claude Code', 'Cursor', 'Codex', 'Gemini']) {
+    for (const tool of ['전체', 'Claude Code', 'Cursor', 'Codex', 'Gemini']) {
       expect(filter).toContainElement(screen.getByRole('tab', { name: tool }))
     }
-    expect(screen.getByPlaceholderText('의도·작업자·repo 검색')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('의도·작업자·저장소 검색')).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: '열기 →' })).toHaveLength(7)
   })
 
@@ -178,7 +178,7 @@ describe('AppShell + product IA', () => {
       }),
     ).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent(/실 캡처 세션/)
-    expect(screen.getByRole('heading', { name: '기본 메타' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '기본 정보' })).toBeInTheDocument()
   })
 
   it('SessionDetail shows loading state while ingest is in-flight (S1.7)', async () => {
@@ -201,7 +201,7 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('status')).toHaveTextContent(/세션 데이터 불러오는 중/)
+    expect(screen.getByRole('status', { name: '세션 불러오는 중' })).toBeInTheDocument()
   })
 
   it('ExplainBack renders 5 fields composer for s-024', () => {
@@ -215,7 +215,7 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Explain Back 노트', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '설명 메모', level: 1 })).toBeInTheDocument()
     for (const label of ['의도', '결과', '검증', '미해결', '핸드오프']) {
       expect(screen.getByLabelText(new RegExp(label))).toBeInTheDocument()
     }
@@ -259,7 +259,7 @@ describe('AppShell + product IA', () => {
     for (const ch of ['Slack #ai-work', 'Notion · 일일 메모리', '이메일 (팀 메일링)']) {
       expect(screen.getByText(ch)).toBeInTheDocument()
     }
-    expect(screen.getByRole('link', { name: /← Explain Back/ })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /← 설명 메모/ })).toHaveAttribute(
       'href',
       '/sessions/s-024/explain',
     )
@@ -319,7 +319,7 @@ describe('AppShell + product IA', () => {
     )
 
     expect(
-      screen.getByRole('heading', { name: '셀프 회상 — 어제 한 일', level: 1 }),
+      screen.getByRole('heading', { name: '내가 시킨 일 다시보기', level: 1 }),
     ).toBeInTheDocument()
     expect(screen.getByText('나만 보는 회상 모드')).toBeInTheDocument()
     expect(screen.getByText('주간 리포트 자동 생성 cron')).toBeInTheDocument()
@@ -338,12 +338,12 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Audit Trail', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '감사 기록', level: 1 })).toBeInTheDocument()
     expect(screen.getByText('AI 변경 검증율 · 30일')).toBeInTheDocument()
     expect(screen.getByText('미검토')).toBeInTheDocument()
     expect(screen.getByText('7대 원칙 적용')).toBeInTheDocument()
     expect(screen.getByText('applicants 테이블 prod 인덱스 적용 완료')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Audit Trail', selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '감사 기록', selected: true })).toBeInTheDocument()
   })
 
   it('Audit principles tab links upgrade cta to settings export', () => {
@@ -378,8 +378,8 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Audit Trail', level: 1 })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Audit Trail', selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '감사 기록', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '감사 기록', selected: true })).toBeInTheDocument()
   })
 
   it('Audit Trail splits work packets and chain tail when live workPackets exist', async () => {
@@ -464,10 +464,11 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('status')).toHaveTextContent(/데이터 불러오는 중/)
-    // hero/KPI/timeline 시드 텍스트가 로딩 중 안 보여야 한다
+    // skeleton 모드 — hero/KPI/timeline 시드 텍스트가 로딩 중 안 보여야 한다 (flash 차단)
     expect(screen.queryByText(/오늘 작업 \d+건/)).not.toBeInTheDocument()
-    expect(screen.queryByText('오늘의 Work Session 타임라인')).not.toBeInTheDocument()
+    expect(screen.queryByText('오늘의 작업 타임라인')).not.toBeInTheDocument()
+    // skeleton hero 자체는 aria-label로 식별
+    expect(screen.getByLabelText('오늘 우선 작업 불러오는 중')).toBeInTheDocument()
   })
 
   it('Sessions hides empty-state CTA while ingest is in-flight', async () => {
@@ -490,7 +491,7 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('status')).toHaveTextContent(/데이터 불러오는 중/)
+    // skeleton 모드 — 빈 상태 카피·CTA가 로딩 중에 노출되지 않아야 한다
     expect(
       screen.queryByRole('heading', { name: '일치하는 세션이 없습니다.' }),
     ).not.toBeInTheDocument()
@@ -517,8 +518,7 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('status')).toHaveTextContent(/데이터 불러오는 중/)
-    // seed AUDIT_EVENTS의 시드 텍스트가 로딩 중에 노출되지 않아야 한다 (flash 차단)
+    // skeleton 모드 — seed AUDIT_EVENTS의 시드 텍스트가 로딩 중에 노출되지 않아야 한다 (flash 차단)
     expect(
       screen.queryByText('applicants 테이블 prod 인덱스 적용 완료'),
     ).not.toBeInTheDocument()
@@ -536,7 +536,7 @@ describe('AppShell + product IA', () => {
     )
 
     expect(
-      screen.getByRole('heading', { name: '체인 무결성 결과', level: 1 }),
+      screen.getByRole('heading', { name: '기록 변조 검증', level: 1 }),
     ).toBeInTheDocument()
     expect(screen.getByRole('status', { name: 'mock 한계 안내' })).toBeInTheDocument()
     expect(screen.getByText(/ev-2396 · expected_prev=ad9912f · stored_prev=BROKEN/)).toBeInTheDocument()
@@ -554,7 +554,7 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'PDF export 미리보기', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'PDF 내보내기 미리보기', level: 1 })).toBeInTheDocument()
     expect(screen.getByText(/AI 변경 감사 자료/)).toBeInTheDocument()
     expect(screen.getByRole('tablist', { name: '파일 형식' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'PDF (한국어)' })).toHaveClass('active')
@@ -572,14 +572,14 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.click(screen.getByRole('tab', { name: '체인 무결성' }))
+    fireEvent.click(screen.getByRole('tab', { name: '기록 변조 검증' }))
     expect(
-      screen.getByRole('heading', { name: '체인 무결성 결과', level: 1 }),
+      screen.getByRole('heading', { name: '기록 변조 검증', level: 1 }),
     ).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('tab', { name: 'PDF export' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'PDF 내보내기' }))
     expect(
-      screen.getByRole('heading', { name: 'PDF export 미리보기', level: 1 }),
+      screen.getByRole('heading', { name: 'PDF 내보내기 미리보기', level: 1 }),
     ).toBeInTheDocument()
   })
 
@@ -671,7 +671,7 @@ describe('AppShell + product IA', () => {
         level: 1,
       }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Replay', selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '재생', selected: true })).toBeInTheDocument()
     expect(screen.getByRole('group', { name: '사고 타임라인 캔버스' })).toBeInTheDocument()
     expect(screen.getByText('원인 후보')).toBeInTheDocument()
     expect(screen.getByText('확실한 증거')).toBeInTheDocument()
@@ -809,7 +809,7 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('tab', { name: 'Replay', selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '재생', selected: true })).toBeInTheDocument()
     expect(screen.getByRole('status', { name: 'mock incident 안내' })).toBeInTheDocument()
   })
 
@@ -828,15 +828,17 @@ describe('AppShell + product IA', () => {
       screen.getByRole('heading', { name: /Agent Work Memory.*현황판/, level: 1 }),
     ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Phase', level: 2 })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'm2 Sprint', level: 2 })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: /Phase C.*Sprint/, level: 2 }),
+    ).toBeInTheDocument()
     // 화면 매트릭스·보류·흔적은 details/summary로 collapse
     expect(screen.getByText(/화면 매트릭스/)).toBeInTheDocument()
     expect(screen.getByText(/보류 결정/)).toBeInTheDocument()
     expect(screen.getByText(/프로토타입 흔적/)).toBeInTheDocument()
-    // 진행 중 Phase 1 m2 Build 표시
-    expect(screen.getByText(/m2 Build/)).toBeInTheDocument()
-    // 완료된 sprint
-    expect(screen.getByText('S2.5.c')).toBeInTheDocument()
+    // 활성 Phase C — Local Dogfooding Ready (PhaseStepper + SprintList 헤더 2곳)
+    expect(screen.getAllByText(/Local Dogfooding Ready/).length).toBeGreaterThanOrEqual(1)
+    // 활성 sprint C2
+    expect(screen.getByText('C2')).toBeInTheDocument()
   })
 
   it('Onboarding Workspace step renders form + progressbar + next link', () => {
@@ -999,8 +1001,8 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Members', level: 1 })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Members', selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '구성원', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '구성원', selected: true })).toBeInTheDocument()
     // KPI 4
     expect(screen.getByText('활성 멤버')).toBeInTheDocument()
     expect(screen.getByText('평균 검토 응답')).toBeInTheDocument()
@@ -1022,7 +1024,7 @@ describe('AppShell + product IA', () => {
     expect(screen.getByText('비활성')).toBeInTheDocument()
     // Audit footer
     expect(
-      screen.getByText(/역할 변경 · 초대 · 삭제는 모두 Audit Trail에 자동 기록/),
+      screen.getByText(/역할 변경 · 초대 · 삭제는 모두 감사 기록에 자동 저장/),
     ).toBeInTheDocument()
   })
 
@@ -1037,8 +1039,8 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Member 초대', level: 1 })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Member 초대', selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '초대', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '초대', selected: true })).toBeInTheDocument()
     // 이메일 시드 2개 추가됨
     expect(screen.getByText('2명 추가됨 · 초대 메일은 한국어로 발송됩니다.')).toBeInTheDocument()
     // 역할 radiogroup
@@ -1084,7 +1086,7 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Roles & Risk 룰', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '역할 · 위험 규칙', level: 1 })).toBeInTheDocument()
     expect(screen.getByText('매트릭스 · 8 카테고리 × 3 역할 = 24 셀')).toBeInTheDocument()
     // 8 카테고리 모두
     for (const cat of [
@@ -1115,14 +1117,14 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Roles & Risk 룰' }))
+    fireEvent.click(screen.getByRole('tab', { name: '역할 · 위험 규칙' }))
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Roles & Risk 룰', level: 1 })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: '역할 · 위험 규칙', level: 1 })).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /← Members/ }))
+    fireEvent.click(screen.getByRole('button', { name: /← 구성원/ }))
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Members', level: 1 })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: '구성원', level: 1 })).toBeInTheDocument()
     })
   })
 
@@ -1137,8 +1139,8 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('tab', { name: 'Members', selected: true })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Members', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '구성원', selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '구성원', level: 1 })).toBeInTheDocument()
   })
 
   it('Settings defaults to Profile tab — 5 tabs in tablist + grid forms + danger zone', () => {
@@ -1152,19 +1154,19 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Profile & Account', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '프로필 · 계정', level: 1 })).toBeInTheDocument()
     // 5 tabs
     for (const t of [
-      'Profile & Account',
-      'Integrations',
-      'Notifications',
-      'Audit Export',
-      'Plan & Billing',
+      '프로필 · 계정',
+      '연동',
+      '알림',
+      '감사 자료 내보내기',
+      '요금제 · 결제',
     ]) {
       expect(screen.getByRole('tab', { name: t })).toBeInTheDocument()
     }
     expect(
-      screen.getByRole('tab', { name: 'Profile & Account', selected: true }),
+      screen.getByRole('tab', { name: '프로필 · 계정', selected: true }),
     ).toBeInTheDocument()
     // 기본 정보 fields
     expect(screen.getByLabelText('표시 이름')).toHaveValue('CTO 겸직 대표')
@@ -1188,7 +1190,7 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Integrations', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '연동', level: 1 })).toBeInTheDocument()
     // AI 도구 4종 + 외부 서비스 3 — 각 이름 모두 한 번씩
     for (const name of ['Claude Code', 'Cursor', 'Codex', 'ChatGPT', 'GitHub', 'Slack', '채널톡']) {
       expect(screen.getByText(name)).toBeInTheDocument()
@@ -1212,13 +1214,13 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Notifications', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '알림', level: 1 })).toBeInTheDocument()
     expect(screen.getByText('5개 이벤트 × 4 채널')).toBeInTheDocument()
     // 행 5개 — 각 이벤트 텍스트
     for (const e of [
       '고위험 신호 (DB · Secret · Destructive)',
       '미설명 세션 (24h)',
-      '체인 무결성 깨짐',
+      '기록 변조 검증 깨짐',
       'Reviewer 응답 지연 (30분+)',
       '비용 한도 임박 (Active Op 80%)',
     ]) {
@@ -1248,7 +1250,7 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Audit Export 설정', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '감사 자료 내보내기 설정', level: 1 })).toBeInTheDocument()
     // 3 radiogroups
     expect(screen.getByRole('radiogroup', { name: 'PDF 양식' })).toBeInTheDocument()
     expect(screen.getByRole('radiogroup', { name: '보존 기간' })).toBeInTheDocument()
@@ -1280,7 +1282,7 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Plan & Billing', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '요금제 · 결제', level: 1 })).toBeInTheDocument()
     // 현재 플랜 (Team · 100,000원/월) — 외부 PUBLIC_TIERS와 정합
     expect(screen.getByText(/Team · 100,000원\/월/)).toBeInTheDocument()
     // 무제한 플랜이라 progressbar 없음 — "무제한 플랜" 안내 텍스트
@@ -1340,16 +1342,16 @@ describe('AppShell + product IA', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Audit Export' }))
+    fireEvent.click(screen.getByRole('tab', { name: '감사 자료 내보내기' }))
     await waitFor(() => {
       expect(
-        screen.getByRole('heading', { name: 'Audit Export 설정', level: 1 }),
+        screen.getByRole('heading', { name: '감사 자료 내보내기 설정', level: 1 }),
       ).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Profile & Account' }))
+    fireEvent.click(screen.getByRole('tab', { name: '프로필 · 계정' }))
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Profile & Account', level: 1 })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: '프로필 · 계정', level: 1 })).toBeInTheDocument()
     })
   })
 
@@ -1365,7 +1367,7 @@ describe('AppShell + product IA', () => {
     )
 
     expect(
-      screen.getByRole('tab', { name: 'Profile & Account', selected: true }),
+      screen.getByRole('tab', { name: '프로필 · 계정', selected: true }),
     ).toBeInTheDocument()
   })
 

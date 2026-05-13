@@ -19,9 +19,9 @@ export function SelfRecall() {
     <>
       <div className="page-h">
         <div>
-          <div className="eyebrow">진입 시점 · 어제·지난주 작업 회상이 필요할 때</div>
-          <h1>셀프 회상 — 어제 한 일</h1>
-          <p>며칠 전 자기가 시킨 작업도 같은 의도/결과 분리로 다시 본다 (Reviewer Brief 셀프 모드).</p>
+          <div className="eyebrow">어제·지난주 작업 회상이 필요할 때</div>
+          <h1>내가 시킨 일 다시보기</h1>
+          <p>며칠 전 자기가 시킨 작업도 같은 의도·결과 분리로 다시 봅니다.</p>
         </div>
         <div className="actions">
           <button className="btn" type="button">
@@ -40,7 +40,7 @@ export function SelfRecall() {
                 나만 보는 회상 모드
               </div>
               <div className="muted" style={{ font: 'var(--t-caption1)' }}>
-                어제 작업 {yesterday.length}건 · 검토 완료. 셀프 핸드오프 노트만 작성 가능.
+                어제 작업 {yesterday.length}건 · 검토 완료. 본인용 인수인계 노트만 작성 가능.
               </div>
             </div>
           </div>
@@ -61,7 +61,7 @@ export function SelfRecall() {
       {yesterday.map((s) => (
         <div key={s.id} className="split">
           <div>
-            <div className="lh">의도 · 어제 내가 시킨 것 (Explain Back)</div>
+            <div className="lh">의도 · 어제 내가 시킨 것 (설명 메모)</div>
             <div
               style={{
                 font: 'var(--t-heading3)',

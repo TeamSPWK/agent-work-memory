@@ -12,19 +12,19 @@ type TabId = 'members' | 'invite' | 'roles'
 
 const HEADERS: Record<TabId, { eyebrow: string; title: string; sub: string }> = {
   members: {
-    eyebrow: 'Workspace · 상시 화면',
-    title: 'Members',
-    sub: '현재 워크스페이스의 멤버 · 역할 · 검토 응답 시간을 본다. 가설 검증 대상이 아닌 운영 화면.',
+    eyebrow: '팀 · 상시 화면',
+    title: '구성원',
+    sub: '현재 팀의 구성원 · 역할 · 검토 응답 시간을 봅니다.',
   },
   invite: {
-    eyebrow: 'Workspace · Member 초대',
-    title: 'Member 초대',
+    eyebrow: '팀 · 새 구성원 초대',
+    title: '초대',
     sub: '이메일 다중 입력 + 역할 지정 + 메일 카피 미리보기.',
   },
   roles: {
-    eyebrow: 'Workspace · 역할 매트릭스',
-    title: 'Roles & Risk 룰',
-    sub: '위험 카테고리 × 역할별 권한. 변경 시 audit log 기록.',
+    eyebrow: '팀 · 역할 매트릭스',
+    title: '역할 · 위험 규칙',
+    sub: '위험 카테고리 × 역할별 권한. 변경 시 감사 기록에 자동 저장됩니다.',
   },
 }
 
@@ -62,18 +62,18 @@ export function Workspace() {
           )}
           {tab === 'invite' && (
             <button className="btn" type="button" onClick={() => setTab('members')}>
-              ← Members
+              ← 구성원
             </button>
           )}
           {tab === 'roles' && (
             <button className="btn" type="button" onClick={() => setTab('members')}>
-              ← Members
+              ← 구성원
             </button>
           )}
         </div>
       </div>
 
-      <div className="seg" role="tablist" aria-label="Workspace 탭" style={{ marginBottom: 16 }}>
+      <div className="seg" role="tablist" aria-label="팀 탭" style={{ marginBottom: 16 }}>
         {WORKSPACE_TABS.map((t) => (
           <button
             key={t.id}
