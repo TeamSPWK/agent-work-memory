@@ -319,7 +319,7 @@ export const PROJECT_META = {
   name: 'Agent Work Memory',
   tagline: 'AI Audit Trail SaaS for Korean SMB',
   ownerEmail: 'jay@spacewalk.tech',
-  currentCommit: '453379f', // C8a 변경은 미커밋 (사용자 승인 후)
+  currentCommit: '5d2377d', // C8a PASS + 영역별 5분할 커밋 마지막 (2026-05-13)
   lastUpdated: '2026-05-13',
 }
 

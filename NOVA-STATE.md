@@ -78,7 +78,9 @@
 - Tester Onboarding + M0/S1·S1.5·S1.6·S1.7·H2-b — Tasks 표 압축 참조. | 2026-05-12~13
 
 ## Refs
-- **현재 페이즈 마스터: `docs/projects/plans/local-dogfooding-ready.md`** (Phase C 8 sprint + 의존성 그래프, C1~C7 PASS, C8 dogfooding 대기)
+- **다음 세션 진입점: `docs/projects/plans/r1-bin-awm-split.md`** (R1 sprint 5 모듈 분할 상세 + 진입 가드)
+- C8a PASS evidence: `docs/projects/plans/c8a-critical-fix.md` + `docs/verifications/2026-05-13-ux-audit-review-summary.md`
+- **현재 페이즈 마스터: `docs/projects/plans/local-dogfooding-ready.md`** (Phase C 8 sprint + 의존성 그래프, C1~C7+C8a PASS, R1 next, C8 dogfooding 대기)
 - C2 검증: `docs/verifications/phase-c2-intent-summary.md`
 - C3 검증: `docs/verifications/phase-c3-audit-workpacket-summary.md`
 - C4 검증: `docs/verifications/phase-c4-risk-fanout.md`
