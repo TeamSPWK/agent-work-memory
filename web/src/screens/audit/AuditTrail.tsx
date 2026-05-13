@@ -10,12 +10,24 @@ type Range = (typeof RANGES)[number]
 
 export function AuditTrail() {
   const ingest = useIngest()
-  const events = ingest.auditEvents.length > 0 ? ingest.auditEvents : AUDIT_EVENTS
+  // loading 중에는 seed 표시 안 함(목업→실데이터 flash 차단). 실 데이터 있으면 실 우선, 없을 때만 seed fallback.
+  const isLive = !ingest.loading && (ingest.workPackets.length > 0 || ingest.auditEvents.length > 0)
+  const showSeed = !ingest.loading && !isLive
+  const events = isLive ? ingest.auditEvents : showSeed ? AUDIT_EVENTS : []
+  const workPackets = isLive ? ingest.workPackets : []
   const [range, setRange] = useState<Range>('30일')
   const [, setParams] = useSearchParams()
 
   return (
     <>
+      {ingest.loading && (
+        <div className="card tight" role="status" style={{ marginBottom: 16 }}>
+          <p style={{ font: 'var(--t-body2)', color: 'var(--text-assistive)', margin: 0 }}>
+            데이터 불러오는 중…
+          </p>
+        </div>
+      )}
+
       <div className="grid-4" style={{ marginBottom: 16 }}>
         <div className="card tight">
           <div className="kpi">
@@ -90,7 +102,116 @@ export function AuditTrail() {
         </div>
       </div>
 
+      {workPackets.length > 0 && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card-h">
+            <h3>작업 패킷 — 의도로 묶인 변경</h3>
+            <span className="sub">세션을 의도 단위로 묶어 본 작업의 *왜·무엇*을 요약</span>
+          </div>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>작업</th>
+                <th style={{ width: 130 }}>레포</th>
+                <th style={{ width: 90 }}>세션</th>
+                <th style={{ width: 100 }}>커밋 후보</th>
+                <th style={{ width: 80 }}>위험</th>
+                <th style={{ width: 100 }}>증거</th>
+                <th style={{ width: 130 }}>마지막 활동</th>
+              </tr>
+            </thead>
+            <tbody>
+              {workPackets.slice(0, 12).map((p) => (
+                <tr key={p.id}>
+                  <td>
+                    <div
+                      style={{
+                        font: 'var(--t-label1-strong)',
+                        color: 'var(--text-strong)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: 460,
+                      }}
+                      title={p.title}
+                    >
+                      {p.title || '(제목 없음)'}
+                    </div>
+                    <div
+                      className="muted"
+                      style={{
+                        font: 'var(--t-caption1)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: 460,
+                      }}
+                      title={p.summary}
+                    >
+                      {p.summary || p.nextAction}
+                    </div>
+                  </td>
+                  <td className="mono muted" style={{ font: 'var(--t-caption1)' }}>
+                    {p.repo || '(미연결)'}
+                  </td>
+                  <td className="tnum">
+                    {p.sessionCount}
+                    {p.needsReviewCount > 0 && (
+                      <span className="muted" style={{ font: 'var(--t-caption1)' }}>
+                        {' · '}
+                        {p.needsReviewCount} 확인
+                      </span>
+                    )}
+                  </td>
+                  <td className="tnum muted">
+                    {p.commitCandidateCount}
+                    {p.confirmedCommitCount > 0 && ` (✓${p.confirmedCommitCount})`}
+                  </td>
+                  <td>
+                    {p.riskCount > 0 ? (
+                      <span className="tag" style={{ background: 'var(--bg-subtle)' }}>
+                        {p.riskCount}건
+                      </span>
+                    ) : (
+                      <span className="muted">—</span>
+                    )}
+                  </td>
+                  <td>
+                    <span
+                      className="tag"
+                      style={{
+                        background:
+                          p.evidenceGrade === '좋음'
+                            ? 'var(--c-green-95)'
+                            : p.evidenceGrade === '보통'
+                              ? 'var(--bg-subtle)'
+                              : 'var(--c-orange-95)',
+                        color:
+                          p.evidenceGrade === '좋음'
+                            ? 'var(--status-positive)'
+                            : p.evidenceGrade === '보통'
+                              ? 'var(--text-neutral)'
+                              : 'var(--c-orange-30)',
+                      }}
+                    >
+                      {p.evidenceGrade}
+                    </span>
+                  </td>
+                  <td className="tnum muted" style={{ font: 'var(--t-caption1)' }}>
+                    {p.lastActivity}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       <div className="card">
+        <div className="card-h">
+          <h3>Chain tail — 변조 불가성 증거 (PRD §5.5)</h3>
+          <span className="sub">SHA-256 chain 마지막 N건. prev·hash 변경 시 verify 깨짐</span>
+        </div>
         <div className="row between" style={{ marginBottom: 12 }}>
           <div className="seg" role="tablist" aria-label="기간">
             {RANGES.map((r) => (

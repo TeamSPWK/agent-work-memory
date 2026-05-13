@@ -14,11 +14,14 @@ const TODAY_TODO = [
 
 export function Today() {
   const ingest = useIngest()
-  // 실 데이터가 있으면 seed 위에 병합 (seed는 fallback)
-  const base = ingest.sessions.length > 0 ? ingest.sessions : SESSIONS
+  // 목업→실데이터 flash 차단: loading 중에는 base 비움.
+  // 실 데이터 있으면 우선, 없을 때만 seed fallback.
+  const isLive = !ingest.loading && ingest.sessions.length > 0
+  const showSeed = !ingest.loading && !isLive
+  const base = isLive ? ingest.sessions : showSeed ? SESSIONS : []
   // `ingest --limit 30` 응답은 *최근 30* 세션이라 startedAt에 날짜 정보가 없다.
   // 실 데이터일 땐 hero 카피의 "오늘"이 정확히 *오늘만* 의미하지 않는다 — M0/S2 측정 후 카피 정정.
-  const recent = base.filter((s) => s.when.startsWith('오늘') || ingest.sessions.length > 0)
+  const recent = base.filter((s) => s.when.startsWith('오늘') || isLive)
   const unexplained = base.filter((s) => !s.explained)
   const firstUnexplainedId = unexplained[0]?.id ?? recent[0]?.id
 
@@ -51,6 +54,14 @@ export function Today() {
         </div>
       </div>
 
+      {ingest.loading ? (
+        <div className="card tight" role="status" style={{ marginBottom: 16 }}>
+          <p style={{ font: 'var(--t-body2)', color: 'var(--text-assistive)', margin: 0 }}>
+            데이터 불러오는 중…
+          </p>
+        </div>
+      ) : (
+        <>
       {/* Hero — 오늘 가장 시급한 단일 action */}
       <section
         className="today-hero"
@@ -230,6 +241,8 @@ export function Today() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </>
   )
 }

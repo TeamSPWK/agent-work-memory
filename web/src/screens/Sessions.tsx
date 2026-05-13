@@ -11,7 +11,10 @@ const TOOLS = ['All', 'Claude Code', 'Cursor', 'Codex', 'Gemini'] as const
 
 export function Sessions() {
   const ingest = useIngest()
-  const base = ingest.sessions.length > 0 ? ingest.sessions : SESSIONS
+  // 목업→실데이터 flash 차단: loading 중에는 base 비움.
+  const isLive = !ingest.loading && ingest.sessions.length > 0
+  const showSeed = !ingest.loading && !isLive
+  const base = isLive ? ingest.sessions : showSeed ? SESSIONS : []
   const [tool, setTool] = useState<string>('All')
   const [q, setQ] = useState('')
   const debouncedQ = useDebounce(q, 200)
@@ -49,6 +52,14 @@ export function Sessions() {
         </div>
       </div>
 
+      {ingest.loading && (
+        <div className="card tight" role="status" style={{ marginBottom: 16 }}>
+          <p style={{ font: 'var(--t-body2)', color: 'var(--text-assistive)', margin: 0 }}>
+            데이터 불러오는 중…
+          </p>
+        </div>
+      )}
+
       <div className="card">
         <div className="row between" style={{ marginBottom: 14 }}>
           <div className="seg" role="tablist" aria-label="도구 필터">
@@ -85,7 +96,7 @@ export function Sessions() {
           </div>
         </div>
 
-        {list.length === 0 ? (
+        {ingest.loading ? null : list.length === 0 ? (
           <div className="empty-state" role="status" aria-label="검색 결과 없음">
             <Icon name="review" size={32} />
             <h3>일치하는 세션이 없습니다.</h3>

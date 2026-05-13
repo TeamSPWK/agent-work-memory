@@ -14,6 +14,25 @@ type IngestSession = {
   commitCandidates?: Array<{ files: string[] }>
 }
 
+export type IngestWorkPacket = {
+  id: string
+  title: string
+  repo: string
+  summary: string
+  status: string
+  sessionIds: string[]
+  sessionCount: number
+  needsReviewCount: number
+  reviewedCount: number
+  commitCandidateCount: number
+  confirmedCommitCount: number
+  riskCount: number
+  evidenceScore: number
+  evidenceGrade: string
+  lastActivity: string
+  nextAction: string
+}
+
 type IngestChainEvent = {
   id: string
   createdAt: string
@@ -39,6 +58,7 @@ type IngestAuditChain = {
 type IngestData = {
   ingestedAt?: string
   sessions?: IngestSession[]
+  workPackets?: IngestWorkPacket[]
   auditChain?: IngestAuditChain
 }
 
@@ -80,6 +100,7 @@ function toAuditEventFromChain(e: IngestChainEvent): AuditEvent {
 export type IngestState = {
   loading: boolean
   sessions: SessionSeed[]
+  workPackets: IngestWorkPacket[]
   auditEvents: AuditEvent[]
   error: string | null
 }
@@ -88,6 +109,7 @@ export function useIngest(): IngestState {
   const [state, setState] = useState<IngestState>({
     loading: true,
     sessions: [],
+    workPackets: [],
     auditEvents: [],
     error: null,
   })
@@ -102,13 +124,14 @@ export function useIngest(): IngestState {
       .then((data) => {
         if (cancelled) return
         const sessions = (data.sessions ?? []).map(toSessionSeed)
+        const workPackets = data.workPackets ?? []
         const auditEvents = (data.auditChain?.tail ?? []).map(toAuditEventFromChain)
-        setState({ loading: false, sessions, auditEvents, error: null })
+        setState({ loading: false, sessions, workPackets, auditEvents, error: null })
       })
       .catch((e: unknown) => {
         if (cancelled) return
         const msg = e instanceof Error ? e.message : String(e)
-        setState({ loading: false, sessions: [], auditEvents: [], error: msg })
+        setState({ loading: false, sessions: [], workPackets: [], auditEvents: [], error: msg })
       })
     return () => {
       cancelled = true

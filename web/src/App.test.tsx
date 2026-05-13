@@ -156,6 +156,7 @@ describe('AppShell + product IA', () => {
           explained: false,
         },
       ],
+      workPackets: [],
       auditEvents: [],
       error: null,
     })
@@ -185,6 +186,7 @@ describe('AppShell + product IA', () => {
     vi.mocked(useIngest).mockReturnValueOnce({
       loading: true,
       sessions: [],
+      workPackets: [],
       auditEvents: [],
       error: null,
     })
@@ -378,6 +380,148 @@ describe('AppShell + product IA', () => {
 
     expect(screen.getByRole('heading', { name: 'Audit Trail', level: 1 })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Audit Trail', selected: true })).toBeInTheDocument()
+  })
+
+  it('Audit Trail splits work packets and chain tail when live workPackets exist', async () => {
+    const { useIngest } = await import('./lib/useIngest')
+    vi.mocked(useIngest).mockReturnValueOnce({
+      loading: false,
+      sessions: [],
+      workPackets: [
+        {
+          id: 'packet_demo',
+          title: 'M0/S1.7 SessionDetail fix',
+          repo: 'swk/agent-work-memory',
+          summary: '실 ingest id로 navigate 시 404 fix',
+          status: 'needs_explanation',
+          sessionIds: ['claude_xxx_flow01_aaa'],
+          sessionCount: 1,
+          needsReviewCount: 1,
+          reviewedCount: 0,
+          commitCandidateCount: 2,
+          confirmedCommitCount: 0,
+          riskCount: 0,
+          evidenceScore: 60,
+          evidenceGrade: '보통',
+          lastActivity: '11:47',
+          nextAction: '커밋 후보 확인',
+        },
+      ],
+      auditEvents: [
+        {
+          id: 'evt_x',
+          at: '2026-05-13T03:00:00Z',
+          type: 'PreToolUse',
+          session: 'claude_xxx',
+          summary: 'PreToolUse: bash ls',
+          actor: 'claude_hook',
+          risk: null,
+          hash: 'abc123',
+          prev: 'def456',
+          broken: false,
+        },
+      ],
+      error: null,
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/audit']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="audit" element={<Audit />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('heading', { name: '작업 패킷 — 의도로 묶인 변경' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('M0/S1.7 SessionDetail fix')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Chain tail — 변조 불가성 증거 (PRD §5.5)' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('PreToolUse: bash ls')).toBeInTheDocument()
+  })
+
+  it('Today shows loading status and hides hero/KPI flash while ingest is in-flight', async () => {
+    const { useIngest } = await import('./lib/useIngest')
+    vi.mocked(useIngest).mockReturnValueOnce({
+      loading: true,
+      sessions: [],
+      workPackets: [],
+      auditEvents: [],
+      error: null,
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/today']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="today" element={<Today />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('status')).toHaveTextContent(/데이터 불러오는 중/)
+    // hero/KPI/timeline 시드 텍스트가 로딩 중 안 보여야 한다
+    expect(screen.queryByText(/오늘 작업 \d+건/)).not.toBeInTheDocument()
+    expect(screen.queryByText('오늘의 Work Session 타임라인')).not.toBeInTheDocument()
+  })
+
+  it('Sessions hides empty-state CTA while ingest is in-flight', async () => {
+    const { useIngest } = await import('./lib/useIngest')
+    vi.mocked(useIngest).mockReturnValueOnce({
+      loading: true,
+      sessions: [],
+      workPackets: [],
+      auditEvents: [],
+      error: null,
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/sessions']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="sessions" element={<Sessions />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('status')).toHaveTextContent(/데이터 불러오는 중/)
+    expect(
+      screen.queryByRole('heading', { name: '일치하는 세션이 없습니다.' }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /도구 연결/ })).not.toBeInTheDocument()
+  })
+
+  it('Audit Trail shows loading status and hides seed flash while ingest is in-flight', async () => {
+    const { useIngest } = await import('./lib/useIngest')
+    vi.mocked(useIngest).mockReturnValueOnce({
+      loading: true,
+      sessions: [],
+      workPackets: [],
+      auditEvents: [],
+      error: null,
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/audit']}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route path="audit" element={<Audit />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('status')).toHaveTextContent(/데이터 불러오는 중/)
+    // seed AUDIT_EVENTS의 시드 텍스트가 로딩 중에 노출되지 않아야 한다 (flash 차단)
+    expect(
+      screen.queryByText('applicants 테이블 prod 인덱스 적용 완료'),
+    ).not.toBeInTheDocument()
   })
 
   it('Audit integrity tab shows mock notice + broken row detail', () => {
