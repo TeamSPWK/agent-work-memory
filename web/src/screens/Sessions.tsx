@@ -5,17 +5,20 @@ import { Icon } from '../components/Icon'
 import { RiskChip } from '../components/RiskChip'
 import { useDebounce } from '../lib/useDebounce'
 import { tabKeyHandler } from '../lib/useTabKeyboard'
+import { useIngest } from '../lib/useIngest'
 
 const TOOLS = ['All', 'Claude Code', 'Cursor', 'Codex', 'Gemini'] as const
 
 export function Sessions() {
+  const ingest = useIngest()
+  const base = ingest.sessions.length > 0 ? ingest.sessions : SESSIONS
   const [tool, setTool] = useState<string>('All')
   const [q, setQ] = useState('')
   const debouncedQ = useDebounce(q, 200)
 
   const list = useMemo(
     () =>
-      SESSIONS.filter(
+      base.filter(
         (s) =>
           (tool === 'All' || s.tool === tool) &&
           (debouncedQ === '' ||
@@ -23,7 +26,7 @@ export function Sessions() {
             s.actor.includes(debouncedQ) ||
             s.repo.includes(debouncedQ)),
       ),
-    [tool, debouncedQ],
+    [base, tool, debouncedQ],
   )
 
   return (

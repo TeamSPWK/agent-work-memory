@@ -3,11 +3,14 @@ import { useSearchParams } from 'react-router-dom'
 import { AUDIT_EVENTS, AUDIT_STATS } from '../../lib/seed/audit'
 import { Icon } from '../../components/Icon'
 import { RiskChip } from '../../components/RiskChip'
+import { useIngest } from '../../lib/useIngest'
 
 const RANGES = ['오늘', '주', '월', '30일', '분기'] as const
 type Range = (typeof RANGES)[number]
 
 export function AuditTrail() {
+  const ingest = useIngest()
+  const events = ingest.auditEvents.length > 0 ? ingest.auditEvents : AUDIT_EVENTS
   const [range, setRange] = useState<Range>('30일')
   const [, setParams] = useSearchParams()
 
@@ -147,7 +150,7 @@ export function AuditTrail() {
             </tr>
           </thead>
           <tbody>
-            {AUDIT_EVENTS.map((e) => (
+            {events.map((e) => (
               <tr key={e.id} className={e.broken ? 'broken' : ''}>
                 <td className="tnum muted" style={{ font: 'var(--t-caption1)' }}>
                   {e.at}

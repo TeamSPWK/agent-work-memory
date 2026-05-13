@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { SESSIONS } from '../lib/seed/sessions'
 import { Icon } from '../components/Icon'
 import { RiskChip } from '../components/RiskChip'
+import { useIngest } from '../lib/useIngest'
 
 const TODAY_COUNT = { changed: 22, risk: 4, unexplained: 3 }
 
@@ -12,8 +13,13 @@ const TODAY_TODO = [
 ]
 
 export function Today() {
-  const recent = SESSIONS.filter((s) => s.when.startsWith('오늘'))
-  const unexplained = SESSIONS.filter((s) => !s.explained)
+  const ingest = useIngest()
+  // 실 데이터가 있으면 seed 위에 병합 (seed는 fallback)
+  const base = ingest.sessions.length > 0 ? ingest.sessions : SESSIONS
+  // `ingest --limit 30` 응답은 *최근 30* 세션이라 startedAt에 날짜 정보가 없다.
+  // 실 데이터일 땐 hero 카피의 "오늘"이 정확히 *오늘만* 의미하지 않는다 — M0/S2 측정 후 카피 정정.
+  const recent = base.filter((s) => s.when.startsWith('오늘') || ingest.sessions.length > 0)
+  const unexplained = base.filter((s) => !s.explained)
   const firstUnexplainedId = unexplained[0]?.id ?? recent[0]?.id
 
   return (
