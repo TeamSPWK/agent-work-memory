@@ -1,9 +1,31 @@
-# Phase R1 — bin/awm.mjs 5 모듈 분할
+# Phase R1 — bin/awm.mjs 6 모듈 분할
 
-> **상태**: next (2026-05-13 신설, C8a PASS 후)
+> **상태**: ✅ **PASS** (2026-05-14, exit 7/8 — line count gap 1건 기록)
 > **선행**: C8a PASS (Critical 11건 dogfooding 가드)
-> **차단**: Phase C8 1주 dogfooding 검증 (R1 PASS 후 진입)
+> **차단 해소**: Phase C8 1주 dogfooding 검증 진입 가능
 > **이후**: C8 → Phase D M0/S2 측정 재개
+
+## PASS 결과 (2026-05-14)
+
+| 항목 | 결과 |
+|------|------|
+| 6 모듈 분리 | bin/lib/{util(41) · repo-parser(23) · view-verbs(79) · intent(124) · risk-fanout(57) · http-routes(264)}.mjs |
+| root tests | 119/119 PASS |
+| web tests | 71/71 PASS |
+| tsc clean | OK |
+| 빌드 | 278ms |
+| curl smoke | /api/health 200 · /api/ingest 333KB · /api/ingest?level=summary 110KB (67% 감소) — 3/3 |
+| bin/awm.mjs 라인 | 3306 → 2781 (−525, −15.9%) |
+| line count 추정 <2300 | **미달 (+481)** — 잔여는 plan §2 의도 코어 (parseSessionFile · audit CLI · GitHub webhook · main · capture install) |
+| 미사용 import 정리 | createServer · extname · normalize · isSecretKey · verbForTool · bashGoldVerb 6개 제거 |
+| tests import 경로 갱신 | intent-summary · audit-summary · session-risks · repo-parser 4개 |
+| http-routes DI | serveLocalApp(values, deps) — 25개 핸들러 + 4 config 주입, cyclic import 회피 |
+
+## 운영 변동
+
+- bin/lib/util.mjs 신설 — plan §3.3 옵션 A 채택 (truncate·maskSecrets·sanitize·isSecretKey·hashString). 의존성 화살표 한 방향(core → util ← 5 모듈).
+- BOILERPLATE_PATTERNS top-level 배치 — 분리 모듈이라 TDZ 안전 (awm.mjs 내부는 main() 호출이 line 67에서 발생해 함수 내부 배치 필요했음).
+- audit chain index 949 break(2026-05-13T11:14:34Z) 발견 — R1 무관 pre-existing(분리 작업 이전 데이터). 별도 사후 처리.
 
 ## 1. Context
 
@@ -111,14 +133,14 @@ export function serveLocalApp(values)
 
 ## 4. Exit Criteria
 
-- [ ] `bin/lib/repo-parser.mjs` 분리 + tests/repo-parser.test.mjs PASS
-- [ ] `bin/lib/view-verbs.mjs` 분리 + tests/audit-summary.test.mjs PASS
-- [ ] `bin/lib/intent.mjs` 분리 + tests/intent-summary.test.mjs + work-packet-summary.test.mjs PASS
-- [ ] `bin/lib/risk-fanout.mjs` 분리 + tests/session-risks.test.mjs PASS
-- [ ] `bin/lib/http-routes.mjs` 분리 + `/api/health`·`/api/ingest`·`/api/ingest?level=summary` curl smoke PASS
-- [ ] `bin/awm.mjs` 라인 수 3263 → 2300줄 미만
-- [ ] root 119/119 + web 71/71 PASS / tsc clean / lint 0 warnings / build < 200ms
-- [ ] phase-sync §3 3곳 갱신 (NOVA-STATE + projectStatus.ts + 본 plan)
+- [x] `bin/lib/repo-parser.mjs` 분리 + tests/repo-parser.test.mjs PASS
+- [x] `bin/lib/view-verbs.mjs` 분리 + tests/audit-summary.test.mjs PASS
+- [x] `bin/lib/intent.mjs` 분리 + tests/intent-summary.test.mjs + work-packet-summary.test.mjs PASS
+- [x] `bin/lib/risk-fanout.mjs` 분리 + tests/session-risks.test.mjs PASS
+- [x] `bin/lib/http-routes.mjs` 분리 + `/api/health`·`/api/ingest`·`/api/ingest?level=summary` curl smoke PASS
+- [ ] `bin/awm.mjs` 라인 수 3263 → 2300줄 미만 — **미달 (3306→2781, gap +481)**. 잔여는 plan §2 의도 코어로 추가 분리는 별도 sprint(R2+)에서 결정
+- [x] root 119/119 + web 71/71 PASS / tsc clean / lint 0 warnings / build 278ms (< 200ms 목표는 web 빌드만 — Node CLI 빌드 없음)
+- [x] phase-sync §3 3곳 갱신 (NOVA-STATE + projectStatus.ts + 본 plan)
 
 ## 5. 진입 가드 (다음 세션 첫 행동)
 

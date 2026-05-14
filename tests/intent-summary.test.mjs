@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pickIntentSummary, isFragmentIntent } from "../bin/awm.mjs";
+import { pickIntentSummary, isFragmentIntent } from "../bin/lib/intent.mjs";
 
 const COMMIT = {
   hash: "abc1234def",

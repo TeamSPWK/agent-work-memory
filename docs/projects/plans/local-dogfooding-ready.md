@@ -51,6 +51,8 @@ S1.6 baseline 7 발견 + 환경 + 잔존 jargon = 9 문제. 본 phase 안에서 
 | **C5** ✅ | SessionDetail 실 데이터 어댑터 + C2 polish (사용자 라이브 검증 발견) | bin/awm.mjs session에 `commandCount`·`commandSamples` + isVagueIntentText 임계 8→4 + isFragmentIntent MIN_LEN 폐기 / `SessionSeed` 타입 9 optional 추가 / ingest.ts toSessionSeed `cmds: 0` hardcode 제거 + 9 fields propagate / SessionDetail.tsx isLive 4 패널 (대화 흐름·실행된 명령·변경 파일·미해결) | **PASS** — commandCount > 0: 16/30, flowSteps 채워짐: 30/30 (평균 4.5단계), `(요약 부족)` prefix 9/30 → 1/30. `docs/verifications/phase-c5-sessiondetail-adapter.md` |
 | **C6** ✅ | Repo 파서 정합 100% | bin/awm.mjs `isValidCwdValue` 신규(MM/DD·YYYY-MM-DD·1-segment·짧은 텍스트 모두 invalid) + `inferRepoLabel` invalid 시 `dirname(file.path)` 폴백 + tests/repo-parser.test.mjs 11 | **PASS** — 30/30 정상, 잘못 추출 repo 0건. `docs/verifications/phase-c6-repo-parser.md` |
 | **C7** ✅ | Incident·Reviewer jargon 평이화 | Incident.tsx + Replay/EventDetail/ReviewerBrief.tsx 4 파일 + i18n 카탈로그 incident.* 12 키 사전 정의 + App.test.tsx 5 라벨 갱신 | **PASS** — 30+ 라벨 평이화 (Reviewer Brief·Audit Trail row·cross-reference·Explain Back·fact·commit·detail 등). 고유명사·기술 약어(Slack·Datadog·Operator·prod·T0)는 의도적 유지. `docs/verifications/phase-c7-jargon.md` |
+| **C8a** ✅ | Critical 11건 dogfooding 가드 fix | A1~A4 데이터 신뢰 + B1~B2 인프라 + C1~C3 UX/법적 + D1 코드 패턴 분리 + H6 lint | **PASS** — root 119/119 + web 71/71 + ingest 70% 감소. `docs/projects/plans/c8a-critical-fix.md` |
+| **R1** ✅ | bin/awm.mjs 6 모듈 분리 | bin/lib/{util·repo-parser·view-verbs·intent·risk-fanout·http-routes}.mjs. http-routes DI 25 deps | **PASS (구조 분리 + smoke 3/3)** — 3306→2781(-15.9%), tests 119/119 + 71/71, /api/health·/api/ingest·/api/ingest?level=summary 3/3. 라인 추정 <2300 미달(+481)은 plan §2 의도 코어 잔여. `docs/projects/plans/r1-bin-awm-split.md` |
 | **C8** | 1주 dogfooding 검증 | 코드 변경 0. 본인 작업 5 영업일 + 매일 1회 Today 의도적 열람 + 매일 *최소 1건 ExplainBack 채움* + 1주 후 자기 보고 | (a) 5/5 영업일 누적 (b) 7 baseline 재측정 (단편·매칭 분산·위험 fan-out 등) (c) 본인 자기 보고 *"하루 1회 이상 실사용 가치 — 회상 가능했다"* | `docs/verifications/phase-c8-dogfooding.md` |
 
 ### 의존성 그래프
@@ -59,11 +61,11 @@ S1.6 baseline 7 발견 + 환경 + 잔존 jargon = 9 문제. 본 phase 안에서 
 C1 (환경) ──┬─→ C2 (intent) ──┬─→ C4 (risk fan-out) ──┐
             │                  │                        │
             │                  └─→ C5 (sessdetail) ──┐  │
-            │                                         ├─→ C8 (1주)
-            ├─→ C3 (audit summary) ──────────────────┘  │
-            │                                            │
-            ├─→ C6 (repo 파서) ──────────────────────────┤
-            └─→ C7 (incident jargon) ────────────────────┘
+            │                                         ├─→ C8a (가드) ──→ R1 (구조 분리) ──→ C8 (1주)
+            ├─→ C3 (audit summary) ──────────────────┘
+            │
+            ├─→ C6 (repo 파서) ──────────────────────────────────────────────────────────┘
+            └─→ C7 (incident jargon) ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
 ```
 
 C2·C3는 C1 후 *병렬 가능* (다른 코드 영역). C6·C7은 *완전 독립 병렬*. C8은 코드 변경 0이라 다른 sprint와 *충돌 없이 백그라운드 누적*.

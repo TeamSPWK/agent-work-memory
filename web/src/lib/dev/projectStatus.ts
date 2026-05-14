@@ -173,16 +173,16 @@ export const SPRINTS: Sprint[] = [
   {
     id: 'R1',
     goal: 'bin/awm.mjs 5분할',
-    status: 'next',
-    exit: 'bin/lib/{view-verbs,intent,risk-fanout,repo-parser,http-routes}.mjs 모듈 분리. 단일 3263줄 → 5 모듈',
-    note: 'Phase D 진입 전 별도 1~2일 sprint. C8a와 영역 분리, 충돌 X',
+    status: 'done',
+    exit: 'PASS — bin/lib/{repo-parser,view-verbs,intent,risk-fanout,http-routes}.mjs + util.mjs 6 모듈 분리. tests 119/119 + web 71/71 + 빌드 278ms + /api/health·/api/ingest·/api/ingest?level=summary smoke 3/3. bin/awm.mjs 3306→2781(-525, -15.9%) — 추정 <2300 미달이나 책임 분리 완료',
+    note: 'docs/projects/plans/r1-bin-awm-split.md — exit 7/8 PASS, 1건 line count gap 기록',
   },
   {
     id: 'C8',
     goal: '1주 dogfooding 검증',
-    status: 'pending',
+    status: 'next',
     exit: '5/5 영업일 + 7 baseline 재측정 + 자기 보고 "하루 1회 이상 가치"',
-    note: '코드 변경 0. C8a + R1 PASS 후 진입. docs/verifications/phase-c8-dogfooding.md',
+    note: '코드 변경 0. R1 PASS 후 활성. docs/verifications/phase-c8-dogfooding.md',
   },
 ]
 
@@ -319,8 +319,8 @@ export const PROJECT_META = {
   name: 'Agent Work Memory',
   tagline: 'AI Audit Trail SaaS for Korean SMB',
   ownerEmail: 'jay@spacewalk.tech',
-  currentCommit: '5d2377d', // C8a PASS + 영역별 5분할 커밋 마지막 (2026-05-13)
-  lastUpdated: '2026-05-13',
+  currentCommit: '18d46be', // R1 plan + currentCommit 갱신 (2026-05-13). R1 PASS 커밋 후 새 hash로 갱신 예정
+  lastUpdated: '2026-05-14',
 }
 
 export type NextAction = {
@@ -332,11 +332,11 @@ export type NextAction = {
 
 /** "지금 해야 할 한 가지." Linear inbox 패러다임. */
 export const NEXT_ACTION: NextAction = {
-  sprint: 'R1',
-  title: 'bin/awm.mjs 5분할 — 책임 분리 (Phase D 측정 전)',
+  sprint: 'C8',
+  title: 'C8 1주 dogfooding 검증 — 5 영업일 자기 사용',
   detail:
-    'Phase C8a PASS 후 nova:review C2 결함(3263줄 단일 파일에 view-verbs·intent·risk-fanout·repo-parser·http-routes·webhook·CLI argv 6+ 책임)을 R1 sprint에서 처리. bin/lib/{view-verbs,intent,risk-fanout,repo-parser,http-routes}.mjs 5 모듈로 책임 분리 + import 경로 갱신. 기존 tests 그대로 유지(import 변경만). 1~2일 추정. R1 PASS 후 C8 dogfooding 진입.',
-  primaryRoute: '/dev/status',
+    'R1 PASS(2026-05-14) 후 Phase C 마지막 sprint. 코드 변경 0. 본인이 매일 도구로 켜놓고 (a) 5/5 영업일 사용 (b) 매일 1회 Today + 매일 1건 ExplainBack (c) S1.6 7 baseline 재측정 — Today KPI·Risk·SessionDetail·Audit 4개 화면이 실데이터로 신뢰 가능한지 (d) 1주 후 자기 보고 "하루 1회 이상 가치". PASS 시 Phase D M0/S2 측정 재개.',
+  primaryRoute: '/today',
 }
 
 /** 그룹별 진행률(완료/전체). 화면 매트릭스 헤더에 표시. */

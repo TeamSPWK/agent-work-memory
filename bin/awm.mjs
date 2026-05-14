@@ -13,9 +13,8 @@ import {
   writeFileSync,
   appendFileSync,
 } from "node:fs";
-import { createServer } from "node:http";
 import { homedir } from "node:os";
-import { dirname, extname, join, normalize, resolve, sep } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createPersistence, validationError } from "./persist.mjs";
 import { scoreCommitCandidate, categorizeScore, buildMatchReason } from "./match.mjs";
@@ -32,6 +31,19 @@ import {
   syncGitHubActivity,
   verifyGitHubWebhookSignature,
 } from "./github.mjs";
+import { isValidCwdValue, inferRepoLabel } from "./lib/repo-parser.mjs";
+import { maskSecrets, sanitize, truncate, hashString } from "./lib/util.mjs";
+import { humanizeAuditSummary } from "./lib/view-verbs.mjs";
+import {
+  pickIntentSummary,
+  isFragmentIntent,
+  isVagueIntentText,
+  isStrongIntentText,
+  isAssistantBoilerplate,
+  summarizeMissingIntent,
+} from "./lib/intent.mjs";
+import { detectRisk, narrowRiskSearchable, buildSessionRisks } from "./lib/risk-fanout.mjs";
+import { serveLocalApp as serveLocalAppImpl } from "./lib/http-routes.mjs";
 
 // 점수 기반 정렬용 — downstream이 commitCandidates[0]을 최고 후보로 사용
 const CONFIDENCE_RANK = Object.freeze({ high: 2, medium: 1, low: 0 });
@@ -371,171 +383,11 @@ function summarizePayload(eventName, command, prompt) {
   return String(eventName);
 }
 
-// Phase C3 — events.jsonl raw summary를 한국어 의도 한 줄로 view-layer 변환.
-// 기록 시 summary(hash chain 포함)는 raw 그대로 유지하고, buildAuditChainView가 화면 노출용으로만 변환.
-// rawSummary 필드에 원본 보존 → hover/디버깅 가능.
-function humanizeAuditSummary(event) {
-  const rawSummary = String(event?.summary ?? "");
-  const summary = computeAuditVerb(event) ?? rawSummary ?? "이벤트";
-  return { summary, rawSummary };
-}
-
-function computeAuditVerb(event) {
-  const eventName = event?.event;
-  if (!eventName) return null;
-
-  if (eventName === "SessionStart") return "세션 시작";
-  if (eventName === "SessionEnd" || eventName === "Stop") return "세션 종료";
-  if (eventName === "UserPromptSubmit") return "사용자 요청 도착";
-  if (eventName === "Notification") return "알림";
-  if (eventName === "session_summary") return "세션 요약";
-  if (eventName === "pre_commit") return "커밋 직전 검사";
-
-  if (eventName === "PreToolUse" || eventName === "PostToolUse") {
-    return verbForTool(event);
-  }
-  return null;
-}
-
-function verbForTool(event) {
-  const tool = event?.toolName;
-  const input = event?.payload?.tool_input ?? {};
-
-  if (tool === "Bash") {
-    const command = String(input.command ?? "").trim();
-    if (!command) return "명령 실행";
-    return bashGoldVerb(command) ?? `명령 실행 — ${truncate(command, 60)}`;
-  }
-
-  if (tool === "Read" || tool === "Edit" || tool === "Write" || tool === "NotebookEdit") {
-    const verb = tool === "Read" ? "파일 읽기"
-      : tool === "Edit" ? "파일 수정"
-      : tool === "Write" ? "파일 작성"
-      : "노트북 수정";
-    const filePath = String(input.file_path ?? input.notebook_path ?? "").trim();
-    if (!filePath) return verb;
-    const basename = filePath.split("/").filter(Boolean).at(-1);
-    return basename ? `${verb} — ${basename}` : verb;
-  }
-
-  if (tool === "Grep") return "검색";
-  if (tool === "Glob") return "파일 찾기";
-  if (tool === "Task") return "에이전트 호출";
-  if (tool === "WebFetch") return "웹 페이지 가져오기";
-  if (tool === "WebSearch") return "웹 검색";
-  if (tool === "TodoWrite") return "할 일 갱신";
-  if (tool === "ExitPlanMode") return "Plan 승인 요청";
-
-  if (!tool) return null;
-  return `${tool} 호출`;
-}
-
-// Bash command 안의 자주 쓰는 ~10개 패턴만 한국어로. 나머지는 호출자가 폴백.
-function bashGoldVerb(command) {
-  const c = String(command).replace(/\s+/g, " ").trim();
-  if (/(^|\s|&&\s*)npm\s+(test\b|run\s+test\b)/i.test(c)) return "테스트 실행";
-  if (/(^|\s|&&\s*)npx\s+vitest\b/i.test(c)) return "테스트 실행";
-  if (/(^|\s|&&\s*)npm\s+run\s+build\b/i.test(c)) return "빌드";
-  if (/(^|\s|&&\s*)npm\s+run\s+serve\b/i.test(c)) return "로컬 서버 실행";
-  if (/(^|\s|&&\s*)npm\s+(install|i)\b/i.test(c)) return "패키지 설치";
-  if (/(^|\s|&&\s*)git\s+commit\b/i.test(c)) return "커밋";
-  if (/(^|\s|&&\s*)git\s+status\b/i.test(c)) return "git 상태 조회";
-  if (/(^|\s|&&\s*)git\s+diff\b/i.test(c)) return "git diff 조회";
-  if (/(^|\s|&&\s*)git\s+log\b/i.test(c)) return "git log 조회";
-  if (/(^|\s|&&\s*)git\s+push\b/i.test(c)) return "git push";
-  if (/(^|\s|&&\s*)node\s+bin\/awm\.mjs\b/i.test(c)) return "awm CLI";
-  if (/(^|\s|&&\s*)(ls|cat|head|tail|find|grep|rg)\b/i.test(c)) return "파일 탐색";
-  if (/(^|\s|&&\s*)npx\s+tsc\b/i.test(c)) return "타입 검사";
-  return null;
-}
-
 function buildEvidence(command, payload) {
   const evidence = [];
   if (command) evidence.push({ type: "command", label: command });
   if (payload.transcript_path) evidence.push({ type: "session", label: "transcript_path" });
   return evidence;
-}
-
-function sanitize(value) {
-  if (typeof value === "string") return maskSecrets(value);
-  if (Array.isArray(value)) return value.map(sanitize);
-  if (value && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [
-        key,
-        isSecretKey(key) ? "[masked]" : sanitize(item),
-      ]),
-    );
-  }
-  return value;
-}
-
-function isSecretKey(key) {
-  return /token|secret|password|passwd|authorization|api[_-]?key|access[_-]?key/i.test(key);
-}
-
-function maskSecrets(text) {
-  return text
-    .replace(/(bearer\s+)[a-z0-9._~+/=-]+/gi, "$1[masked]")
-    .replace(/(sk-[a-z0-9_-]{12,})/gi, "[masked]")
-    .replace(/(--(?:token|secret|password|passwd|api[_-]?key|access[_-]?key)\s+)[^\s"']+/gi, "$1[masked]")
-    .replace(/((?:token|secret|password|passwd|api[_-]?key)\s*[:=]\s*)[^\s"']+/gi, "$1[masked]");
-}
-
-function detectRisk(searchable) {
-  const value = searchable.toLowerCase();
-  if (/drop\s+database|truncate\s+table|delete\s+from|rm\s+-rf|db:migrate|migrate\s+deploy|db\s+reset/.test(value)) {
-    return { category: "Database", severity: "high", reason: "파괴적 명령 또는 데이터베이스 명령이 감지됨" };
-  }
-  if (/migration|migrations|schema|\.env|secret|auth|permission|docker|\.github\/workflows|infra/.test(value)) {
-    return { category: "Operational", severity: "medium", reason: "운영 영향이 큰 경로 또는 키워드가 감지됨" };
-  }
-  return undefined;
-}
-
-// Phase C4 — risk 매칭 범위 좁힘. file.relativePath·cwdGuess는 false positive 원인
-// (예: ~/.claude/image-cache/<hash>가 permission/secret 패턴 우연 매칭). 사용자 텍스트·명령만 검사.
-function narrowRiskSearchable({ firstText = "", lastText = "", commands = [] }) {
-  return [firstText, lastText, ...(commands ?? [])].filter(Boolean).join("\n");
-}
-
-// Phase C4 — packet → session risk fan-out.
-// 같은 workPacket에 묶인 sessions 중 risks 있는 session(들)의 위험을
-// 다른 sessions의 relatedRisks에 propagate. session.risks(직접)와 분리해
-// UI/측정 시 *직접 위험*과 *연관 위험*을 구분 가능.
-// 입력 sessions는 immutable — 새 객체 배열 반환.
-function buildSessionRisks(sessions, workPackets) {
-  const bySessionId = new Map(sessions.map((session) => [session.id, session]));
-
-  // packetId → { directRisks: [{ sourceSessionId, risk }] }
-  const packetIndex = new Map();
-  for (const packet of workPackets ?? []) {
-    const directRisks = [];
-    for (const sessionId of packet.sessionIds ?? []) {
-      const session = bySessionId.get(sessionId);
-      if (!session) continue;
-      for (const risk of session.risks ?? []) {
-        directRisks.push({ sourceSessionId: sessionId, risk });
-      }
-    }
-    if (directRisks.length > 0) packetIndex.set(packet.id, { sessionIds: packet.sessionIds, directRisks });
-  }
-
-  return sessions.map((session) => {
-    const relatedRisks = [];
-    for (const { sessionIds, directRisks } of packetIndex.values()) {
-      if (!sessionIds.includes(session.id)) continue;
-      for (const { sourceSessionId, risk } of directRisks) {
-        if (sourceSessionId === session.id) continue; // 자기 자신은 직접 risks에 이미 있음
-        relatedRisks.push({
-          ...risk,
-          sourceSessionId,
-          relation: "packet",
-        });
-      }
-    }
-    return { ...session, relatedRisks };
-  });
 }
 
 function installClaudeHook({ autoMerge = false } = {}) {
@@ -1678,119 +1530,6 @@ function chooseIntentText(texts) {
 
 // Phase C2 — intentSummary 단편 처리. 4단 fallback:
 //   1) firstText 명료 → 그대로
-//   2) 직전 명료 user turn 있음 → 그것으로 대체
-//   3) 단편 + 커밋 후보 있음 → '(요약 부족) "원문" — 결과 커밋 X "subject" 추정'
-//   4) 단편 + 커밋 없음 → '(요약 부족) <원문>' or summarizeMissingIntent
-// 목적: baseline 단편 7/30 → ≤ 1/30, agent raw 답변이 의도로 둔갑하는 케이스 0.
-// 상수는 함수 내부에 둔다 — 모듈 평가 중 main() 호출이 line 67에서 일어나므로
-// 모듈 top-level const는 TDZ 위반 위험.
-function isFragmentIntent(text) {
-  // Phase C2 polish — MIN_LEN=20 폐기. 한국어는 4~10자에 의도 명료한 경우 다수
-  // ("S5 시작"·"동적화 진행"·"C4 진행" 등). vague pattern OR 빈 텍스트만 단편으로.
-  // isVagueIntentText 안에 length≤4 가드 있음.
-  const normalized = String(text ?? "").replace(/\s+/g, " ").trim();
-  if (!normalized) return true;
-  return isVagueIntentText(normalized);
-}
-
-function pickIntentSummary({
-  firstText,
-  userTexts = [],
-  commitCandidates = [],
-  tool = "AI",
-  commands = [],
-}) {
-  const FRAGMENT_LABEL = "(요약 부족)";
-  const cleaned = String(firstText ?? "").replace(/\s+/g, " ").trim();
-
-  if (cleaned && !isFragmentIntent(cleaned)) {
-    return {
-      intentSummary: truncate(cleaned, 180),
-      fullIntent: truncate(cleaned, 520),
-      isFragment: false,
-    };
-  }
-
-  const seen = new Set(cleaned ? [cleaned] : []);
-  const candidate = [...userTexts]
-    .reverse()
-    .map((t) => String(t ?? "").replace(/\s+/g, " ").trim())
-    .find((t) => t && !seen.has(t) && !isFragmentIntent(t) && !isAssistantBoilerplate(t));
-  if (candidate) {
-    return {
-      intentSummary: truncate(candidate, 180),
-      fullIntent: truncate(candidate, 520),
-      isFragment: false,
-    };
-  }
-
-  const bestCommit = commitCandidates[0];
-
-  if (cleaned) {
-    if (bestCommit) {
-      const subj = truncate(bestCommit.subject ?? "", 80);
-      const hint = `${FRAGMENT_LABEL} "${truncate(cleaned, 50)}" — 결과 커밋 ${bestCommit.shortHash} "${subj}" 추정`;
-      return {
-        intentSummary: truncate(hint, 180),
-        fullIntent: truncate(hint, 520),
-        isFragment: true,
-      };
-    }
-    const raw = `${FRAGMENT_LABEL} ${cleaned}`;
-    return {
-      intentSummary: truncate(raw, 180),
-      fullIntent: truncate(raw, 520),
-      isFragment: true,
-    };
-  }
-
-  if (bestCommit) {
-    const subj = truncate(bestCommit.subject ?? "", 100);
-    const hint = `${FRAGMENT_LABEL} 사용자 요청 미기록 — 결과 커밋 ${bestCommit.shortHash} "${subj}" 추정`;
-    return {
-      intentSummary: truncate(hint, 180),
-      fullIntent: truncate(hint, 520),
-      isFragment: true,
-    };
-  }
-
-  const fallback = summarizeMissingIntent(tool, commands);
-  return {
-    intentSummary: truncate(fallback, 180),
-    fullIntent: truncate(fallback, 520),
-    isFragment: true,
-  };
-}
-
-function isStrongIntentText(text) {
-  if (isAssistantBoilerplate(text)) return false;
-  return /해줘|해주세요|진행|수정|구현|만들|확인|왜|어떻게|문제|에러|검토|평가|설명|알려|부탁/i.test(text);
-}
-
-// Phase C8a D1 — assistant boilerplate 패턴을 데이터로 분리 (Missing_Lookup).
-// 새 패턴 추가 시 코드 수정 X — 배열에 추가만. since 메타로 추적.
-// TDZ 회피: const를 함수 안으로 (module 평가 line 67에서 main() 호출 — C2와 동일 패턴).
-function isAssistantBoilerplate(text) {
-  const BOILERPLATE_PATTERNS = [
-    { pattern: /검증을 시작하겠습니다/i, since: "C2" },
-    { pattern: /신규 파일들을 검증하겠습니다/i, since: "C2" },
-    { pattern: /체계적으로 살펴보겠습니다/i, since: "C2" },
-    { pattern: /작업을 시작하겠습니다/i, since: "C2" },
-    { pattern: /이제 .*확인하겠습니다/i, since: "C2" },
-    { pattern: /먼저 .*확인하겠습니다/i, since: "C2" },
-    { pattern: /계속 .*확인하겠습니다/i, since: "C2" },
-    { pattern: /살펴보겠습니다/i, since: "C2" },
-    { pattern: /진행하겠습니다/i, since: "C2" },
-    { pattern: /수정하겠습니다/i, since: "C2" },
-    { pattern: /구현하겠습니다/i, since: "C2" },
-    { pattern: /세션 시작 훅 확인/i, since: "C2" },
-    { pattern: /에이전트 세션 시작 훅/i, since: "C2" },
-    { pattern: /로컬 권한\/샌드박스 설정 확인/i, since: "C2" },
-  ];
-  const value = String(text ?? "");
-  return BOILERPLATE_PATTERNS.some(({ pattern }) => pattern.test(value));
-}
-
 function buildCommitCandidate(commit, index, startedAt, endedAt, signals = []) {
   const commitDate = new Date(commit.timestamp * 1000);
   const distanceMinutes = distanceFromWindowMinutes(commitDate, startedAt, endedAt);
@@ -1898,16 +1637,6 @@ function refineSessionTitle(title, intent, commitCandidates, tool) {
   return title;
 }
 
-function isVagueIntentText(text = "") {
-  const normalized = String(text).replace(/\s+/g, " ").trim();
-  // Phase C2 polish (2026-05-13) — 길이 임계를 8 → 4로 낮춤.
-  // 8자 임계가 *"S5 시작"·"동적화 진행"·"C4 진행"* 같은 짧지만 명료한 한국어 의도까지 폄훼.
-  // 한국어 4자 이하면 거의 인사·단답·확인(예: "안녕"·"감사"·"오케이")이라 단편 분류 안전.
-  // 명료 인정 케이스는 pattern 매칭에 의존.
-  return /^(네|넵|응|오케이|좋아|진행|다음|계속|확인|커밋|\/clear|clear)[\s.!?~]*(진행|진행합시다|해주세요|해줘|부탁|만|만 해줘|합시다)?[\s.!?~]*$/i.test(normalized)
-    || normalized.length <= 4;
-}
-
 function collectSessionSignals(value, texts, commands, timestamps, cwdCandidates, userTexts = [], key = "") {
   if (value == null) return;
   if (typeof value === "string") {
@@ -1996,12 +1725,6 @@ function toReadableSessionText(value) {
 
 function isSystemInstructionText(text) {
   return /<permissions instructions>|Filesystem sandboxing|sandbox_mode|danger-full-access|Knowledge cutoff|You are Codex|AGENTS\.md instructions|# Personal Global|AI Coding Discipline|# Collaboration Mode|## Apps \(Connectors\)|## Plugins|## Skills|Codex desktop context|request_user_input availability|Caveat: The messages below were generated by the user while running local commands|<environment_context>|<app-context>|<skills_instructions>|<plugins_instructions>|hookSpecificOutput|hookEventName|CLAUDE_PLUGIN_ROOT|NOVA-STATE|# Nova State|너는 Nova Engineering의 Self-Evolution 엔진/i.test(text);
-}
-
-function summarizeMissingIntent(tool, commands) {
-  const firstCommand = commands.find(Boolean);
-  if (firstCommand) return `${tool} 세션에서 사용자 요청 문장은 찾지 못했고, 명령 후보 ${truncate(firstCommand, 80)}가 기록됐다.`;
-  return `${tool} 세션에서 사용자 요청 요약을 추출하지 못했다.`;
 }
 
 function normalizeToolName(value) {
@@ -2391,32 +2114,6 @@ function resolveSessionRepoIdentity(cwdValue, gitRoot) {
   return { repoRoot: gitRoot };
 }
 
-// Phase C6 — 날짜 파편(`05/12`·`2026-05-12/new-chat`)이나 1-segment 값이
-// cwdValue로 들어왔을 때 invalid 판정해 file.path dirname 기반 폴백 사용.
-// baseline #6 (30 세션 중 3건 repo 잘못 추출) 회귀 차단.
-function isValidCwdValue(value) {
-  const normalized = String(value ?? "").trim();
-  if (!normalized || normalized.length < 3) return false;
-  // MM/DD 또는 M/D 같은 날짜 파편
-  if (/^\d{1,2}\/\d{1,2}(\/|$)/.test(normalized)) return false;
-  // YYYY-MM-DD 시작 (날짜로 끝나든 추가 segment 있든)
-  if (/^\d{4}-\d{2}-\d{2}(\/|$)/.test(normalized)) return false;
-  // absolute path는 ok
-  if (normalized.startsWith("/")) return true;
-  // relative path는 최소 2-segment 필요 (parent/name 추출 가능)
-  const parts = normalized.split("/").filter(Boolean);
-  if (parts.length < 2) return false;
-  return true;
-}
-
-function inferRepoLabel(cwdValue, file) {
-  const source = cwdValue && isValidCwdValue(cwdValue) ? cwdValue : dirname(file.path);
-  const parts = String(source).split("/").filter(Boolean);
-  const name = parts.at(-1) ?? file.source?.id ?? "local";
-  const parent = parts.at(-2) ?? "local";
-  return `${parent}/${name}`;
-}
-
 function makeTitle(firstText, file, tool, commands = []) {
   if (firstText) return truncate(firstText.replace(/\s+/g, " "), 64);
   const firstCommand = commands.find(Boolean);
@@ -2424,204 +2121,33 @@ function makeTitle(firstText, file, tool, commands = []) {
   return `${tool} session ${file.relativePath.split("/").at(-1)?.slice(0, 8) ?? ""}`;
 }
 
-function truncate(value, length) {
-  const text = maskSecrets(String(value)).replace(/\s+/g, " ").trim();
-  return text.length > length ? `${text.slice(0, length - 1)}…` : text;
-}
-
-function hashString(value) {
-  let hash = 5381;
-  for (let index = 0; index < value.length; index += 1) {
-    hash = ((hash << 5) + hash) ^ value.charCodeAt(index);
-  }
-  return (hash >>> 0).toString(16);
-}
-
 function serveLocalApp(values = []) {
-  ensureState();
-  const port = Number(readFlag(values, "--port") ?? 5173);
-  const host = readFlag(values, "--host") ?? "127.0.0.1";
-  const staticRoot = join(projectRoot, "dist");
-
-  if (!existsSync(join(staticRoot, "index.html"))) {
-    throw new Error("dist/index.html not found. Run npm run build first.");
-  }
-
-  const server = createServer(async (request, response) => {
-    const url = new URL(request.url ?? "/", `http://${host}:${port}`);
-
-    try {
-      if (url.pathname === "/api/github/webhook") {
-        if (request.method !== "POST") {
-          sendJson(response, { ok: false, code: "METHOD_NOT_ALLOWED", message: "POST required." }, 405);
-          return;
-        }
-        const result = await receiveGitHubWebhook(request);
-        sendJson(response, result, result.duplicate ? 200 : 202);
-        if (!result.duplicate) scheduleIngestRebuild(Number(url.searchParams.get("limit") ?? 30));
-        return;
-      }
-
-      if (url.pathname === "/api/health") {
-        sendJson(response, {
-          ok: true,
-          cwd,
-          stateDir,
-          version: readPackageVersion(),
-          now: new Date().toISOString(),
-          github: buildGitHubVisibility(),
-          lastWrite: persistence.getLastWrite(),
-          quarantined: persistence.getQuarantined(),
-        });
-        return;
-      }
-
-      if (url.pathname === "/api/persist-events") {
-        sendJson(response, persistence.getEventsRing());
-        return;
-      }
-
-      if (url.pathname === "/api/discovery") {
-        const refresh = url.searchParams.get("refresh") === "1";
-        const discovery = refresh || !existsSync(discoveryPath)
-          ? buildAndStoreDiscovery()
-          : JSON.parse(readFileSync(discoveryPath, "utf8"));
-        sendJson(response, discovery);
-        return;
-      }
-
-      if (url.pathname === "/api/events") {
-        sendJson(response, readEvents());
-        return;
-      }
-
-      if (url.pathname === "/api/mvp" || url.pathname === "/api/ingest") {
-        const refresh = url.searchParams.get("refresh") === "1";
-        const limit = Number(url.searchParams.get("limit") ?? 30);
-        const level = url.searchParams.get("level"); // "summary" | null
-        const ingest = refresh ? buildAndStoreIngest(limit) : getCachedOrBuildIngest(limit);
-
-        // Phase C8a B1 — `?level=summary` 옵션 추가. 목록 화면(Today/Sessions/Risk)용
-        // 경량 응답. flowSteps·commandSamples·evidence·commitCandidates 같은 무거운
-        // 필드를 sessions에서 제외해 payload 크기를 줄임. SessionDetail은 후속 sprint에서
-        // 신규 `/api/sessions/:id` 엔드포인트로 분리 예정.
-        if (level === "summary") {
-          const trimmedSessions = (ingest.sessions ?? []).map((s) => ({
-            id: s.id,
-            tool: s.tool,
-            actor: s.actor,
-            repo: s.repo,
-            intentSummary: s.intentSummary,
-            startedAt: s.startedAt,
-            status: s.status,
-            commandCount: s.commandCount,
-            risks: s.risks,
-            relatedRisks: s.relatedRisks,
-          }));
-          sendJson(response, { ...ingest, sessions: trimmedSessions });
-          return;
-        }
-
-        sendJson(response, ingest);
-        return;
-      }
-
-      if (url.pathname === "/api/reviews/bulk" && request.method === "POST") {
-        const body = await readRequestJson(request);
-        const reviews = await saveBulkReviews(body);
-        sendJson(response, { reviews });
-        scheduleIngestRebuild(Number(url.searchParams.get("limit") ?? 30));
-        return;
-      }
-
-      if (url.pathname === "/api/reviews") {
-        if (request.method === "GET") {
-          sendJson(response, readReviews());
-          return;
-        }
-        if (request.method === "POST") {
-          const body = await readRequestJson(request);
-          const review = await saveReview(body);
-          sendJson(response, review);
-          scheduleIngestRebuild(Number(url.searchParams.get("limit") ?? 30));
-          return;
-        }
-      }
-
-      if (url.pathname === "/api/links") {
-        if (request.method === "GET") {
-          sendJson(response, readLinks());
-          return;
-        }
-        if (request.method === "POST") {
-          const body = await readRequestJson(request);
-          const link = await saveLink(body);
-          buildAndStoreIngest(Number(url.searchParams.get("limit") ?? 30));
-          sendJson(response, link);
-          return;
-        }
-      }
-
-      if (url.pathname === "/api/sessions" && request.method === "POST") {
-        const body = await readRequestJson(request);
-        const session = saveManualSession(body);
-        const ingest = buildAndStoreIngest(Number(url.searchParams.get("limit") ?? 30));
-        sendJson(response, { session, ingest });
-        return;
-      }
-
-      if (url.pathname === "/api/today") {
-        const events = readEvents().filter((event) => localDate(new Date(event.createdAt)) === localDate(new Date()));
-        sendJson(response, {
-          date: localDate(new Date()),
-          eventCount: events.length,
-          riskCount: events.filter((event) => event.risk).length,
-          events,
-        });
-        return;
-      }
-
-      if (url.pathname === "/api/wiki") {
-        if (request.method === "GET") {
-          sendJson(response, readWikiEntry(url.searchParams.get("path")));
-          return;
-        }
-        if (request.method === "POST") {
-          const body = await readRequestJson(request);
-          sendJson(response, saveWikiEntry(body));
-          return;
-        }
-      }
-
-      if (url.pathname === "/api/wiki/copy" && request.method === "POST") {
-        const body = await readRequestJson(request);
-        sendJson(response, copyWikiEntry(body));
-        return;
-      }
-
-      serveStatic(request, response, staticRoot, url.pathname);
-    } catch (error) {
-      if (response.headersSent || response.writableEnded) {
-        response.destroy(error instanceof Error ? error : undefined);
-        return;
-      }
-      const message = error instanceof Error ? error.message : String(error);
-      const explicitCode = error && typeof error === "object" && typeof error.code === "string" ? error.code : null;
-      const code = explicitCode === "VALIDATION"
-        ? "VALIDATION"
-        : explicitCode === "AUTH"
-          ? "AUTH"
-        : explicitCode === "PERSIST_WRITE_FAIL"
-          ? "PERSIST_WRITE_FAIL"
-          : "INTERNAL";
-      const status = code === "VALIDATION" ? 400 : code === "AUTH" ? 401 : code === "PERSIST_WRITE_FAIL" ? 503 : 500;
-      sendJson(response, { ok: false, code, message }, status);
-    }
-  });
-
-  server.listen(port, host, () => {
-    console.log(`AWM local app: http://${host}:${port}/`);
-    console.log(`API health: http://${host}:${port}/api/health`);
+  return serveLocalAppImpl(values, {
+    projectRoot,
+    cwd,
+    stateDir,
+    discoveryPath,
+    ensureState,
+    readFlag,
+    readPackageVersion,
+    localDate,
+    persistence,
+    receiveGitHubWebhook,
+    buildGitHubVisibility,
+    scheduleIngestRebuild,
+    buildAndStoreDiscovery,
+    buildAndStoreIngest,
+    getCachedOrBuildIngest,
+    readEvents,
+    readReviews,
+    saveReview,
+    saveBulkReviews,
+    readLinks,
+    saveLink,
+    saveManualSession,
+    readWikiEntry,
+    saveWikiEntry,
+    copyWikiEntry,
   });
 }
 
@@ -3066,14 +2592,6 @@ function normalizeIssueNote(issueNote) {
   };
 }
 
-async function readRequestJson(request) {
-  const chunks = [];
-  for await (const chunk of request) chunks.push(Buffer.from(chunk));
-  const text = Buffer.concat(chunks).toString("utf8");
-  if (!text.trim()) return {};
-  return JSON.parse(text);
-}
-
 async function readRequestBody(request, { maxBytes } = {}) {
   const chunks = [];
   let total = 0;
@@ -3200,42 +2718,6 @@ function readEvents() {
     .map((line) => JSON.parse(line));
 }
 
-function sendJson(response, value, status = 200) {
-  response.writeHead(status, {
-    "content-type": "application/json; charset=utf-8",
-    "access-control-allow-origin": "*",
-  });
-  response.end(`${JSON.stringify(value, null, 2)}\n`);
-}
-
-function serveStatic(request, response, staticRoot, pathname) {
-  const requestedPath = decodeURIComponent(pathname === "/" ? "/index.html" : pathname);
-  const filePath = safeStaticPath(staticRoot, requestedPath);
-  const target = filePath && existsSync(filePath) && statSync(filePath).isFile()
-    ? filePath
-    : join(staticRoot, "index.html");
-  response.writeHead(200, { "content-type": mimeType(target) });
-  response.end(readFileSync(target));
-}
-
-function safeStaticPath(root, pathname) {
-  const withoutLeadingSlash = pathname.replace(/^\/+/, "");
-  const normalized = normalize(withoutLeadingSlash);
-  if (normalized.startsWith("..") || normalized.includes(`${sep}..${sep}`)) return undefined;
-  const fullPath = join(root, normalized);
-  return fullPath.startsWith(root) ? fullPath : undefined;
-}
-
-function mimeType(filePath) {
-  const extension = extname(filePath);
-  if (extension === ".html") return "text/html; charset=utf-8";
-  if (extension === ".js") return "text/javascript; charset=utf-8";
-  if (extension === ".css") return "text/css; charset=utf-8";
-  if (extension === ".svg") return "image/svg+xml";
-  if (extension === ".json") return "application/json; charset=utf-8";
-  return "application/octet-stream";
-}
-
 function readPackageVersion() {
   try {
     return JSON.parse(readFileSync(join(projectRoot, "package.json"), "utf8")).version;
@@ -3295,12 +2777,5 @@ function shellQuote(value) {
 }
 
 export {
-  pickIntentSummary,
-  isFragmentIntent,
-  humanizeAuditSummary,
   packetSummary,
-  narrowRiskSearchable,
-  buildSessionRisks,
-  isValidCwdValue,
-  inferRepoLabel,
 };

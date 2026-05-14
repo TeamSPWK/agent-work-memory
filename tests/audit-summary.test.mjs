@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { humanizeAuditSummary } from "../bin/awm.mjs";
+import { humanizeAuditSummary } from "../bin/lib/view-verbs.mjs";
 
 function mkEvent(overrides = {}) {
   return {

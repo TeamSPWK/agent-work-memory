@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSessionRisks, narrowRiskSearchable } from "../bin/awm.mjs";
+import { buildSessionRisks, narrowRiskSearchable } from "../bin/lib/risk-fanout.mjs";
 
 describe("narrowRiskSearchable — path/cwd 매칭 제외", () => {
   it("file.relativePath·cwdGuess는 searchable에서 제외", () => {

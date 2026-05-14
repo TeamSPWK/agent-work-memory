@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isValidCwdValue, inferRepoLabel } from "../bin/awm.mjs";
+import { isValidCwdValue, inferRepoLabel } from "../bin/lib/repo-parser.mjs";
 
 const mkFile = (path = "/Users/me/develop/swk/myrepo/sessions/abc.jsonl") => ({
   path,
