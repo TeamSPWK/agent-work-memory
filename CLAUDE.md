@@ -28,6 +28,8 @@ v1에서 *Vite 8 + React 18 + TS 5.7 SPA + Node ESM CLI + 로컬 `.awm/`*를 사
 
 ## Build & Verify
 
+PR 검증에는 `/pr` review를 사용한다.
+
 M0 Tech Validation 진입(2026-05-13) 후 v1 자산이 main에 통합돼 *로컬 작동*. Stack 결정(M1)은 별개.
 
 ### 외부 테스터 / 신규 환경 — 한 줄
@@ -89,7 +91,7 @@ node bin/awm.mjs capture install git-hooks             # .git/hooks/pre-commit (
 ## Non-Negotiables (advisory — 강제 미설치)
 - `.env`, `.secret/`, `*.pem`, `*.key`, 액세스 토큰을 커밋·로그·이슈에 노출하지 않는다.
 - v2 시작점에는 `.awm/`·`.nova/` 사용자 데이터 디렉토리 없음. v2 구현 시 `docs/areas/regulatory/` 정책 따라 결정.
-- 3개 이상 파일 수정 → 계획 먼저, 승인 후 구현 (사용자 글로벌 규칙).
+- 대규모 변경 전에는 계획을 작성한다.
 - git commit/push는 사용자 명시적 요청 시에만.
 
 > Enforcement gap: 위 규칙은 현재 settings/hooks/CI로 막히지 않은 advisory다.
@@ -99,7 +101,7 @@ node bin/awm.mjs capture install git-hooks             # .git/hooks/pre-commit (
 - `.env`, `.secret/`, `*.pem`, `*.key`, 액세스 토큰을 커밋·로그·이슈에 노출하지 않는다.
 - `.awm/`(사용자 작업 기억)와 `.nova/`(세션 이벤트)는 사용자 데이터다. 디버깅 목적 외 외부 전송·요약 출력 금지.
 - 원문 transcript는 기본 저장하지 않는다. 저장 형식이 바뀌면 `docs/DATA_CONTRACT.md`도 같이 갱신.
-- 3개 이상 파일 수정 → 계획 먼저, 승인 후 구현 (사용자 글로벌 규칙).
+- 대규모 변경 전에는 계획을 작성한다.
 - git commit/push는 사용자 명시적 요청 시에만.
 
 > Enforcement gap: 위 규칙은 현재 settings/hooks/CI로 막히지 않은 advisory다.
@@ -143,8 +145,6 @@ UI/UX 코드(`web/src/**` · CSS · 화면·컴포넌트·라우트) 변경 시 
 - 협업 원칙은 *git에 들어가는 프로젝트 내부 파일*에만 둔다. 개인 글로벌 메모리는 작업 환경/사용자/AI 도구가 달라지면 무의미하므로 사용 안 함.
 
 ## Claude Code 특화
-- Nova 자동 적용 규칙은 SessionStart 훅으로 주입됨. 상세는 `docs/nova-rules.md`(플러그인) on-demand 로드.
-- 자주 쓰는 진입점: `/nova:next`, `/nova:plan`, `/nova:check`, `/nova:review`, `/nova:claude-md`.
 - 지침이 누락된 것 같으면 `/memory`로 로드된 파일 확인.
 - 본 파일은 Claude 운영 헌법 + 라우터로 유지한다. 다른 에이전트 공통 계약은 `AGENTS.md` 브리지가 본 파일을 가리킨다.
 
